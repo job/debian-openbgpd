@@ -1,0 +1,27 @@
+#!/bin/sh -e
+
+create_user() {
+  local username='_openbgpd'
+
+  if id $username > /dev/null 2>&1; then return; fi
+
+  adduser --system --disabled-password --no-create-home --force-badname \
+    --group --home /var/lib/openbgpd \
+    --gecos "OpenBSD BGP Daemon" $username
+}
+
+create_directories() {
+  if [ "$2" ]; then return 0; fi # only on the first install
+
+  mkdir -p /var/lib/openbgpd
+  chmod 0755 /var/lib/openbgpd
+}
+
+case "$1" in
+configure)
+  create_directories "$@"
+  create_user "$@"
+  ;;
+esac
+
+#DEBHELPER#

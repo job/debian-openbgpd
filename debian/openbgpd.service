@@ -1,0 +1,26 @@
+[Unit]
+Description=OpenBSD BGP Daemon
+Documentation=man:openbgpd(8)
+After=network.target
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/default/openbgpd
+ExecStart=/usr/sbin/bgpd $DAEMON_OPTS
+ExecStartPre=/usr/sbin/bgpd -n $DAEMON_OPTS
+Restart=on-failure
+# security profile
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=full
+ProtectHome=true
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_SETGID
+CapabilityBoundingSet=CAP_SETUID
+CapabilityBoundingSet=CAP_SYSLOG
+CapabilityBoundingSet=CAP_SYS_CHROOT
+CapabilityBoundingSet=CAP_SYS_NICE
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

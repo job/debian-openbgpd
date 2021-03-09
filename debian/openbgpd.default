@@ -1,0 +1,4 @@
+# /etc/default/openbgpd
+
+# For options, see man bgpd(8).
+DAEMON_OPTS=""

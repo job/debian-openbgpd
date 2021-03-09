@@ -1,0 +1,27 @@
+
+                             NOTES FOR DEBIAN USERS
+                             ======================
+
+1. AUTOMATIC STARTUP
+--------------------
+
+In order to avoid the startup of the BGP daemon on an unconfigured machine,
+automatic startup, on boot, is disabled by default. To enable it, perform
+this action:
+
+   1. For systems running systemd: systemctl enable openbgpd
+
+2. CONFIGURATION
+----------------
+
+After the installation of the package the configuration file
+/etc/bgpd.conf will not exist.
+
+This is intentional because because a sane default configuration file
+suitable to all environments does not exist (other than RFC 8212 ;-).
+
+The /usr/share/doc/openbgpd/bgpd.conf.gz file contains excellent inspiration.
+
+To get started:
+
+   $ zcat /usr/share/doc/openbgpd/bgpd.conf.gz | sudo tee /etc/bgpd.conf

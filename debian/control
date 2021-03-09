@@ -1,0 +1,25 @@
+Source: openbgpd
+Section: net
+Priority: optional
+Maintainer: Job Snijders <job@openbsd.org>
+Uploaders: John Goerzen <jgoerzen@complete.org>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Homepage: https://www.openbgpd.org/
+#Vcs-Browser: https://salsa.debian.org/debian/openbgpd
+#Vcs-Git: https://salsa.debian.org/debian/openbgpd.git
+Rules-Requires-Root: no
+
+Package: openbgpd
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
+Recommends: rpki-client
+Description: OpenBSD BGP daemon
+ The Border Gateway Protocol (BGP) allows machines to exchange information
+ about network reachability with other systems speaking the BGP protocol.
+ The global Internet routing system is composed of BGP speakers.
+ OpenBGPD, also known as OpenBSD Border Gateway Protocol Daemon, is a
+ server software program that allows general purpose computers to be
+ used as routers, Route Reflectors, or Route Servers. It is a Unix system
+ daemon that provides a free, open-source implementation of the BGP
+ as specified by the Internet Engineering Task Force (IETF).

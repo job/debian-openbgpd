@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+set -e
+
+case "${1}" in
+	purge)
+		deluser --quiet _openbgpd >/dev/null 2>&1 || true
+		rm -rf /var/lib/openbgpd
+	;;
+esac
+
+#DEBHELPER#
