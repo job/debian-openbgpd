@@ -11,7 +11,7 @@ Vcs-Git: https://github.com/job/debian-openbgpd.git
 Rules-Requires-Root: no
 
 Package: openbgpd
-Conflicts: quagga-bgpd
+Conflicts: frr, quagga-bgpd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, adduser
 Recommends: rpki-client
