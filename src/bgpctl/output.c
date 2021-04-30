@@ -1,4 +1,4 @@
-/*	$OpenBSD: output.c,v 1.9 2020/05/10 13:38:46 deraadt Exp $ */
+/*	$OpenBSD: output.c,v 1.15 2021/04/15 14:12:05 claudio Exp $ */
 
 /*
  * Copyright (c) 2003 Henning Brauer <henning@openbsd.org>
@@ -76,6 +76,10 @@ show_head(struct parse_result *res)
 		printf("%-5s %3s %-20s %-15s  %5s %5s %s\n",
 		    "flags", "ovs", "destination", "gateway", "lpref", "med",
 		    "aspath origin");
+		break;
+	case SHOW_SET:
+		printf("%-6s %-34s %7s %7s %6s %11s\n", "Type", "Name",
+		    "#IPv4", "#IPv6", "#ASnum", "Last Change");
 		break;
 	case NETWORK_SHOW:
 		printf("flags: S = Static\n");
@@ -262,7 +266,7 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 	if (p->conf.down) {
 		printf(", marked down");
 	}
-	if (*(p->conf.reason)) {
+	if (p->conf.reason[0]) {
 		printf(" with shutdown reason \"%s\"",
 		    log_reason(p->conf.reason));
 	}
@@ -297,7 +301,7 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 
 	show_neighbor_msgstats(p);
 	printf("\n");
-	if (*(p->stats.last_reason)) {
+	if (p->stats.last_reason[0]) {
 		printf("  Last received shutdown reason: \"%s\"\n",
 		    log_reason(p->stats.last_reason));
 	}
@@ -590,7 +594,7 @@ show_ext_community(u_char *data, u_int16_t len)
 }
 
 static void
-show_attr(u_char *data, size_t len, struct parse_result *res)
+show_attr(u_char *data, size_t len, int reqflags)
 {
 	u_char		*path;
 	struct in_addr	 id;
@@ -643,8 +647,8 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 	case ATTR_ASPATH:
 	case ATTR_AS4_PATH:
 		/* prefer 4-byte AS here */
-		e4 = aspath_verify(data, alen, 1);
-		e2 = aspath_verify(data, alen, 0);
+		e4 = aspath_verify(data, alen, 1, 0);
+		e2 = aspath_verify(data, alen, 0, 0);
 		if (e4 == 0 || e4 == AS_ERR_SOFT) {
 			path = data;
 		} else if (e2 == 0 || e2 == AS_ERR_SOFT) {
@@ -818,7 +822,7 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 		break;
 	}
  done:
-	printf("%c", EOL0(res->flags));
+	printf("%c", EOL0(reqflags));
 }
 
 static void
@@ -958,11 +962,66 @@ show_rib_hash(struct rde_hashstats *hash)
 }
 
 static void
+show_rib_set(struct ctl_show_set *set)
+{
+	char buf[64];
+
+	if (set->type == ASNUM_SET)
+		snprintf(buf, sizeof(buf), "%7s %7s %6zu",
+		    "-", "-", set->as_cnt);
+	else
+		snprintf(buf, sizeof(buf), "%7zu %7zu %6s",
+		    set->v4_cnt, set->v6_cnt, "-");
+
+	printf("%-6s %-34s %s %11s\n", fmt_set_type(set), set->name,
+	    buf, fmt_monotime(set->lastchange));
+}
+
+static void
+show_rtr(struct ctl_show_rtr *rtr)
+{
+	static int not_first;
+
+	if (not_first)
+		printf("\n");
+	not_first = 1;
+
+	printf("RTR neighbor is %s, port %u\n",
+	    log_addr(&rtr->remote_addr), rtr->remote_port);
+	if (rtr->descr[0])
+		printf(" Description: %s\n", rtr->descr);
+	if (rtr->local_addr.aid != AID_UNSPEC)
+		printf(" Local Address: %s\n", log_addr(&rtr->local_addr));
+	if (rtr->session_id != -1)
+		printf (" Session ID: %d Serial #: %u\n",
+		    rtr->session_id, rtr->serial);
+	printf(" Refresh: %u, Retry: %u, Expire: %u\n",
+	    rtr->refresh, rtr->retry, rtr->expire);
+
+	if (rtr->last_sent_error != NO_ERROR) {
+		printf(" Last sent error: %s\n",
+		  log_rtr_error(rtr->last_sent_error));
+		if (rtr->last_sent_msg[0])
+			printf(" with reason \"%s\"",
+			    log_reason(rtr->last_sent_msg));
+	}
+	if (rtr->last_recv_error != NO_ERROR) {
+		printf("Last received error: %s\n",
+		  log_rtr_error(rtr->last_recv_error));
+		if (rtr->last_recv_msg[0])
+			printf(" with reason \"%s\"",
+			    log_reason(rtr->last_recv_msg));
+	}
+
+	printf("\n");
+}
+
+static void
 show_result(u_int rescode)
 {
 	if (rescode == 0)
 		printf("request processed\n");
-	else if (rescode >
+	else if (rescode >=
 	    sizeof(ctl_res_strerror)/sizeof(ctl_res_strerror[0]))
 		printf("unknown result error code %u\n", rescode);
 	else
@@ -988,6 +1047,8 @@ const struct output show_output = {
 	.rib = show_rib,
 	.rib_mem = show_rib_mem,
 	.rib_hash = show_rib_hash,
+	.set = show_rib_set,
+	.rtr = show_rtr,
 	.result = show_result,
 	.tail = show_tail
 };

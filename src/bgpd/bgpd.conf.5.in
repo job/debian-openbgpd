@@ -1,4 +1,4 @@
-.\" $OpenBSD: bgpd.conf.5,v 1.205 2020/05/16 16:58:11 jmc Exp $
+.\" $OpenBSD: bgpd.conf.5,v 1.209 2021/03/02 09:45:07 claudio Exp $
 .\"
 .\" Copyright (c) 2004 Claudio Jeker <claudio@openbsd.org>
 .\" Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -16,7 +16,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: May 16 2020 $
+.Dd $Mdocdate: March 2 2021 $
 .Dt BGPD.CONF 5
 .Os
 .Sh NAME
@@ -268,9 +268,18 @@ daemons, such as
 .Xr ospfd 8 .
 .Pp
 .It Xo
-.Ic rde
-.Ic med
-.Ic compare
+.Ic rde Ic evaluate
+.Pq Ic default Ns | Ns Ic all
+.Xc
+If set to
+.Ar all
+keep evaluating alternative paths in case the selected path is filtered
+out.
+By default if a path is filtered by the output filters then no alternative
+path is sent to this peer.
+.Pp
+.It Xo
+.Ic rde Ic med Ic compare
 .Pq Ic always Ns | Ns Ic strict
 .Xc
 If set to
@@ -329,6 +338,20 @@ typically more stable, route.
 This renders the decision process nondeterministic.
 The default is
 .Ic ignore .
+.Pp
+.It Xo
+.Ic reject Ic as-set
+.Pq Ic yes Ns | Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+.Em AS paths
+attributes containing
+.Em AS_SET
+path segments will be rejected and
+all prefixes will be treated as withdraws.
+The default is
+.Ic no .
 .Pp
 .It Ic router-id Ar dotted-quad
 Set the BGP router ID, which must be non-zero and should be unique
@@ -480,6 +503,39 @@ and the Origin Validation State (OVS) is set.
 roa-set { 192.0.2.0/24 maxlen 24 source-as 64511
           203.0.113.0/24 source-as 64496 }
 .Ed
+.Pp
+.It Xo
+.Ic rtr Ar address
+.Ic { Ar ... Ic }
+.Xc
+The
+.Ic rtr
+block specifies a
+.Em RPKI to Router Protocol
+session.
+The rtr session properties are as follows:
+.Pp
+.Bl -tag -width Ds -compact
+.It Ic descr Ar description
+Add a description.
+The description is used in logging and status reports, but has no further
+meaning for
+.Xr bgpd 8 .
+.Pp
+.It Ic local-address Ar address
+Bind to the specific IP address before opening the TCP connection to the
+.Em rtr
+server.
+.Pp
+.It Ic port Ar number
+Specify the TCP destination port for the
+.Em rtr
+session.
+If not specified the default
+.Ic port
+is
+.Em 323 .
+.El
 .El
 .Sh NETWORK ANNOUNCEMENTS
 .Ic network
@@ -1087,8 +1143,37 @@ statement defines the maximum hops the neighbor may be away.
 .It Ic passive
 Do not attempt to actively open a TCP connection to the neighbor system.
 .Pp
+.It Xo
+.Ic reject Ic as-set
+.Pq Ic yes Ns | Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+.Em AS paths
+attributes containing
+.Em AS_SET
+path segments will be rejected and
+all prefixes will be treated as withdraws.
+The default is inherited from the global
+.Ic reject Ic as-set
+setting.
+.Pp
 .It Ic remote-as Ar as-number
 Set the AS number of the remote system.
+.Pp
+.It Xo
+.Ic rde Ic evaluate
+.Pq Ic default Ns | Ns Ic all
+.Xc
+If set to
+.Ar all
+keep evaluating alternative paths in case the selected path is filtered
+out.
+By default if a path is filtered by the output filters then no alternative
+path is sent to this peer.
+The default is inherited from the global
+.Ic rde Ic evaluate
+setting.
 .Pp
 .It Ic rib Ar name
 Bind the neighbor to the specified RIB.

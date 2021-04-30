@@ -1,4 +1,4 @@
-/*	$OpenBSD: kroute.c,v 1.239 2019/10/01 08:57:48 claudio Exp $ */
+/*	$OpenBSD: kroute.c,v 1.241 2021/01/18 12:15:36 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -110,7 +110,7 @@ int	kr6_delete(struct ktable *, struct kroute_full *, u_int8_t);
 int	krVPN4_delete(struct ktable *, struct kroute_full *, u_int8_t);
 int	krVPN6_delete(struct ktable *, struct kroute_full *, u_int8_t);
 void	kr_net_delete(struct network *);
-int	kr_net_match(struct ktable *, struct network_config *, u_int16_t);
+int	kr_net_match(struct ktable *, struct network_config *, u_int16_t, int);
 struct network *kr_net_find(struct ktable *, struct network *);
 void	kr_net_clear(struct ktable *);
 void	kr_redistribute(int, struct ktable *, struct kroute *);
@@ -601,14 +601,14 @@ krVPN4_change(struct ktable *kt, struct kroute_full *kl, u_int8_t fib_prio)
 		return (0);
 
 	/* only single MPLS label are supported for now */
-	if (kl->prefix.vpn4.labellen != 3) {
+	if (kl->prefix.labellen != 3) {
 		log_warnx("%s: %s/%u has not a single label", __func__,
 		    log_addr(&kl->prefix), kl->prefixlen);
 		return (0);
 	}
-	mplslabel = (kl->prefix.vpn4.labelstack[0] << 24) |
-	    (kl->prefix.vpn4.labelstack[1] << 16) |
-	    (kl->prefix.vpn4.labelstack[2] << 8);
+	mplslabel = (kl->prefix.labelstack[0] << 24) |
+	    (kl->prefix.labelstack[1] << 16) |
+	    (kl->prefix.labelstack[2] << 8);
 	mplslabel = htonl(mplslabel);
 
 	labelid = rtlabel_name2id(kl->label);
@@ -617,7 +617,7 @@ krVPN4_change(struct ktable *kt, struct kroute_full *kl, u_int8_t fib_prio)
 	if (kl->flags & (F_BLACKHOLE|F_REJECT))
 		kl->nexthop.v4.s_addr = htonl(INADDR_LOOPBACK);
 
-	if ((kr = kroute_find(kt, kl->prefix.vpn4.addr.s_addr, kl->prefixlen,
+	if ((kr = kroute_find(kt, kl->prefix.v4.s_addr, kl->prefixlen,
 	    fib_prio)) != NULL)
 		action = RTM_CHANGE;
 
@@ -626,7 +626,7 @@ krVPN4_change(struct ktable *kt, struct kroute_full *kl, u_int8_t fib_prio)
 			log_warn("%s", __func__);
 			return (-1);
 		}
-		kr->r.prefix.s_addr = kl->prefix.vpn4.addr.s_addr;
+		kr->r.prefix.s_addr = kl->prefix.v4.s_addr;
 		kr->r.prefixlen = kl->prefixlen;
 		kr->r.nexthop.s_addr = kl->nexthop.v4.s_addr;
 		kr->r.flags = kl->flags | F_BGPD_INSERTED | F_MPLS;
@@ -675,14 +675,14 @@ krVPN6_change(struct ktable *kt, struct kroute_full *kl, u_int8_t fib_prio)
 		return (0);
 
 	/* only single MPLS label are supported for now */
-	if (kl->prefix.vpn6.labellen != 3) {
+	if (kl->prefix.labellen != 3) {
 		log_warnx("%s: %s/%u has not a single label", __func__,
 		    log_addr(&kl->prefix), kl->prefixlen);
 		return (0);
 	}
-	mplslabel = (kl->prefix.vpn6.labelstack[0] << 24) |
-	    (kl->prefix.vpn6.labelstack[1] << 16) |
-	    (kl->prefix.vpn6.labelstack[2] << 8);
+	mplslabel = (kl->prefix.labelstack[0] << 24) |
+	    (kl->prefix.labelstack[1] << 16) |
+	    (kl->prefix.labelstack[2] << 8);
 	mplslabel = htonl(mplslabel);
 
 	/* for blackhole and reject routes nexthop needs to be ::1 */
@@ -691,7 +691,7 @@ krVPN6_change(struct ktable *kt, struct kroute_full *kl, u_int8_t fib_prio)
 
 	labelid = rtlabel_name2id(kl->label);
 
-	if ((kr6 = kroute6_find(kt, &kl->prefix.vpn6.addr, kl->prefixlen,
+	if ((kr6 = kroute6_find(kt, &kl->prefix.v6, kl->prefixlen,
 	    fib_prio)) != NULL)
 		action = RTM_CHANGE;
 
@@ -700,8 +700,7 @@ krVPN6_change(struct ktable *kt, struct kroute_full *kl, u_int8_t fib_prio)
 			log_warn("%s", __func__);
 			return (-1);
 		}
-		memcpy(&kr6->r.prefix, &kl->prefix.vpn6.addr,
-		    sizeof(struct in6_addr));
+		memcpy(&kr6->r.prefix, &kl->prefix.v6, sizeof(struct in6_addr));
 		kr6->r.prefixlen = kl->prefixlen;
 		memcpy(&kr6->r.nexthop, &kl->nexthop.v6,
 		    sizeof(struct in6_addr));
@@ -848,7 +847,7 @@ krVPN4_delete(struct ktable *kt, struct kroute_full *kl, u_int8_t fib_prio)
 {
 	struct kroute_node	*kr;
 
-	if ((kr = kroute_find(kt, kl->prefix.vpn4.addr.s_addr, kl->prefixlen,
+	if ((kr = kroute_find(kt, kl->prefix.v4.s_addr, kl->prefixlen,
 	    fib_prio)) == NULL)
 		return (0);
 
@@ -871,7 +870,7 @@ krVPN6_delete(struct ktable *kt, struct kroute_full *kl, u_int8_t fib_prio)
 {
 	struct kroute6_node	*kr6;
 
-	if ((kr6 = kroute6_find(kt, &kl->prefix.vpn6.addr, kl->prefixlen,
+	if ((kr6 = kroute6_find(kt, &kl->prefix.v6, kl->prefixlen,
 	    fib_prio)) == NULL)
 		return (0);
 
@@ -1318,7 +1317,8 @@ kr_net_redist_del(struct ktable *kt, struct network_config *net, int dynamic)
 }
 
 int
-kr_net_match(struct ktable *kt, struct network_config *net, u_int16_t flags)
+kr_net_match(struct ktable *kt, struct network_config *net, u_int16_t flags,
+    int loopback)
 {
 	struct network		*xn;
 
@@ -1330,10 +1330,16 @@ kr_net_match(struct ktable *kt, struct network_config *net, u_int16_t flags)
 			/* static match already redistributed */
 			continue;
 		case NETWORK_STATIC:
+			/* Skip networks with nexthop on loopback. */
+			if (loopback)
+				continue;
 			if (flags & F_STATIC)
 				break;
 			continue;
 		case NETWORK_CONNECTED:
+			/* Skip networks with nexthop on loopback. */
+			if (loopback)
+				continue;
 			if (flags & F_CONNECTED)
 				break;
 			continue;
@@ -1419,6 +1425,7 @@ kr_redistribute(int type, struct ktable *kt, struct kroute *kr)
 {
 	struct network_config	 net;
 	u_int32_t		 a;
+	int			 loflag = 0;
 
 	bzero(&net, sizeof(net));
 	net.prefix.aid = AID_INET;
@@ -1449,9 +1456,9 @@ kr_redistribute(int type, struct ktable *kt, struct kroute *kr)
 	    (a >> IN_CLASSA_NSHIFT) == IN_LOOPBACKNET)
 		return;
 
-	/* Consider networks with nexthop loopback as not redistributable. */
+	/* Check if the nexthop is the loopback addr. */
 	if (kr->nexthop.s_addr == htonl(INADDR_LOOPBACK))
-		return;
+		loflag = 1;
 
 	/*
 	 * never allow 0.0.0.0/0 the default route can only be redistributed
@@ -1460,7 +1467,7 @@ kr_redistribute(int type, struct ktable *kt, struct kroute *kr)
 	if (kr->prefix.s_addr == INADDR_ANY && kr->prefixlen == 0)
 		return;
 
-	if (kr_net_match(kt, &net, kr->flags) == 0)
+	if (kr_net_match(kt, &net, kr->flags, loflag) == 0)
 		/* no longer matches, if still present remove it */
 		kr_net_redist_del(kt, &net, 1);
 }
@@ -1468,7 +1475,8 @@ kr_redistribute(int type, struct ktable *kt, struct kroute *kr)
 void
 kr_redistribute6(int type, struct ktable *kt, struct kroute6 *kr6)
 {
-	struct network_config	 net;
+	struct network_config	net;
+	int			loflag = 0;
 
 	bzero(&net, sizeof(net));
 	net.prefix.aid = AID_INET6;
@@ -1503,11 +1511,9 @@ kr_redistribute6(int type, struct ktable *kt, struct kroute6 *kr6)
 	    IN6_IS_ADDR_V4COMPAT(&kr6->prefix))
 		return;
 
-	/*
-	 * Consider networks with nexthop loopback as not redistributable.
-	 */
+	/* Check if the nexthop is the loopback addr. */
 	if (IN6_IS_ADDR_LOOPBACK(&kr6->nexthop))
-		return;
+		loflag = 1;
 
 	/*
 	 * never allow ::/0 the default route can only be redistributed
@@ -1517,7 +1523,7 @@ kr_redistribute6(int type, struct ktable *kt, struct kroute6 *kr6)
 	    memcmp(&kr6->prefix, &in6addr_any, sizeof(struct in6_addr)) == 0)
 		return;
 
-	if (kr_net_match(kt, &net, kr6->flags) == 0)
+	if (kr_net_match(kt, &net, kr6->flags, loflag) == 0)
 		/* no longer matches, if still present remove it */
 		kr_net_redist_del(kt, &net, 1);
 }

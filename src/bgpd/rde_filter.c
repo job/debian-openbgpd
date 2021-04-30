@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_filter.c,v 1.123 2020/02/14 13:54:31 claudio Exp $ */
+/*	$OpenBSD: rde_filter.c,v 1.126 2020/12/30 07:29:56 claudio Exp $ */
 
 /*
  * Copyright (c) 2004 Claudio Jeker <claudio@openbsd.org>
@@ -48,15 +48,15 @@ rde_apply_set(struct filter_set_head *sh, struct rde_peer *peer,
 			break;
 		case ACTION_SET_RELATIVE_LOCALPREF:
 			if (set->action.relative > 0) {
-				if (set->action.relative + state->aspath.lpref <
-				    state->aspath.lpref)
+				if (state->aspath.lpref >
+				    UINT_MAX - set->action.relative)
 					state->aspath.lpref = UINT_MAX;
 				else
 					state->aspath.lpref +=
 					    set->action.relative;
 			} else {
-				if ((u_int32_t)-set->action.relative >
-				    state->aspath.lpref)
+				if (state->aspath.lpref <
+				    0U - set->action.relative)
 					state->aspath.lpref = 0;
 				else
 					state->aspath.lpref +=
@@ -70,15 +70,15 @@ rde_apply_set(struct filter_set_head *sh, struct rde_peer *peer,
 		case ACTION_SET_RELATIVE_MED:
 			state->aspath.flags |= F_ATTR_MED | F_ATTR_MED_ANNOUNCE;
 			if (set->action.relative > 0) {
-				if (set->action.relative + state->aspath.med <
-				    state->aspath.med)
+				if (state->aspath.med >
+				    UINT_MAX - set->action.relative)
 					state->aspath.med = UINT_MAX;
 				else
 					state->aspath.med +=
 					    set->action.relative;
 			} else {
-				if ((u_int32_t)-set->action.relative >
-				    state->aspath.med)
+				if (state->aspath.med <
+				    0U - set->action.relative)
 					state->aspath.med = 0;
 				else
 					state->aspath.med +=
@@ -90,15 +90,15 @@ rde_apply_set(struct filter_set_head *sh, struct rde_peer *peer,
 			break;
 		case ACTION_SET_RELATIVE_WEIGHT:
 			if (set->action.relative > 0) {
-				if (set->action.relative + state->aspath.weight
-				    < state->aspath.weight)
+				if (state->aspath.weight >
+				    UINT_MAX - set->action.relative)
 					state->aspath.weight = UINT_MAX;
 				else
 					state->aspath.weight +=
 					    set->action.relative;
 			} else {
-				if ((u_int32_t)-set->action.relative >
-				    state->aspath.weight)
+				if (state->aspath.weight <
+				    0U - set->action.relative)
 					state->aspath.weight = 0;
 				else
 					state->aspath.weight +=
@@ -135,11 +135,13 @@ rde_apply_set(struct filter_set_head *sh, struct rde_peer *peer,
 			free(np);
 			break;
 		case ACTION_SET_NEXTHOP:
+			fatalx("unexpected filter action in RDE");
+		case ACTION_SET_NEXTHOP_REF:
 		case ACTION_SET_NEXTHOP_REJECT:
 		case ACTION_SET_NEXTHOP_BLACKHOLE:
 		case ACTION_SET_NEXTHOP_NOMODIFY:
 		case ACTION_SET_NEXTHOP_SELF:
-			nexthop_modify(set->action.nh, set->type, aid,
+			nexthop_modify(set->action.nh_ref, set->type, aid,
 			    &state->nexthop, &state->nhflags);
 			break;
 		case ACTION_SET_COMMUNITY:
@@ -462,9 +464,8 @@ filterset_free(struct filter_set_head *sh)
 			rtlabel_unref(s->action.id);
 		else if (s->type == ACTION_PFTABLE_ID)
 			pftable_unref(s->action.id);
-		else if (s->type == ACTION_SET_NEXTHOP &&
-		    bgpd_process == PROC_RDE)
-			nexthop_unref(s->action.nh);
+		else if (s->type == ACTION_SET_NEXTHOP_REF)
+			nexthop_unref(s->action.nh_ref);
 		free(s);
 	}
 }
@@ -575,6 +576,11 @@ filterset_equal(struct filter_set_head *ah, struct filter_set_head *bh)
 			    sizeof(a->action.nexthop)) == 0)
 				continue;
 			break;
+		case ACTION_SET_NEXTHOP_REF:
+			if (a->type == b->type &&
+			    a->action.nh_ref == b->action.nh_ref)
+				continue;
+			break;
 		case ACTION_SET_NEXTHOP_BLACKHOLE:
 		case ACTION_SET_NEXTHOP_REJECT:
 		case ACTION_SET_NEXTHOP_NOMODIFY:
@@ -657,6 +663,7 @@ filterset_name(enum action_types type)
 	case ACTION_SET_AS_OVERRIDE:
 		return ("as-override");
 	case ACTION_SET_NEXTHOP:
+	case ACTION_SET_NEXTHOP_REF:
 	case ACTION_SET_NEXTHOP_REJECT:
 	case ACTION_SET_NEXTHOP_BLACKHOLE:
 	case ACTION_SET_NEXTHOP_NOMODIFY:
