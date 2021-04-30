@@ -1,4 +1,4 @@
-/*	$OpenBSD: output_json.c,v 1.3 2020/05/10 13:38:46 deraadt Exp $ */
+/*	$OpenBSD: output_json.c,v 1.9 2021/04/15 14:12:05 claudio Exp $ */
 
 /*
  * Copyright (c) 2020 Claudio Jeker <claudio@openbsd.org>
@@ -202,10 +202,10 @@ json_neighbor_full(struct peer *p)
 	json_neighbor_stats(p);
 
 	/* errors */
-	if (*(p->conf.reason))
+	if (p->conf.reason[0])
 		json_do_printf("my_shutdown_reason", "%s",
 		    log_reason(p->conf.reason));
-	if (*(p->stats.last_reason))
+	if (p->stats.last_reason[0])
 		json_do_printf("last_shutdown_reason", "%s",
 		    log_reason(p->stats.last_reason));
 	errstr = fmt_errstr(p->stats.last_sent_errcode,
@@ -538,7 +538,7 @@ json_do_ext_community(u_char *data, uint16_t len)
 }
 
 static void
-json_attr(u_char *data, size_t len, struct parse_result *res)
+json_attr(u_char *data, size_t len, int reqflags)
 {
 	struct bgpd_addr prefix;
 	struct in_addr id;
@@ -598,8 +598,8 @@ json_attr(u_char *data, size_t len, struct parse_result *res)
 	case ATTR_ASPATH:
 	case ATTR_AS4_PATH:
 		/* prefer 4-byte AS here */
-		e4 = aspath_verify(data, alen, 1);
-		e2 = aspath_verify(data, alen, 0);
+		e4 = aspath_verify(data, alen, 1, 0);
+		e2 = aspath_verify(data, alen, 0, 0);
 		if (e4 == 0 || e4 == AS_ERR_SOFT) {
 			path = data;
 		} else if (e2 == 0 || e2 == AS_ERR_SOFT) {
@@ -919,11 +919,66 @@ json_rib_hash(struct rde_hashstats *hash)
 }
 
 static void
+json_rib_set(struct ctl_show_set *set)
+{
+	json_do_array("sets");
+
+	json_do_object("set");
+	json_do_printf("name", "%s", set->name);
+	json_do_printf("type", "%s", fmt_set_type(set));
+	json_do_printf("last_change", "%s", fmt_monotime(set->lastchange));
+	if (set->type == ASNUM_SET) {
+		json_do_uint("num_ASnum", set->as_cnt);
+	} else {
+		json_do_uint("num_IPv4", set->v4_cnt);
+		json_do_uint("num_IPv6", set->v6_cnt);
+	}
+	json_do_end();
+}
+
+static void
+json_rtr(struct ctl_show_rtr *rtr)
+{
+	json_do_array("rtrs");
+
+	json_do_object("rtr");
+	if (rtr->descr[0])
+		json_do_printf("descr", "%s", rtr->descr);
+	json_do_printf("remote_addr", "%s", log_addr(&rtr->remote_addr));
+	json_do_uint("remote_port", rtr->remote_port);
+	if (rtr->local_addr.aid != AID_UNSPEC)
+		json_do_printf("local_addr", "%s", log_addr(&rtr->local_addr));
+
+	if (rtr->session_id != -1) {
+		json_do_uint("session_id", rtr->session_id);
+		json_do_uint("serial", rtr->serial);
+	}
+	json_do_uint("refresh", rtr->refresh);
+	json_do_uint("retry", rtr->retry);
+	json_do_uint("expire", rtr->expire);
+
+	if (rtr->last_sent_error != NO_ERROR) {
+		json_do_printf("last_sent_error", "%s",
+		    log_rtr_error(rtr->last_sent_error));
+		if (rtr->last_sent_msg[0])
+			json_do_printf("last_sent_msg", "%s",
+			    log_reason(rtr->last_sent_msg));
+	}
+	if (rtr->last_recv_error != NO_ERROR) {
+		json_do_printf("last_recv_error", "%s",
+		    log_rtr_error(rtr->last_recv_error));
+		if (rtr->last_recv_msg[0])
+			json_do_printf("last_recv_msg", "%s",
+			    log_reason(rtr->last_recv_msg));
+	}
+}
+
+static void
 json_result(u_int rescode)
 {
 	if (rescode == 0)
 		json_do_printf("status", "OK");
-	else if (rescode >
+	else if (rescode >=
 	    sizeof(ctl_res_strerror)/sizeof(ctl_res_strerror[0])) {
 		json_do_printf("status", "FAILED");
 		json_do_printf("error", "unknown error %d", rescode);
@@ -952,6 +1007,8 @@ const struct output json_output = {
 	.rib = json_rib,
 	.rib_mem = json_rib_mem,
 	.rib_hash = json_rib_hash,
+	.set = json_rib_set,
+	.rtr = json_rtr,
 	.result = json_result,
 	.tail = json_tail
 };

@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.408.4.1 2020/10/27 20:38:00 bluhm Exp $ */
+/*	$OpenBSD: parse.y,v 1.415 2021/04/15 13:42:33 bluhm Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -89,12 +89,14 @@ char		*symget(const char *);
 static struct bgpd_config	*conf;
 static struct network_head	*netconf;
 static struct peer_head		*new_peers, *cur_peers;
+static struct rtr_config_head	*cur_rtrs;
 static struct peer		*curpeer;
 static struct peer		*curgroup;
 static struct rde_rib		*currib;
 static struct l3vpn		*curvpn;
 static struct prefixset		*curpset, *curoset;
-static struct prefixset_tree	*curpsitree;
+static struct roa_tree		*curroatree;
+static struct rtr_config	*currtr;
 static struct filter_head	*filter_l;
 static struct filter_head	*peerfilter_l;
 static struct filter_head	*groupfilter_l;
@@ -162,6 +164,8 @@ static void	 add_as_set(u_int32_t);
 static void	 done_as_set(void);
 static struct prefixset	*new_prefix_set(char *, int);
 static void	 add_roa_set(struct prefixset_item *, u_int32_t, u_int8_t);
+static struct rtr_config	*get_rtr(struct bgpd_addr *);
+static int	 insert_rtr(struct rtr_config *);
 
 typedef struct {
 	union {
@@ -196,7 +200,7 @@ typedef struct {
 
 %token	AS ROUTERID HOLDTIME YMIN LISTEN ON FIBUPDATE FIBPRIORITY RTABLE
 %token	NONE UNICAST VPN RD EXPORT EXPORTTRGT IMPORTTRGT DEFAULTROUTE
-%token	RDE RIB EVALUATE IGNORE COMPARE
+%token	RDE RIB EVALUATE IGNORE COMPARE RTR PORT
 %token	GROUP NEIGHBOR NETWORK
 %token	EBGP IBGP
 %token	LOCALAS REMOTEAS DESCR LOCALADDR MULTIHOP PASSIVE MAXPREFIX RESTART
@@ -252,6 +256,7 @@ grammar		: /* empty */
 		| grammar prefixset '\n'
 		| grammar roa_set '\n'
 		| grammar origin_set '\n'
+		| grammar rtr '\n'
 		| grammar rib '\n'
 		| grammar conf_main '\n'
 		| grammar l3vpn '\n'
@@ -498,9 +503,9 @@ prefixset_item	: prefix prefixlenop			{
 		;
 
 roa_set		: ROASET '{' optnl		{
-			curpsitree = &conf->roa;
+			curroatree = &conf->roa;
 		} roa_set_l optnl '}'			{
-			curpsitree = NULL;
+			curroatree = NULL;
 		}
 		| ROASET '{' optnl '}'		/* nothing */
 		;
@@ -510,12 +515,12 @@ origin_set	: ORIGINSET STRING '{' optnl		{
 				free($2);
 				YYERROR;
 			}
-			curpsitree = &curoset->psitems;
+			curroatree = &curoset->roaitems;
 			free($2);
 		} roa_set_l optnl '}'			{
 			SIMPLEQ_INSERT_TAIL(&conf->originsets, curoset, entry);
 			curoset = NULL;
-			curpsitree = NULL;
+			curroatree = NULL;
 		}
 		| ORIGINSET STRING '{' optnl '}'		{
 			if ((curoset = new_prefix_set($2, 1)) == NULL) {
@@ -525,7 +530,7 @@ origin_set	: ORIGINSET STRING '{' optnl		{
 			free($2);
 			SIMPLEQ_INSERT_TAIL(&conf->originsets, curoset, entry);
 			curoset = NULL;
-			curpsitree = NULL;
+			curroatree = NULL;
 		}
 		;
 
@@ -537,6 +542,7 @@ roa_set_l	: prefixset_item SOURCEAS as4number_any			{
 				YYERROR;
 			}
 			add_roa_set($1, $3, $1->p.len_max);
+			free($1);
 		}
 		| roa_set_l comma prefixset_item SOURCEAS as4number_any	{
 			if ($3->p.len_min != $3->p.len) {
@@ -546,6 +552,60 @@ roa_set_l	: prefixset_item SOURCEAS as4number_any			{
 				YYERROR;
 			}
 			add_roa_set($3, $5, $3->p.len_max);
+			free($3);
+		}
+		;
+
+rtr		: RTR address	{
+			currtr = get_rtr(&$2);
+			currtr->remote_port = 323;
+			if (insert_rtr(currtr) == -1) {
+				free(currtr);
+				YYERROR;
+			}
+			currtr = NULL;
+		}
+		| RTR address	{
+			currtr = get_rtr(&$2);
+			currtr->remote_port = 323;
+		} '{' optnl rtropt_l optnl '}' {
+			if (insert_rtr(currtr) == -1) {
+				free(currtr);
+				YYERROR;
+			}
+			currtr = NULL;
+		}
+		;
+
+rtropt_l	: rtropt
+		| rtropt_l optnl rtropt
+
+rtropt		: DESCR STRING		{
+			if (strlcpy(currtr->descr, $2,
+			    sizeof(currtr->descr)) >=
+			    sizeof(currtr->descr)) {
+				yyerror("descr \"%s\" too long: max %zu",
+				    $2, sizeof(currtr->descr) - 1);
+				free($2);
+				YYERROR;
+			}
+			free($2);
+		}
+		| LOCALADDR address	{
+			if ($2.aid != currtr->remote_addr.aid) {
+				yyerror("Bad address family %s for "
+				    "local-addr", aid2str($2.aid));
+				YYERROR;
+			}
+			currtr->local_addr = $2;
+		}
+		| PORT NUMBER {
+			if ($2 < 1 || $2 > USHRT_MAX) {
+				yyerror("local-port must be between %u and %u",
+				    1, USHRT_MAX);
+				YYERROR;
+			}
+			currtr->remote_port = $2;
 		}
 		;
 
@@ -620,6 +680,12 @@ conf_main	: AS as4number		{
 				conf->flags |= BGPD_FLAG_DECISION_TRANS_AS;
 			else
 				conf->flags &= ~BGPD_FLAG_DECISION_TRANS_AS;
+		}
+		| REJECT ASSET yesno	{
+			if ($3 == 1)
+				conf->flags |= BGPD_FLAG_NO_AS_SET;
+			else
+				conf->flags &= ~BGPD_FLAG_NO_AS_SET;
 		}
 		| LOG STRING		{
 			if (!strcmp($2, "updates"))
@@ -724,6 +790,19 @@ conf_main	: AS as4number		{
 				YYERROR;
 			}
 			free($4);
+		}
+		| RDE EVALUATE STRING {
+			if (!strcmp($3, "all"))
+				conf->flags |= BGPD_FLAG_DECISION_ALL_PATHS;
+			else if (!strcmp($3, "default"))
+				conf->flags &= ~BGPD_FLAG_DECISION_ALL_PATHS;
+			else {
+				yyerror("rde evaluate: "
+				    "unknown setting \"%s\"", $3);
+				free($3);
+				YYERROR;
+			}
+			free($3);
 		}
 		| NEXTHOP QUALIFY VIA STRING	{
 			if (!strcmp($4, "bgp"))
@@ -1178,8 +1257,10 @@ neighbor	: {	curpeer = new_peer(); }
 			curpeer_filter[0] = NULL;
 			curpeer_filter[1] = NULL;
 
-			if (neighbor_consistent(curpeer) == -1)
+			if (neighbor_consistent(curpeer) == -1) {
+				free(curpeer);
 				YYERROR;
+			}
 			if (RB_INSERT(peer_head, new_peers, curpeer) != NULL)
 				fatalx("%s: peer tree is corrupt", __func__);
 			curpeer = curgroup;
@@ -1194,11 +1275,13 @@ group		: GROUP string			{
 				yyerror("group name \"%s\" too long: max %zu",
 				    $2, sizeof(curgroup->conf.group) - 1);
 				free($2);
+				free(curgroup);
 				YYERROR;
 			}
 			free($2);
 			if (get_id(curgroup)) {
 				yyerror("get_id failed");
+				free(curgroup);
 				YYERROR;
 			}
 		} '{' groupopts_l '}'		{
@@ -1656,6 +1739,25 @@ peeropts	: REMOTEAS as4number	{
 				YYERROR;
 			}
 			free($2);
+		}
+		| REJECT ASSET yesno	{
+			if ($3 == 1)
+				curpeer->conf.flags |= PEERFLAG_NO_AS_SET;
+			else
+				curpeer->conf.flags &= ~PEERFLAG_NO_AS_SET;
+		}
+		| RDE EVALUATE STRING {
+			if (!strcmp($3, "all"))
+				curpeer->conf.flags |= PEERFLAG_EVALUATE_ALL;
+			else if (!strcmp($3, "default"))
+				curpeer->conf.flags &= ~PEERFLAG_EVALUATE_ALL;
+			else {
+				yyerror("rde evaluate: "
+				    "unknown setting \"%s\"", $3);
+				free($3);
+				YYERROR;
+			}
+			free($3);
 		}
 		;
 
@@ -2854,6 +2956,7 @@ lookup(char *s)
 		{ "password",		PASSWORD},
 		{ "peer-as",		PEERAS},
 		{ "pftable",		PFTABLE},
+		{ "port",		PORT},
 		{ "prefix",		PREFIX},
 		{ "prefix-set",		PREFIXSET},
 		{ "prefixlen",		PREFIXLEN},
@@ -2875,6 +2978,7 @@ lookup(char *s)
 		{ "router-id",		ROUTERID},
 		{ "rtable",		RTABLE},
 		{ "rtlabel",		RTLABEL},
+		{ "rtr",		RTR},
 		{ "self",		SELF},
 		{ "set",		SET},
 		{ "socket",		SOCKET },
@@ -3273,7 +3377,7 @@ init_config(struct bgpd_config *c)
 }
 
 struct bgpd_config *
-parse_config(char *filename, struct peer_head *ph)
+parse_config(char *filename, struct peer_head *ph, struct rtr_config_head *rh)
 {
 	struct sym		*sym, *next;
 	struct rde_rib		*rr;
@@ -3297,6 +3401,7 @@ parse_config(char *filename, struct peer_head *ph)
 	curgroup = NULL;
 
 	cur_peers = ph;
+	cur_rtrs = rh;
 	new_peers = &conf->peers;
 	netconf = &conf->networks;
 
@@ -3456,6 +3561,28 @@ symget(const char *nam)
 		}
 	}
 	return (NULL);
+}
+
+static int
+cmpcommunity(struct community *a, struct community *b)
+{
+	if (a->flags > b->flags)
+		return 1;
+	if (a->flags < b->flags)
+		return -1;
+	if (a->data1 > b->data1)
+		return 1;
+	if (a->data1 < b->data1)
+		return -1;
+	if (a->data2 > b->data2)
+		return 1;
+	if (a->data2 < b->data2)
+		return -1;
+	if (a->data3 > b->data3)
+		return 1;
+	if (a->data3 < b->data3)
+		return -1;
+	return 0;
 }
 
 static int
@@ -3815,6 +3942,10 @@ alloc_peer(void)
 
 	if (conf->flags & BGPD_FLAG_DECISION_TRANS_AS)
 		p->conf.flags |= PEERFLAG_TRANS_AS;
+	if (conf->flags & BGPD_FLAG_DECISION_ALL_PATHS)
+		p->conf.flags |= PEERFLAG_EVALUATE_ALL;
+	if (conf->flags & BGPD_FLAG_NO_AS_SET)
+		p->conf.flags |= PEERFLAG_NO_AS_SET;
 
 	return (p);
 }
@@ -3835,8 +3966,6 @@ new_peer(void)
 		    sizeof(p->conf.descr)) >= sizeof(p->conf.descr))
 			fatalx("new_peer descr strlcpy");
 		p->conf.groupid = curgroup->conf.id;
-		p->conf.local_as = curgroup->conf.local_as;
-		p->conf.local_short_as = curgroup->conf.local_short_as;
 	}
 	return (p);
 }
@@ -3993,7 +4122,9 @@ get_id(struct peer *newpeer)
 		/* neighbor */
 		if (cur_peers)
 			RB_FOREACH(p, peer_head, cur_peers)
-				if (memcmp(&p->conf.remote_addr,
+				if (p->conf.remote_masklen ==
+				    newpeer->conf.remote_masklen &&
+				    memcmp(&p->conf.remote_addr,
 				    &newpeer->conf.remote_addr,
 				    sizeof(p->conf.remote_addr)) == 0)
 					break;
@@ -4202,6 +4333,7 @@ int
 neighbor_consistent(struct peer *p)
 {
 	struct bgpd_addr *local_addr;
+	struct peer *xp;
 
 	switch (p->conf.remote_addr.aid) {
 	case AID_INET:
@@ -4260,6 +4392,21 @@ neighbor_consistent(struct peer *p)
 		return (-1);
 	}
 
+	/* check for duplicate peer definitions */
+	RB_FOREACH(xp, peer_head, new_peers)
+		if (xp->conf.remote_masklen ==
+		    p->conf.remote_masklen &&
+		    memcmp(&xp->conf.remote_addr,
+		    &p->conf.remote_addr,
+		    sizeof(p->conf.remote_addr)) == 0)
+			break;
+	if (xp != NULL) {
+		char *descr = log_fmt_peer(&p->conf);
+		yyerror("duplicate %s", descr);
+		free(descr);
+		return (-1);
+	}
+
 	return (0);
 }
 
@@ -4277,16 +4424,17 @@ filterset_add(struct filter_set_head *sh, struct filter_set *s)
 			switch (s->type) {
 			case ACTION_SET_COMMUNITY:
 			case ACTION_DEL_COMMUNITY:
-				if (memcmp(&s->action.community,
-				    &t->action.community,
-				    sizeof(s->action.community)) < 0) {
+				switch (cmpcommunity(&s->action.community,
+				    &t->action.community)) {
+				case -1:
 					TAILQ_INSERT_BEFORE(t, s, entry);
 					return;
-				} else if (memcmp(&s->action.community,
-				    &t->action.community,
-				    sizeof(s->action.community)) == 0)
+				case 0:
 					break;
-				continue;
+				case 1:
+					continue;
+				}
+				break;
 			case ACTION_SET_NEXTHOP:
 				/* only last nexthop per AF matters */
 				if (s->action.nexthop.aid <
@@ -4486,7 +4634,7 @@ new_prefix_set(char *name, int is_roa)
 	struct prefixset *pset;
 
 	if (is_roa) {
-		type = "roa-set";
+		type = "origin-set";
 		sets = &conf->originsets;
 	}
 
@@ -4504,38 +4652,89 @@ new_prefix_set(char *name, int is_roa)
 		return NULL;
 	}
 	RB_INIT(&pset->psitems);
+	RB_INIT(&pset->roaitems);
 	return pset;
 }
 
 static void
 add_roa_set(struct prefixset_item *npsi, u_int32_t as, u_int8_t max)
 {
-	struct prefixset_item	*psi;
-	struct roa_set rs, *rsp;
+	struct roa *roa, *r;
 
-	/* no prefixlen option in this tree */
-	npsi->p.op = OP_NONE;
-	npsi->p.len_max = npsi->p.len_min = npsi->p.len;
-	psi = RB_INSERT(prefixset_tree, curpsitree, npsi);
-	if (psi == NULL)
-		psi = npsi;
-	else
-		free(npsi);
+	if ((roa = calloc(1, sizeof(*roa))) == NULL)
+		fatal("add_roa_set");
 
-	if (psi->set == NULL)
-		if ((psi->set = set_new(1, sizeof(rs))) == NULL)
-			fatal("set_new");
-
-	/* merge sets with same key, longer maxlen wins */
-	if ((rsp = set_match(psi->set, as)) != NULL) {
-		if (rsp->maxlen < max)
-			rsp->maxlen = max;
-	} else  {
-		rs.as = as;
-		rs.maxlen = max;
-		if (set_add(psi->set, &rs, 1) != 0)
-			fatal("as_set_new");
-		/* prep data so that set_match works */
-		set_prep(psi->set);
+	roa->aid = npsi->p.addr.aid;
+	roa->prefixlen = npsi->p.len;
+	roa->maxlen = max;
+	roa->asnum = as;
+	switch (roa->aid) {
+	case AID_INET:
+		roa->prefix.inet = npsi->p.addr.v4;
+		break;
+	case AID_INET6:
+		roa->prefix.inet6 = npsi->p.addr.v6;
+		break;
+	default:
+		fatalx("Bad address family for roa_set address");
 	}
+
+	r = RB_INSERT(roa_tree, curroatree, roa);
+	if (r != NULL)
+		/* just ignore duplicates */
+		free(roa);
+}
+
+static struct rtr_config *
+get_rtr(struct bgpd_addr *addr)
+{
+	struct rtr_config *n;
+
+	n = calloc(1, sizeof(*n));
+	if (n == NULL) {
+		yyerror("out of memory");
+		return NULL;
+	}
+
+	n->remote_addr = *addr;
+	strlcpy(n->descr, log_addr(addr), sizeof(currtr->descr));
+
+	return n;
+}
+
+static int
+insert_rtr(struct rtr_config *new)
+{
+	static uint32_t id;
+	struct rtr_config *r;
+
+	if (id == UINT32_MAX) {
+		yyerror("out of rtr session IDs");
+		return -1;
+	}
+
+	SIMPLEQ_FOREACH(r, &conf->rtrs, entry)
+		if (memcmp(&r->remote_addr, &new->remote_addr,
+		    sizeof(r->remote_addr)) == 0 &&
+		    r->remote_port == new->remote_port) {
+			yyerror("duplicate rtr session to %s:%u",
+			    log_addr(&new->remote_addr), new->remote_port);
+			return -1;
+		}
+
+	if (cur_rtrs)
+		SIMPLEQ_FOREACH(r, cur_rtrs, entry)
+			if (memcmp(&r->remote_addr, &new->remote_addr,
+			    sizeof(r->remote_addr)) == 0 &&
+			    r->remote_port == new->remote_port) {
+				new->id = r->id;
+				break;
+			}
+
+	if (new->id == 0)
+		new->id = ++id;
+
+	SIMPLEQ_INSERT_TAIL(&conf->rtrs, currtr, entry);
+
+	return 0;
 }

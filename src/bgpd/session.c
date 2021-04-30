@@ -1,4 +1,4 @@
-/*	$OpenBSD: session.c,v 1.402 2020/06/27 07:24:42 bket Exp $ */
+/*	$OpenBSD: session.c,v 1.411 2021/02/16 08:29:16 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004, 2005 Henning Brauer <henning@openbsd.org>
@@ -100,15 +100,16 @@ void		 session_template_clone(struct peer *, struct sockaddr *,
 		    u_int32_t, u_int32_t);
 int		 session_match_mask(struct peer *, struct bgpd_addr *);
 
-struct bgpd_config	*conf, *nconf;
+static struct bgpd_config	*conf, *nconf;
+static struct imsgbuf		*ibuf_rde;
+static struct imsgbuf		*ibuf_rde_ctl;
+static struct imsgbuf		*ibuf_main;
+
 struct bgpd_sysdep	 sysdep;
 volatile sig_atomic_t	 session_quit;
 int			 pending_reconf;
 int			 csock = -1, rcsock = -1;
 u_int			 peer_cnt;
-struct imsgbuf		*ibuf_rde;
-struct imsgbuf		*ibuf_rde_ctl;
-struct imsgbuf		*ibuf_main;
 
 struct mrt_head		 mrthead;
 time_t			 pauseaccept;
@@ -196,7 +197,6 @@ session_main(int debug, int verbose)
 	struct peer		*p, **peer_l = NULL, *next;
 	struct mrt		*m, *xm, **mrt_l = NULL;
 	struct pollfd		*pfd = NULL;
-	struct ctl_conn		*ctl_conn;
 	struct listen_addr	*la;
 	void			*newp;
 	time_t			 now;
@@ -205,8 +205,7 @@ session_main(int debug, int verbose)
 	log_init(debug, LOG_DAEMON);
 	log_setverbose(verbose);
 
-	bgpd_process = PROC_SE;
-	log_procinit(log_procnames[bgpd_process]);
+	log_procinit(log_procnames[PROC_SE]);
 
 	if ((pw = getpwnam(BGPD_USER)) == NULL)
 		fatal(NULL);
@@ -237,7 +236,6 @@ session_main(int debug, int verbose)
 		fatal(NULL);
 	imsg_init(ibuf_main, 3);
 
-	TAILQ_INIT(&ctl_conns);
 	LIST_INIT(&mrthead);
 	listener_cnt = 0;
 	peer_cnt = 0;
@@ -265,7 +263,8 @@ session_main(int debug, int verbose)
 				if (p->reconf_action == RECONF_REINIT) {
 					session_stop(p, ERR_CEASE_ADMIN_RESET);
 					if (!p->conf.down)
-						timer_set(p, Timer_IdleHold, 0);
+						timer_set(&p->timers,
+						    Timer_IdleHold, 0);
 				}
 
 				/* deletion due? */
@@ -274,7 +273,7 @@ session_main(int debug, int verbose)
 						session_demote(p, -1);
 					p->conf.demote_group[0] = 0;
 					session_stop(p, ERR_CEASE_PEER_UNCONF);
-					timer_remove_all(p);
+					timer_remove_all(&p->timers);
 					tcp_md5_del_listener(conf, p);
 					log_peer_warnx(&p->conf, "removed");
 					RB_REMOVE(peer_head, &conf->peers, p);
@@ -368,13 +367,16 @@ session_main(int debug, int verbose)
 		now = getmonotime();
 		RB_FOREACH(p, peer_head, &conf->peers) {
 			time_t	nextaction;
-			struct peer_timer *pt;
+			struct timer *pt;
 
 			/* check timers */
-			if ((pt = timer_nextisdue(p, now)) != NULL) {
+			if ((pt = timer_nextisdue(&p->timers, now)) != NULL) {
 				switch (pt->type) {
 				case Timer_Hold:
 					bgp_fsm(p, EVNT_TIMER_HOLDTIME);
+					break;
+				case Timer_SendHold:
+					bgp_fsm(p, EVNT_TIMER_SENDHOLD);
 					break;
 				case Timer_ConnectRetry:
 					bgp_fsm(p, EVNT_TIMER_CONNRETRY);
@@ -389,24 +391,27 @@ session_main(int debug, int verbose)
 					p->IdleHoldTime =
 					    INTERVAL_IDLE_HOLD_INITIAL;
 					p->errcnt = 0;
-					timer_stop(p, Timer_IdleHoldReset);
+					timer_stop(&p->timers,
+					    Timer_IdleHoldReset);
 					break;
 				case Timer_CarpUndemote:
-					timer_stop(p, Timer_CarpUndemote);
+					timer_stop(&p->timers,
+					    Timer_CarpUndemote);
 					if (p->demoted &&
 					    p->state == STATE_ESTABLISHED)
 						session_demote(p, -1);
 					break;
 				case Timer_RestartTimeout:
-					timer_stop(p, Timer_RestartTimeout);
+					timer_stop(&p->timers,
+					    Timer_RestartTimeout);
 					session_graceful_stop(p);
 					break;
 				default:
 					fatalx("King Bula lost in time");
 				}
 			}
-			if ((nextaction = timer_nextduein(p, now)) != -1 &&
-			    nextaction < timeout)
+			if ((nextaction = timer_nextduein(&p->timers,
+			    now)) != -1 && nextaction < timeout)
 				timeout = nextaction;
 
 			/* are we waiting for a write? */
@@ -438,13 +443,10 @@ session_main(int debug, int verbose)
 
 		idx_mrts = i;
 
-		TAILQ_FOREACH(ctl_conn, &ctl_conns, entry) {
-			pfd[i].fd = ctl_conn->ibuf.fd;
-			pfd[i].events = POLLIN;
-			if (ctl_conn->ibuf.w.queued > 0)
-				pfd[i].events |= POLLOUT;
-			i++;
-		}
+		i += control_fill_pfds(pfd + i, pfd_elms -i);
+
+		if (i > pfd_elms)
+			fatalx("poll pfd overflow");
 
 		if (pauseaccept && timeout > 1)
 			timeout = 1;
@@ -511,7 +513,7 @@ session_main(int debug, int verbose)
 				mrt_write(mrt_l[j - idx_peers]);
 
 		for (; j < i; j++)
-			control_dispatch_msg(&pfd[j], &ctl_cnt, &conf->peers);
+			ctl_cnt -= control_dispatch_msg(&pfd[j], &conf->peers);
 	}
 
 	RB_FOREACH_SAFE(p, peer_head, &conf->peers, next) {
@@ -520,7 +522,7 @@ session_main(int debug, int verbose)
 		    "bgpd shutting down",
 		    sizeof(p->conf.reason));
 		session_stop(p, ERR_CEASE_ADMIN_DOWN);
-		timer_remove_all(p);
+		timer_remove_all(&p->timers);
 		free(p);
 	}
 
@@ -574,9 +576,9 @@ init_peer(struct peer *p)
 
 	change_state(p, STATE_IDLE, EVNT_NONE);
 	if (p->conf.down)
-		timer_stop(p, Timer_IdleHold);		/* no autostart */
+		timer_stop(&p->timers, Timer_IdleHold); /* no autostart */
 	else
-		timer_set(p, Timer_IdleHold, 0);	/* start ASAP */
+		timer_set(&p->timers, Timer_IdleHold, 0); /* start ASAP */
 
 	/*
 	 * on startup, demote if requested.
@@ -597,9 +599,10 @@ bgp_fsm(struct peer *peer, enum session_events event)
 	case STATE_IDLE:
 		switch (event) {
 		case EVNT_START:
-			timer_stop(peer, Timer_Hold);
-			timer_stop(peer, Timer_Keepalive);
-			timer_stop(peer, Timer_IdleHold);
+			timer_stop(&peer->timers, Timer_Hold);
+			timer_stop(&peer->timers, Timer_SendHold);
+			timer_stop(&peer->timers, Timer_Keepalive);
+			timer_stop(&peer->timers, Timer_IdleHold);
 
 			/* allocate read buffer */
 			peer->rbuf = calloc(1, sizeof(struct ibuf_read));
@@ -615,14 +618,14 @@ bgp_fsm(struct peer *peer, enum session_events event)
 			peer->stats.last_rcvd_suberr = 0;
 
 			if (!peer->depend_ok)
-				timer_stop(peer, Timer_ConnectRetry);
+				timer_stop(&peer->timers, Timer_ConnectRetry);
 			else if (peer->passive || peer->conf.passive ||
 			    peer->conf.template) {
 				change_state(peer, STATE_ACTIVE, event);
-				timer_stop(peer, Timer_ConnectRetry);
+				timer_stop(&peer->timers, Timer_ConnectRetry);
 			} else {
 				change_state(peer, STATE_CONNECT, event);
-				timer_set(peer, Timer_ConnectRetry,
+				timer_set(&peer->timers, Timer_ConnectRetry,
 				    conf->connectretry);
 				session_connect(peer);
 			}
@@ -641,19 +644,19 @@ bgp_fsm(struct peer *peer, enum session_events event)
 		case EVNT_CON_OPEN:
 			session_tcp_established(peer);
 			session_open(peer);
-			timer_stop(peer, Timer_ConnectRetry);
+			timer_stop(&peer->timers, Timer_ConnectRetry);
 			peer->holdtime = INTERVAL_HOLD_INITIAL;
 			start_timer_holdtime(peer);
 			change_state(peer, STATE_OPENSENT, event);
 			break;
 		case EVNT_CON_OPENFAIL:
-			timer_set(peer, Timer_ConnectRetry,
+			timer_set(&peer->timers, Timer_ConnectRetry,
 			    conf->connectretry);
 			session_close_connection(peer);
 			change_state(peer, STATE_ACTIVE, event);
 			break;
 		case EVNT_TIMER_CONNRETRY:
-			timer_set(peer, Timer_ConnectRetry,
+			timer_set(&peer->timers, Timer_ConnectRetry,
 			    conf->connectretry);
 			session_connect(peer);
 			break;
@@ -670,19 +673,19 @@ bgp_fsm(struct peer *peer, enum session_events event)
 		case EVNT_CON_OPEN:
 			session_tcp_established(peer);
 			session_open(peer);
-			timer_stop(peer, Timer_ConnectRetry);
+			timer_stop(&peer->timers, Timer_ConnectRetry);
 			peer->holdtime = INTERVAL_HOLD_INITIAL;
 			start_timer_holdtime(peer);
 			change_state(peer, STATE_OPENSENT, event);
 			break;
 		case EVNT_CON_OPENFAIL:
-			timer_set(peer, Timer_ConnectRetry,
+			timer_set(&peer->timers, Timer_ConnectRetry,
 			    conf->connectretry);
 			session_close_connection(peer);
 			change_state(peer, STATE_ACTIVE, event);
 			break;
 		case EVNT_TIMER_CONNRETRY:
-			timer_set(peer, Timer_ConnectRetry,
+			timer_set(&peer->timers, Timer_ConnectRetry,
 			    peer->holdtime);
 			change_state(peer, STATE_CONNECT, event);
 			session_connect(peer);
@@ -702,7 +705,7 @@ bgp_fsm(struct peer *peer, enum session_events event)
 			break;
 		case EVNT_CON_CLOSED:
 			session_close_connection(peer);
-			timer_set(peer, Timer_ConnectRetry,
+			timer_set(&peer->timers, Timer_ConnectRetry,
 			    conf->connectretry);
 			change_state(peer, STATE_ACTIVE, event);
 			break;
@@ -710,6 +713,7 @@ bgp_fsm(struct peer *peer, enum session_events event)
 			change_state(peer, STATE_IDLE, event);
 			break;
 		case EVNT_TIMER_HOLDTIME:
+		case EVNT_TIMER_SENDHOLD:
 			session_notification(peer, ERR_HOLDTIMEREXPIRED,
 			    0, NULL, 0);
 			change_state(peer, STATE_IDLE, event);
@@ -725,7 +729,7 @@ bgp_fsm(struct peer *peer, enum session_events event)
 			if (parse_notification(peer)) {
 				change_state(peer, STATE_IDLE, event);
 				/* don't punish, capa negotiation */
-				timer_set(peer, Timer_IdleHold, 0);
+				timer_set(&peer->timers, Timer_IdleHold, 0);
 				peer->IdleHoldTime /= 2;
 			} else
 				change_state(peer, STATE_IDLE, event);
@@ -750,6 +754,7 @@ bgp_fsm(struct peer *peer, enum session_events event)
 			change_state(peer, STATE_IDLE, event);
 			break;
 		case EVNT_TIMER_HOLDTIME:
+		case EVNT_TIMER_SENDHOLD:
 			session_notification(peer, ERR_HOLDTIMEREXPIRED,
 			    0, NULL, 0);
 			change_state(peer, STATE_IDLE, event);
@@ -785,6 +790,7 @@ bgp_fsm(struct peer *peer, enum session_events event)
 			change_state(peer, STATE_IDLE, event);
 			break;
 		case EVNT_TIMER_HOLDTIME:
+		case EVNT_TIMER_SENDHOLD:
 			session_notification(peer, ERR_HOLDTIMEREXPIRED,
 			    0, NULL, 0);
 			change_state(peer, STATE_IDLE, event);
@@ -820,18 +826,18 @@ void
 start_timer_holdtime(struct peer *peer)
 {
 	if (peer->holdtime > 0)
-		timer_set(peer, Timer_Hold, peer->holdtime);
+		timer_set(&peer->timers, Timer_Hold, peer->holdtime);
 	else
-		timer_stop(peer, Timer_Hold);
+		timer_stop(&peer->timers, Timer_Hold);
 }
 
 void
 start_timer_keepalive(struct peer *peer)
 {
 	if (peer->holdtime > 0)
-		timer_set(peer, Timer_Keepalive, peer->holdtime / 3);
+		timer_set(&peer->timers, Timer_Keepalive, peer->holdtime / 3);
 	else
-		timer_stop(peer, Timer_Keepalive);
+		timer_stop(&peer->timers, Timer_Keepalive);
 }
 
 void
@@ -873,11 +879,12 @@ change_state(struct peer *peer, enum session_state state,
 		if (peer->IdleHoldTime == 0)
 			peer->IdleHoldTime = INTERVAL_IDLE_HOLD_INITIAL;
 		peer->holdtime = INTERVAL_HOLD_INITIAL;
-		timer_stop(peer, Timer_ConnectRetry);
-		timer_stop(peer, Timer_Keepalive);
-		timer_stop(peer, Timer_Hold);
-		timer_stop(peer, Timer_IdleHold);
-		timer_stop(peer, Timer_IdleHoldReset);
+		timer_stop(&peer->timers, Timer_ConnectRetry);
+		timer_stop(&peer->timers, Timer_Keepalive);
+		timer_stop(&peer->timers, Timer_Hold);
+		timer_stop(&peer->timers, Timer_SendHold);
+		timer_stop(&peer->timers, Timer_IdleHold);
+		timer_stop(&peer->timers, Timer_IdleHoldReset);
 		session_close_connection(peer);
 		msgbuf_clear(&peer->wbuf);
 		free(peer->rbuf);
@@ -889,7 +896,8 @@ change_state(struct peer *peer, enum session_state state,
 			    peer->conf.id, 0, -1, NULL, 0);
 
 		if (event != EVNT_STOP) {
-			timer_set(peer, Timer_IdleHold, peer->IdleHoldTime);
+			timer_set(&peer->timers, Timer_IdleHold,
+			    peer->IdleHoldTime);
 			if (event != EVNT_NONE &&
 			    peer->IdleHoldTime < MAX_IDLE_HOLD/2)
 				peer->IdleHoldTime *= 2;
@@ -899,7 +907,7 @@ change_state(struct peer *peer, enum session_state state,
 			    (event == EVNT_CON_CLOSED ||
 			    event == EVNT_CON_FATAL)) {
 				/* don't punish graceful restart */
-				timer_set(peer, Timer_IdleHold, 0);
+				timer_set(&peer->timers, Timer_IdleHold, 0);
 				peer->IdleHoldTime /= 2;
 				session_graceful_restart(peer);
 			} else
@@ -920,11 +928,12 @@ change_state(struct peer *peer, enum session_state state,
 			/* do the graceful restart dance */
 			session_graceful_restart(peer);
 			peer->holdtime = INTERVAL_HOLD_INITIAL;
-			timer_stop(peer, Timer_ConnectRetry);
-			timer_stop(peer, Timer_Keepalive);
-			timer_stop(peer, Timer_Hold);
-			timer_stop(peer, Timer_IdleHold);
-			timer_stop(peer, Timer_IdleHoldReset);
+			timer_stop(&peer->timers, Timer_ConnectRetry);
+			timer_stop(&peer->timers, Timer_Keepalive);
+			timer_stop(&peer->timers, Timer_Hold);
+			timer_stop(&peer->timers, Timer_SendHold);
+			timer_stop(&peer->timers, Timer_IdleHold);
+			timer_stop(&peer->timers, Timer_IdleHoldReset);
 			session_close_connection(peer);
 			msgbuf_clear(&peer->wbuf);
 			bzero(&peer->capa.peer, sizeof(peer->capa.peer));
@@ -940,9 +949,10 @@ change_state(struct peer *peer, enum session_state state,
 	case STATE_OPENCONFIRM:
 		break;
 	case STATE_ESTABLISHED:
-		timer_set(peer, Timer_IdleHoldReset, peer->IdleHoldTime);
+		timer_set(&peer->timers, Timer_IdleHoldReset,
+		    peer->IdleHoldTime);
 		if (peer->demoted)
-			timer_set(peer, Timer_CarpUndemote,
+			timer_set(&peer->timers, Timer_CarpUndemote,
 			    INTERVAL_HOLD_DEMOTED);
 		session_up(peer);
 		break;
@@ -986,7 +996,7 @@ session_accept(int listenfd)
 	p = getpeerbyip(conf, (struct sockaddr *)&cliaddr);
 
 	if (p != NULL && p->state == STATE_IDLE && p->errcnt < 2) {
-		if (timer_running(p, Timer_IdleHold, NULL)) {
+		if (timer_running(&p->timers, Timer_IdleHold, NULL)) {
 			/* fast reconnect after clear */
 			p->passive = 1;
 			bgp_fsm(p, EVNT_START);
@@ -1076,7 +1086,7 @@ session_connect(struct peer *peer)
 		bind_addr = &peer->conf.local_addr_v6;
 		break;
 	}
-	if (bind_addr && (sa = addr2sa(bind_addr, 0, &sa_len)) != NULL) {
+	if ((sa = addr2sa(bind_addr, 0, &sa_len)) != NULL) {
 		if (bind(peer->fd, sa, sa_len) == -1) {
 			log_peer_warn(&peer->conf, "session_connect bind");
 			bgp_fsm(peer, EVNT_CON_OPENFAIL);
@@ -1227,7 +1237,8 @@ get_alternate_addr(struct sockaddr *sa, struct bgpd_addr *alt)
 		fatal("getifaddrs");
 
 	for (match = ifap; match != NULL; match = match->ifa_next)
-		if (sa_cmp(sa, match->ifa_addr) == 0)
+		if (match->ifa_addr != NULL &&
+		    sa_cmp(sa, match->ifa_addr) == 0)
 			break;
 
 	if (match == NULL) {
@@ -1238,7 +1249,8 @@ get_alternate_addr(struct sockaddr *sa, struct bgpd_addr *alt)
 	switch (sa->sa_family) {
 	case AF_INET6:
 		for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
-			if (ifa->ifa_addr->sa_family == AF_INET &&
+			if (ifa->ifa_addr != NULL &&
+			    ifa->ifa_addr->sa_family == AF_INET &&
 			    strcmp(ifa->ifa_name, match->ifa_name) == 0) {
 				sa2addr(ifa->ifa_addr, alt, NULL);
 				break;
@@ -1247,10 +1259,12 @@ get_alternate_addr(struct sockaddr *sa, struct bgpd_addr *alt)
 		break;
 	case AF_INET:
 		for (ifa = ifap; ifa != NULL; ifa = ifa->ifa_next) {
-			struct sockaddr_in6 *s =
-			    (struct sockaddr_in6 *)ifa->ifa_addr;
-			if (ifa->ifa_addr->sa_family == AF_INET6 &&
+			if (ifa->ifa_addr != NULL &&
+			    ifa->ifa_addr->sa_family == AF_INET6 &&
 			    strcmp(ifa->ifa_name, match->ifa_name) == 0) {
+				struct sockaddr_in6 *s =
+				    (struct sockaddr_in6 *)ifa->ifa_addr;
+
 				/* only accept global scope addresses */
 				if (IN6_IS_ADDR_LINKLOCAL(&s->sin6_addr) ||
 				    IN6_IS_ADDR_SITELOCAL(&s->sin6_addr))
@@ -1679,7 +1693,8 @@ session_graceful_restart(struct peer *p)
 {
 	u_int8_t	i;
 
-	timer_set(p, Timer_RestartTimeout, p->capa.neg.grestart.timeout);
+	timer_set(&p->timers, Timer_RestartTimeout,
+	    p->capa.neg.grestart.timeout);
 
 	for (i = 0; i < AID_MAX; i++) {
 		if (p->capa.neg.grestart.flags[i] & CAPA_GR_PRESENT) {
@@ -1783,6 +1798,10 @@ session_dispatch_msg(struct pollfd *pfd, struct peer *p)
 			return (1);
 		}
 		p->stats.last_write = getmonotime();
+		if (p->holdtime > 0)
+			timer_set(&p->timers, Timer_SendHold,
+			    p->holdtime < INTERVAL_HOLD ? INTERVAL_HOLD :
+			    p->holdtime);
 		if (p->throttled && p->wbuf.queued < SESS_MSG_LOW_MARK) {
 			if (imsg_rde(IMSG_XON, p->conf.id, NULL, 0) == -1)
 				log_peer_warn(&p->conf, "imsg_compose XON");
@@ -2141,7 +2160,8 @@ parse_open(struct peer *peer)
 			session_notification(peer, ERR_OPEN, ERR_OPEN_OPT,
 				NULL, 0);
 			change_state(peer, STATE_IDLE, EVNT_RCVD_OPEN);
-			timer_set(peer, Timer_IdleHold, 0);	/* no punish */
+			/* no punish */
+			timer_set(&peer->timers, Timer_IdleHold, 0);
 			peer->IdleHoldTime /= 2;
 			return (-1);
 		}
@@ -2814,6 +2834,8 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 		case IMSG_CTL_SHOW_NEXTHOP:
 		case IMSG_CTL_SHOW_INTERFACE:
 		case IMSG_CTL_SHOW_FIB_TABLES:
+		case IMSG_CTL_SHOW_RTR:
+		case IMSG_CTL_SHOW_TIMER:
 			if (idx != PFD_PIPE_MAIN)
 				fatalx("ctl kroute request not from parent");
 			control_imsg_relay(&imsg);
@@ -2826,6 +2848,7 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 		case IMSG_CTL_SHOW_RIB_HASH:
 		case IMSG_CTL_SHOW_NETWORK:
 		case IMSG_CTL_SHOW_NEIGHBOR:
+		case IMSG_CTL_SHOW_SET:
 			if (idx != PFD_PIPE_ROUTE_CTL)
 				fatalx("ctl rib request not from RDE");
 			control_imsg_relay(&imsg);
@@ -2878,8 +2901,8 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 
 					bgp_fsm(p, EVNT_STOP);
 					if (t)
-						timer_set(p, Timer_IdleHold,
-						    60 * t);
+						timer_set(&p->timers,
+						    Timer_IdleHold, 60 * t);
 					break;
 				default:
 					bgp_fsm(p, EVNT_CON_FATAL);
@@ -2913,7 +2936,7 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 				    aid2str(aid));
 				p->capa.neg.grestart.flags[aid] &=
 				    ~CAPA_GR_RESTARTING;
-				timer_stop(p, Timer_RestartTimeout);
+				timer_stop(&p->timers, Timer_RestartTimeout);
 
 				/* signal back to RDE to cleanup stale routes */
 				if (imsg_rde(IMSG_SESSION_RESTARTED,
