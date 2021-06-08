@@ -1,4 +1,4 @@
-/*	$OpenBSD: output_json.c,v 1.9 2021/04/15 14:12:05 claudio Exp $ */
+/*	$OpenBSD: output_json.c,v 1.11 2021/05/27 08:29:07 claudio Exp $ */
 
 /*
  * Copyright (c) 2020 Claudio Jeker <claudio@openbsd.org>
@@ -40,19 +40,23 @@ json_head(struct parse_result *res)
 static void
 json_neighbor_capabilities(struct capabilities *capa)
 {
-	int hascapamp;
+	int hascapamp = 0, hascapaap = 0;
 	uint8_t i;
 
-	for (i = 0; i < AID_MAX; i++)
+	for (i = 0; i < AID_MAX; i++) {
 		if (capa->mp[i])
 			hascapamp = 1;
-	if (!hascapamp && !capa->refresh && !capa->grestart.restart &&
-	    !capa->as4byte)
+		if (capa->add_path[i])
+			hascapaap = 1;
+	}
+	if (!hascapamp && !hascapaap && !capa->grestart.restart &&
+	    !capa->refresh && !capa->enhanced_rr && !capa->as4byte)
 		return;
 
 	json_do_object("capabilities");
 	json_do_bool("as4byte", capa->as4byte);
 	json_do_bool("refresh", capa->refresh);
+	json_do_bool("enhanced_refresh", capa->enhanced_rr);
 
 	if (hascapamp) {
 		json_do_array("multiprotocol");
@@ -95,6 +99,31 @@ json_neighbor_capabilities(struct capabilities *capa)
 
 		json_do_end();
 	}
+	if (hascapaap) {
+		json_do_array("add-path");
+		for (i = 0; i < AID_MAX; i++)
+			if (capa->add_path[i]) {
+				json_do_object("add-path-elm");
+				json_do_printf("family", "%s", aid2str(i));
+				switch (capa->add_path[i]) {
+				case CAPA_AP_RECV:
+					json_do_printf("mode", "recv");
+					break;
+				case CAPA_AP_SEND:
+					json_do_printf("mode", "send");
+					break;
+				case CAPA_AP_BIDIR:
+					json_do_printf("mode", "bidir");
+					break;
+				default:
+					json_do_printf("mode", "unknown %d",
+					    capa->add_path[i]);
+					break;
+				}
+				json_do_end();
+			}
+		json_do_end();
+	}
 
 	json_do_end();
 }
@@ -104,7 +133,9 @@ json_neighbor_stats(struct peer *p)
 {
 	json_do_object("stats");
 	json_do_printf("last_read", "%s", fmt_monotime(p->stats.last_read));
+	json_do_int("last_read_sec", get_monotime(p->stats.last_read));
 	json_do_printf("last_write", "%s", fmt_monotime(p->stats.last_write));
+	json_do_int("last_write_sec", get_monotime(p->stats.last_write));
 
 	json_do_object("prefixes");
 	json_do_uint("sent", p->stats.prefix_out_cnt);
@@ -151,6 +182,22 @@ json_neighbor_stats(struct peer *p)
 	json_do_uint("updates", p->stats.prefix_rcvd_update);
 	json_do_uint("withdraws", p->stats.prefix_rcvd_withdraw);
 	json_do_uint("eor", p->stats.prefix_rcvd_eor);
+	json_do_end();
+
+	json_do_end();
+
+	json_do_object("route-refresh");
+
+	json_do_object("sent");
+	json_do_uint("request", p->stats.refresh_sent_req);
+	json_do_uint("borr", p->stats.refresh_sent_borr);
+	json_do_uint("eorr", p->stats.refresh_sent_eorr);
+	json_do_end();
+
+	json_do_object("received");
+	json_do_uint("request", p->stats.refresh_rcvd_req);
+	json_do_uint("borr", p->stats.refresh_rcvd_borr);
+	json_do_uint("eorr", p->stats.refresh_rcvd_eorr);
 	json_do_end();
 
 	json_do_end();
@@ -267,6 +314,7 @@ json_neighbor(struct peer *p, struct parse_result *res)
 	}
 	json_do_printf("state", "%s", statenames[p->state]);
 	json_do_printf("last_updown", "%s", fmt_monotime(p->stats.last_updown));
+	json_do_int("last_updown_sec", get_monotime(p->stats.last_updown));
 
 	switch (res->action) {
 	case SHOW:
@@ -827,6 +875,7 @@ json_rib(struct ctl_show_rib *r, u_char *asdata, size_t aslen,
 	json_do_uint("localpref", r->local_pref);
 	json_do_uint("weight", r->weight);
 	json_do_printf("last_update", "%s", fmt_timeframe(r->age));
+	json_do_int("last_update_sec", r->age);
 
 	/* keep the object open for communities and attribuites */
 }
@@ -927,6 +976,7 @@ json_rib_set(struct ctl_show_set *set)
 	json_do_printf("name", "%s", set->name);
 	json_do_printf("type", "%s", fmt_set_type(set));
 	json_do_printf("last_change", "%s", fmt_monotime(set->lastchange));
+	json_do_int("last_change_sec", get_monotime(set->lastchange));
 	if (set->type == ASNUM_SET) {
 		json_do_uint("num_ASnum", set->as_cnt);
 	} else {

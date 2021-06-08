@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_update.c,v 1.125 2021/03/02 09:45:07 claudio Exp $ */
+/*	$OpenBSD: rde_update.c,v 1.129 2021/05/27 14:32:08 claudio Exp $ */
 
 /*
  * Copyright (c) 2004 Claudio Jeker <claudio@openbsd.org>
@@ -69,10 +69,10 @@ up_test_update(struct rde_peer *peer, struct prefix *p)
 		/*
 		 * route reflector redistribution rules:
 		 * 1. if announce is set                -> announce
-		 * 2. old non-client, new non-client    -> no
-		 * 3. old client, new non-client        -> yes
-		 * 4. old non-client, new client        -> yes
-		 * 5. old client, new client            -> yes
+		 * 2. from non-client, to non-client    -> no
+		 * 3. from client, to non-client        -> yes
+		 * 4. from non-client, to client        -> yes
+		 * 5. from client, to client            -> yes
 		 */
 		if (frompeer->conf.reflector_client == 0 &&
 		    peer->conf.reflector_client == 0 &&
@@ -101,17 +101,23 @@ up_generate_updates(struct filter_head *rules, struct rde_peer *peer,
 	struct filterstate	state;
 	struct bgpd_addr	addr;
 	int			need_withdraw;
+	uint8_t			prefixlen;
+
+	if (new == NULL) {
+		if (old == NULL)
+			/* no prefix to update or withdraw */
+			return;
+		pt_getaddr(old->pt, &addr);
+		prefixlen = old->pt->prefixlen;
+	} else {
+		pt_getaddr(new->pt, &addr);
+		prefixlen = new->pt->prefixlen;
+	}
 
 again:
 	if (new == NULL) {
-		if (old == NULL)
-			/* no prefix to withdraw */
-			return;
-
 		/* withdraw prefix */
-		pt_getaddr(old->pt, &addr);
-		if (prefix_adjout_withdraw(peer, &addr,
-		    old->pt->prefixlen) == 1) {
+		if (prefix_adjout_withdraw(peer, &addr, prefixlen) == 1) {
 			peer->prefix_out_cnt--;
 			peer->up_wcnt++;
 		}
@@ -135,7 +141,7 @@ again:
 		 * skip the filters.
 		 */
 		if (need_withdraw &&
-		    !(peer->conf.flags & PEERFLAG_EVALUATE_ALL)) {
+		    !(peer->flags & PEERFLAG_EVALUATE_ALL)) {
 			new = NULL;
 			goto again;
 		}
@@ -143,12 +149,10 @@ again:
 		rde_filterstate_prep(&state, prefix_aspath(new),
 		    prefix_communities(new), prefix_nexthop(new),
 		    prefix_nhflags(new));
-		pt_getaddr(new->pt, &addr);
 		if (rde_filter(rules, peer, prefix_peer(new), &addr,
-		    new->pt->prefixlen, prefix_vstate(new), &state) ==
-		    ACTION_DENY) {
+		    prefixlen, prefix_vstate(new), &state) == ACTION_DENY) {
 			rde_filterstate_clean(&state);
-			if (peer->conf.flags & PEERFLAG_EVALUATE_ALL)
+			if (peer->flags & PEERFLAG_EVALUATE_ALL)
 				new = LIST_NEXT(new, entry.list.rib);
 			else
 				new = NULL;
@@ -360,14 +364,14 @@ up_generate_attr(u_char *buf, int len, struct rde_peer *peer,
 			break;
 		case ATTR_ASPATH:
 			if (!peer->conf.ebgp ||
-			    peer->conf.flags & PEERFLAG_TRANS_AS)
+			    peer->flags & PEERFLAG_TRANS_AS)
 				pdata = aspath_prepend(asp->aspath,
 				    peer->conf.local_as, 0, &plen);
 			else
 				pdata = aspath_prepend(asp->aspath,
 				    peer->conf.local_as, 1, &plen);
 
-			if (!rde_as4byte(peer))
+			if (!peer_has_as4byte(peer))
 				pdata = aspath_deflate(pdata, &plen,
 				    &neednewpath);
 
@@ -399,7 +403,7 @@ up_generate_attr(u_char *buf, int len, struct rde_peer *peer,
 			 */
 			if (asp->flags & F_ATTR_MED && (!peer->conf.ebgp ||
 			    asp->flags & F_ATTR_MED_ANNOUNCE ||
-			    peer->conf.flags & PEERFLAG_TRANS_AS)) {
+			    peer->flags & PEERFLAG_TRANS_AS)) {
 				tmp32 = htonl(asp->med);
 				if ((r = attr_write(buf + wlen, len,
 				    ATTR_OPTIONAL, ATTR_MED, &tmp32, 4)) == -1)
@@ -439,7 +443,7 @@ up_generate_attr(u_char *buf, int len, struct rde_peer *peer,
 		case ATTR_AS4_PATH:
 			if (neednewpath) {
 				if (!peer->conf.ebgp ||
-				    peer->conf.flags & PEERFLAG_TRANS_AS)
+				    peer->flags & PEERFLAG_TRANS_AS)
 					pdata = aspath_prepend(asp->aspath,
 					peer->conf.local_as, 0, &plen);
 				else
@@ -494,7 +498,7 @@ up_generate_attr(u_char *buf, int len, struct rde_peer *peer,
 		case ATTR_AGGREGATOR:
 			if (oa == NULL || oa->type != type)
 				break;
-			if (!rde_as4byte(peer)) {
+			if (!peer_has_as4byte(peer)) {
 				/* need to deflate the aggregator */
 				u_int8_t	t[6];
 				u_int16_t	tas;
