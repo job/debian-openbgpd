@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.3.2.  */
+/* A Bison parser, made by GNU Bison 3.7.6.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
    Inc.
 
    This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -34,6 +34,10 @@
 /* C LALR(1) parser skeleton written by Richard Stallman, by
    simplifying the original so-called "semantic" parser.  */
 
+/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
+   especially those whose name start with YY_ or yy_.  They are
+   private implementation details that can be changed or removed.  */
+
 /* All symbols defined below should begin with yy or YY, to avoid
    infringing on user name space.  This should be done even for local
    variables, as they might otherwise be expanded by user macros.
@@ -41,14 +45,11 @@
    define necessary library symbols; they are noted "INFRINGES ON
    USER NAME SPACE" below.  */
 
-/* Undocumented macros, especially those whose name start with YY_,
-   are private implementation details.  Do not rely on them.  */
+/* Identify Bison output, and Bison version.  */
+#define YYBISON 30706
 
-/* Identify Bison output.  */
-#define YYBISON 1
-
-/* Bison version.  */
-#define YYBISON_VERSION "3.3.2"
+/* Bison version string.  */
+#define YYBISON_VERSION "3.7.6"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -66,7 +67,7 @@
 
 
 /* First part of user prologue.  */
-#line 25 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:337  */
+#line 25 "../../../openbgpd-portable/src/bgpd/parse.y"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -242,7 +243,17 @@ typedef struct {
 } YYSTYPE;
 
 
-#line 246 "parse.c" /* yacc.c:337  */
+#line 247 "parse.c"
+
+# ifndef YY_CAST
+#  ifdef __cplusplus
+#   define YY_CAST(Type, Val) static_cast<Type> (Val)
+#   define YY_REINTERPRET_CAST(Type, Val) reinterpret_cast<Type> (Val)
+#  else
+#   define YY_CAST(Type, Val) ((Type) (Val))
+#   define YY_REINTERPRET_CAST(Type, Val) ((Type) (Val))
+#  endif
+# endif
 # ifndef YY_NULLPTR
 #  if defined __cplusplus
 #   if 201103L <= __cplusplus
@@ -255,14 +266,6 @@ typedef struct {
 #  endif
 # endif
 
-/* Enabling verbose error messages.  */
-#ifdef YYERROR_VERBOSE
-# undef YYERROR_VERBOSE
-# define YYERROR_VERBOSE 1
-#else
-# define YYERROR_VERBOSE 0
-#endif
-
 
 /* Debug traces.  */
 #ifndef YYDEBUG
@@ -272,135 +275,144 @@ typedef struct {
 extern int yydebug;
 #endif
 
-/* Token type.  */
+/* Token kinds.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    AS = 258,
-    ROUTERID = 259,
-    HOLDTIME = 260,
-    YMIN = 261,
-    LISTEN = 262,
-    ON = 263,
-    FIBUPDATE = 264,
-    FIBPRIORITY = 265,
-    RTABLE = 266,
-    NONE = 267,
-    UNICAST = 268,
-    VPN = 269,
-    RD = 270,
-    EXPORT = 271,
-    EXPORTTRGT = 272,
-    IMPORTTRGT = 273,
-    DEFAULTROUTE = 274,
-    RDE = 275,
-    RIB = 276,
-    EVALUATE = 277,
-    IGNORE = 278,
-    COMPARE = 279,
-    RTR = 280,
-    PORT = 281,
-    GROUP = 282,
-    NEIGHBOR = 283,
-    NETWORK = 284,
-    EBGP = 285,
-    IBGP = 286,
-    LOCALAS = 287,
-    REMOTEAS = 288,
-    DESCR = 289,
-    LOCALADDR = 290,
-    MULTIHOP = 291,
-    PASSIVE = 292,
-    MAXPREFIX = 293,
-    RESTART = 294,
-    ANNOUNCE = 295,
-    CAPABILITIES = 296,
-    REFRESH = 297,
-    AS4BYTE = 298,
-    CONNECTRETRY = 299,
-    DEMOTE = 300,
-    ENFORCE = 301,
-    NEIGHBORAS = 302,
-    ASOVERRIDE = 303,
-    REFLECTOR = 304,
-    DEPEND = 305,
-    DOWN = 306,
-    DUMP = 307,
-    IN = 308,
-    OUT = 309,
-    SOCKET = 310,
-    RESTRICTED = 311,
-    LOG = 312,
-    TRANSPARENT = 313,
-    TCP = 314,
-    MD5SIG = 315,
-    PASSWORD = 316,
-    KEY = 317,
-    TTLSECURITY = 318,
-    ALLOW = 319,
-    DENY = 320,
-    MATCH = 321,
-    QUICK = 322,
-    FROM = 323,
-    TO = 324,
-    ANY = 325,
-    CONNECTED = 326,
-    STATIC = 327,
-    COMMUNITY = 328,
-    EXTCOMMUNITY = 329,
-    LARGECOMMUNITY = 330,
-    DELETE = 331,
-    PREFIX = 332,
-    PREFIXLEN = 333,
-    PREFIXSET = 334,
-    ROASET = 335,
-    ORIGINSET = 336,
-    OVS = 337,
-    ASSET = 338,
-    SOURCEAS = 339,
-    TRANSITAS = 340,
-    PEERAS = 341,
-    MAXASLEN = 342,
-    MAXASSEQ = 343,
-    SET = 344,
-    LOCALPREF = 345,
-    MED = 346,
-    METRIC = 347,
-    NEXTHOP = 348,
-    REJECT = 349,
-    BLACKHOLE = 350,
-    NOMODIFY = 351,
-    SELF = 352,
-    PREPEND_SELF = 353,
-    PREPEND_PEER = 354,
-    PFTABLE = 355,
-    WEIGHT = 356,
-    RTLABEL = 357,
-    ORIGIN = 358,
-    PRIORITY = 359,
-    ERROR = 360,
-    INCLUDE = 361,
-    IPSEC = 362,
-    ESP = 363,
-    AH = 364,
-    SPI = 365,
-    IKE = 366,
-    IPV4 = 367,
-    IPV6 = 368,
-    QUALIFY = 369,
-    VIA = 370,
-    NE = 371,
-    LE = 372,
-    GE = 373,
-    XRANGE = 374,
-    LONGER = 375,
-    MAXLEN = 376,
-    STRING = 377,
-    NUMBER = 378
+    YYEMPTY = -2,
+    YYEOF = 0,                     /* "end of file"  */
+    YYerror = 256,                 /* error  */
+    YYUNDEF = 257,                 /* "invalid token"  */
+    AS = 258,                      /* AS  */
+    ROUTERID = 259,                /* ROUTERID  */
+    HOLDTIME = 260,                /* HOLDTIME  */
+    YMIN = 261,                    /* YMIN  */
+    LISTEN = 262,                  /* LISTEN  */
+    ON = 263,                      /* ON  */
+    FIBUPDATE = 264,               /* FIBUPDATE  */
+    FIBPRIORITY = 265,             /* FIBPRIORITY  */
+    RTABLE = 266,                  /* RTABLE  */
+    NONE = 267,                    /* NONE  */
+    UNICAST = 268,                 /* UNICAST  */
+    VPN = 269,                     /* VPN  */
+    RD = 270,                      /* RD  */
+    EXPORT = 271,                  /* EXPORT  */
+    EXPORTTRGT = 272,              /* EXPORTTRGT  */
+    IMPORTTRGT = 273,              /* IMPORTTRGT  */
+    DEFAULTROUTE = 274,            /* DEFAULTROUTE  */
+    RDE = 275,                     /* RDE  */
+    RIB = 276,                     /* RIB  */
+    EVALUATE = 277,                /* EVALUATE  */
+    IGNORE = 278,                  /* IGNORE  */
+    COMPARE = 279,                 /* COMPARE  */
+    RTR = 280,                     /* RTR  */
+    PORT = 281,                    /* PORT  */
+    GROUP = 282,                   /* GROUP  */
+    NEIGHBOR = 283,                /* NEIGHBOR  */
+    NETWORK = 284,                 /* NETWORK  */
+    EBGP = 285,                    /* EBGP  */
+    IBGP = 286,                    /* IBGP  */
+    LOCALAS = 287,                 /* LOCALAS  */
+    REMOTEAS = 288,                /* REMOTEAS  */
+    DESCR = 289,                   /* DESCR  */
+    LOCALADDR = 290,               /* LOCALADDR  */
+    MULTIHOP = 291,                /* MULTIHOP  */
+    PASSIVE = 292,                 /* PASSIVE  */
+    MAXPREFIX = 293,               /* MAXPREFIX  */
+    RESTART = 294,                 /* RESTART  */
+    ANNOUNCE = 295,                /* ANNOUNCE  */
+    CAPABILITIES = 296,            /* CAPABILITIES  */
+    REFRESH = 297,                 /* REFRESH  */
+    AS4BYTE = 298,                 /* AS4BYTE  */
+    CONNECTRETRY = 299,            /* CONNECTRETRY  */
+    DEMOTE = 300,                  /* DEMOTE  */
+    ENFORCE = 301,                 /* ENFORCE  */
+    NEIGHBORAS = 302,              /* NEIGHBORAS  */
+    ASOVERRIDE = 303,              /* ASOVERRIDE  */
+    REFLECTOR = 304,               /* REFLECTOR  */
+    DEPEND = 305,                  /* DEPEND  */
+    DOWN = 306,                    /* DOWN  */
+    DUMP = 307,                    /* DUMP  */
+    IN = 308,                      /* IN  */
+    OUT = 309,                     /* OUT  */
+    SOCKET = 310,                  /* SOCKET  */
+    RESTRICTED = 311,              /* RESTRICTED  */
+    LOG = 312,                     /* LOG  */
+    TRANSPARENT = 313,             /* TRANSPARENT  */
+    TCP = 314,                     /* TCP  */
+    MD5SIG = 315,                  /* MD5SIG  */
+    PASSWORD = 316,                /* PASSWORD  */
+    KEY = 317,                     /* KEY  */
+    TTLSECURITY = 318,             /* TTLSECURITY  */
+    ALLOW = 319,                   /* ALLOW  */
+    DENY = 320,                    /* DENY  */
+    MATCH = 321,                   /* MATCH  */
+    QUICK = 322,                   /* QUICK  */
+    FROM = 323,                    /* FROM  */
+    TO = 324,                      /* TO  */
+    ANY = 325,                     /* ANY  */
+    CONNECTED = 326,               /* CONNECTED  */
+    STATIC = 327,                  /* STATIC  */
+    COMMUNITY = 328,               /* COMMUNITY  */
+    EXTCOMMUNITY = 329,            /* EXTCOMMUNITY  */
+    LARGECOMMUNITY = 330,          /* LARGECOMMUNITY  */
+    DELETE = 331,                  /* DELETE  */
+    PREFIX = 332,                  /* PREFIX  */
+    PREFIXLEN = 333,               /* PREFIXLEN  */
+    PREFIXSET = 334,               /* PREFIXSET  */
+    ROASET = 335,                  /* ROASET  */
+    ORIGINSET = 336,               /* ORIGINSET  */
+    OVS = 337,                     /* OVS  */
+    ASSET = 338,                   /* ASSET  */
+    SOURCEAS = 339,                /* SOURCEAS  */
+    TRANSITAS = 340,               /* TRANSITAS  */
+    PEERAS = 341,                  /* PEERAS  */
+    MAXASLEN = 342,                /* MAXASLEN  */
+    MAXASSEQ = 343,                /* MAXASSEQ  */
+    SET = 344,                     /* SET  */
+    LOCALPREF = 345,               /* LOCALPREF  */
+    MED = 346,                     /* MED  */
+    METRIC = 347,                  /* METRIC  */
+    NEXTHOP = 348,                 /* NEXTHOP  */
+    REJECT = 349,                  /* REJECT  */
+    BLACKHOLE = 350,               /* BLACKHOLE  */
+    NOMODIFY = 351,                /* NOMODIFY  */
+    SELF = 352,                    /* SELF  */
+    PREPEND_SELF = 353,            /* PREPEND_SELF  */
+    PREPEND_PEER = 354,            /* PREPEND_PEER  */
+    PFTABLE = 355,                 /* PFTABLE  */
+    WEIGHT = 356,                  /* WEIGHT  */
+    RTLABEL = 357,                 /* RTLABEL  */
+    ORIGIN = 358,                  /* ORIGIN  */
+    PRIORITY = 359,                /* PRIORITY  */
+    ERROR = 360,                   /* ERROR  */
+    INCLUDE = 361,                 /* INCLUDE  */
+    IPSEC = 362,                   /* IPSEC  */
+    ESP = 363,                     /* ESP  */
+    AH = 364,                      /* AH  */
+    SPI = 365,                     /* SPI  */
+    IKE = 366,                     /* IKE  */
+    IPV4 = 367,                    /* IPV4  */
+    IPV6 = 368,                    /* IPV6  */
+    QUALIFY = 369,                 /* QUALIFY  */
+    VIA = 370,                     /* VIA  */
+    NE = 371,                      /* NE  */
+    LE = 372,                      /* LE  */
+    GE = 373,                      /* GE  */
+    XRANGE = 374,                  /* XRANGE  */
+    LONGER = 375,                  /* LONGER  */
+    MAXLEN = 376,                  /* MAXLEN  */
+    STRING = 377,                  /* STRING  */
+    NUMBER = 378                   /* NUMBER  */
   };
+  typedef enum yytokentype yytoken_kind_t;
 #endif
-/* Tokens.  */
+/* Token kinds.  */
+#define YYEMPTY -2
+#define YYEOF 0
+#define YYerror 256
+#define YYUNDEF 257
 #define AS 258
 #define ROUTERID 259
 #define HOLDTIME 260
@@ -531,6 +543,242 @@ extern YYSTYPE yylval;
 int yyparse (void);
 
 
+/* Symbol kind.  */
+enum yysymbol_kind_t
+{
+  YYSYMBOL_YYEMPTY = -2,
+  YYSYMBOL_YYEOF = 0,                      /* "end of file"  */
+  YYSYMBOL_YYerror = 1,                    /* error  */
+  YYSYMBOL_YYUNDEF = 2,                    /* "invalid token"  */
+  YYSYMBOL_AS = 3,                         /* AS  */
+  YYSYMBOL_ROUTERID = 4,                   /* ROUTERID  */
+  YYSYMBOL_HOLDTIME = 5,                   /* HOLDTIME  */
+  YYSYMBOL_YMIN = 6,                       /* YMIN  */
+  YYSYMBOL_LISTEN = 7,                     /* LISTEN  */
+  YYSYMBOL_ON = 8,                         /* ON  */
+  YYSYMBOL_FIBUPDATE = 9,                  /* FIBUPDATE  */
+  YYSYMBOL_FIBPRIORITY = 10,               /* FIBPRIORITY  */
+  YYSYMBOL_RTABLE = 11,                    /* RTABLE  */
+  YYSYMBOL_NONE = 12,                      /* NONE  */
+  YYSYMBOL_UNICAST = 13,                   /* UNICAST  */
+  YYSYMBOL_VPN = 14,                       /* VPN  */
+  YYSYMBOL_RD = 15,                        /* RD  */
+  YYSYMBOL_EXPORT = 16,                    /* EXPORT  */
+  YYSYMBOL_EXPORTTRGT = 17,                /* EXPORTTRGT  */
+  YYSYMBOL_IMPORTTRGT = 18,                /* IMPORTTRGT  */
+  YYSYMBOL_DEFAULTROUTE = 19,              /* DEFAULTROUTE  */
+  YYSYMBOL_RDE = 20,                       /* RDE  */
+  YYSYMBOL_RIB = 21,                       /* RIB  */
+  YYSYMBOL_EVALUATE = 22,                  /* EVALUATE  */
+  YYSYMBOL_IGNORE = 23,                    /* IGNORE  */
+  YYSYMBOL_COMPARE = 24,                   /* COMPARE  */
+  YYSYMBOL_RTR = 25,                       /* RTR  */
+  YYSYMBOL_PORT = 26,                      /* PORT  */
+  YYSYMBOL_GROUP = 27,                     /* GROUP  */
+  YYSYMBOL_NEIGHBOR = 28,                  /* NEIGHBOR  */
+  YYSYMBOL_NETWORK = 29,                   /* NETWORK  */
+  YYSYMBOL_EBGP = 30,                      /* EBGP  */
+  YYSYMBOL_IBGP = 31,                      /* IBGP  */
+  YYSYMBOL_LOCALAS = 32,                   /* LOCALAS  */
+  YYSYMBOL_REMOTEAS = 33,                  /* REMOTEAS  */
+  YYSYMBOL_DESCR = 34,                     /* DESCR  */
+  YYSYMBOL_LOCALADDR = 35,                 /* LOCALADDR  */
+  YYSYMBOL_MULTIHOP = 36,                  /* MULTIHOP  */
+  YYSYMBOL_PASSIVE = 37,                   /* PASSIVE  */
+  YYSYMBOL_MAXPREFIX = 38,                 /* MAXPREFIX  */
+  YYSYMBOL_RESTART = 39,                   /* RESTART  */
+  YYSYMBOL_ANNOUNCE = 40,                  /* ANNOUNCE  */
+  YYSYMBOL_CAPABILITIES = 41,              /* CAPABILITIES  */
+  YYSYMBOL_REFRESH = 42,                   /* REFRESH  */
+  YYSYMBOL_AS4BYTE = 43,                   /* AS4BYTE  */
+  YYSYMBOL_CONNECTRETRY = 44,              /* CONNECTRETRY  */
+  YYSYMBOL_DEMOTE = 45,                    /* DEMOTE  */
+  YYSYMBOL_ENFORCE = 46,                   /* ENFORCE  */
+  YYSYMBOL_NEIGHBORAS = 47,                /* NEIGHBORAS  */
+  YYSYMBOL_ASOVERRIDE = 48,                /* ASOVERRIDE  */
+  YYSYMBOL_REFLECTOR = 49,                 /* REFLECTOR  */
+  YYSYMBOL_DEPEND = 50,                    /* DEPEND  */
+  YYSYMBOL_DOWN = 51,                      /* DOWN  */
+  YYSYMBOL_DUMP = 52,                      /* DUMP  */
+  YYSYMBOL_IN = 53,                        /* IN  */
+  YYSYMBOL_OUT = 54,                       /* OUT  */
+  YYSYMBOL_SOCKET = 55,                    /* SOCKET  */
+  YYSYMBOL_RESTRICTED = 56,                /* RESTRICTED  */
+  YYSYMBOL_LOG = 57,                       /* LOG  */
+  YYSYMBOL_TRANSPARENT = 58,               /* TRANSPARENT  */
+  YYSYMBOL_TCP = 59,                       /* TCP  */
+  YYSYMBOL_MD5SIG = 60,                    /* MD5SIG  */
+  YYSYMBOL_PASSWORD = 61,                  /* PASSWORD  */
+  YYSYMBOL_KEY = 62,                       /* KEY  */
+  YYSYMBOL_TTLSECURITY = 63,               /* TTLSECURITY  */
+  YYSYMBOL_ALLOW = 64,                     /* ALLOW  */
+  YYSYMBOL_DENY = 65,                      /* DENY  */
+  YYSYMBOL_MATCH = 66,                     /* MATCH  */
+  YYSYMBOL_QUICK = 67,                     /* QUICK  */
+  YYSYMBOL_FROM = 68,                      /* FROM  */
+  YYSYMBOL_TO = 69,                        /* TO  */
+  YYSYMBOL_ANY = 70,                       /* ANY  */
+  YYSYMBOL_CONNECTED = 71,                 /* CONNECTED  */
+  YYSYMBOL_STATIC = 72,                    /* STATIC  */
+  YYSYMBOL_COMMUNITY = 73,                 /* COMMUNITY  */
+  YYSYMBOL_EXTCOMMUNITY = 74,              /* EXTCOMMUNITY  */
+  YYSYMBOL_LARGECOMMUNITY = 75,            /* LARGECOMMUNITY  */
+  YYSYMBOL_DELETE = 76,                    /* DELETE  */
+  YYSYMBOL_PREFIX = 77,                    /* PREFIX  */
+  YYSYMBOL_PREFIXLEN = 78,                 /* PREFIXLEN  */
+  YYSYMBOL_PREFIXSET = 79,                 /* PREFIXSET  */
+  YYSYMBOL_ROASET = 80,                    /* ROASET  */
+  YYSYMBOL_ORIGINSET = 81,                 /* ORIGINSET  */
+  YYSYMBOL_OVS = 82,                       /* OVS  */
+  YYSYMBOL_ASSET = 83,                     /* ASSET  */
+  YYSYMBOL_SOURCEAS = 84,                  /* SOURCEAS  */
+  YYSYMBOL_TRANSITAS = 85,                 /* TRANSITAS  */
+  YYSYMBOL_PEERAS = 86,                    /* PEERAS  */
+  YYSYMBOL_MAXASLEN = 87,                  /* MAXASLEN  */
+  YYSYMBOL_MAXASSEQ = 88,                  /* MAXASSEQ  */
+  YYSYMBOL_SET = 89,                       /* SET  */
+  YYSYMBOL_LOCALPREF = 90,                 /* LOCALPREF  */
+  YYSYMBOL_MED = 91,                       /* MED  */
+  YYSYMBOL_METRIC = 92,                    /* METRIC  */
+  YYSYMBOL_NEXTHOP = 93,                   /* NEXTHOP  */
+  YYSYMBOL_REJECT = 94,                    /* REJECT  */
+  YYSYMBOL_BLACKHOLE = 95,                 /* BLACKHOLE  */
+  YYSYMBOL_NOMODIFY = 96,                  /* NOMODIFY  */
+  YYSYMBOL_SELF = 97,                      /* SELF  */
+  YYSYMBOL_PREPEND_SELF = 98,              /* PREPEND_SELF  */
+  YYSYMBOL_PREPEND_PEER = 99,              /* PREPEND_PEER  */
+  YYSYMBOL_PFTABLE = 100,                  /* PFTABLE  */
+  YYSYMBOL_WEIGHT = 101,                   /* WEIGHT  */
+  YYSYMBOL_RTLABEL = 102,                  /* RTLABEL  */
+  YYSYMBOL_ORIGIN = 103,                   /* ORIGIN  */
+  YYSYMBOL_PRIORITY = 104,                 /* PRIORITY  */
+  YYSYMBOL_ERROR = 105,                    /* ERROR  */
+  YYSYMBOL_INCLUDE = 106,                  /* INCLUDE  */
+  YYSYMBOL_IPSEC = 107,                    /* IPSEC  */
+  YYSYMBOL_ESP = 108,                      /* ESP  */
+  YYSYMBOL_AH = 109,                       /* AH  */
+  YYSYMBOL_SPI = 110,                      /* SPI  */
+  YYSYMBOL_IKE = 111,                      /* IKE  */
+  YYSYMBOL_IPV4 = 112,                     /* IPV4  */
+  YYSYMBOL_IPV6 = 113,                     /* IPV6  */
+  YYSYMBOL_QUALIFY = 114,                  /* QUALIFY  */
+  YYSYMBOL_VIA = 115,                      /* VIA  */
+  YYSYMBOL_NE = 116,                       /* NE  */
+  YYSYMBOL_LE = 117,                       /* LE  */
+  YYSYMBOL_GE = 118,                       /* GE  */
+  YYSYMBOL_XRANGE = 119,                   /* XRANGE  */
+  YYSYMBOL_LONGER = 120,                   /* LONGER  */
+  YYSYMBOL_MAXLEN = 121,                   /* MAXLEN  */
+  YYSYMBOL_STRING = 122,                   /* STRING  */
+  YYSYMBOL_NUMBER = 123,                   /* NUMBER  */
+  YYSYMBOL_124_n_ = 124,                   /* '\n'  */
+  YYSYMBOL_125_ = 125,                     /* '='  */
+  YYSYMBOL_126_ = 126,                     /* '{'  */
+  YYSYMBOL_127_ = 127,                     /* '}'  */
+  YYSYMBOL_128_ = 128,                     /* '/'  */
+  YYSYMBOL_129_ = 129,                     /* '+'  */
+  YYSYMBOL_130_ = 130,                     /* '-'  */
+  YYSYMBOL_131_ = 131,                     /* ','  */
+  YYSYMBOL_132_ = 132,                     /* '<'  */
+  YYSYMBOL_133_ = 133,                     /* '>'  */
+  YYSYMBOL_YYACCEPT = 134,                 /* $accept  */
+  YYSYMBOL_grammar = 135,                  /* grammar  */
+  YYSYMBOL_asnumber = 136,                 /* asnumber  */
+  YYSYMBOL_as4number = 137,                /* as4number  */
+  YYSYMBOL_as4number_any = 138,            /* as4number_any  */
+  YYSYMBOL_string = 139,                   /* string  */
+  YYSYMBOL_yesno = 140,                    /* yesno  */
+  YYSYMBOL_varset = 141,                   /* varset  */
+  YYSYMBOL_include = 142,                  /* include  */
+  YYSYMBOL_as_set = 143,                   /* as_set  */
+  YYSYMBOL_144_1 = 144,                    /* $@1  */
+  YYSYMBOL_as_set_l = 145,                 /* as_set_l  */
+  YYSYMBOL_prefixset = 146,                /* prefixset  */
+  YYSYMBOL_147_2 = 147,                    /* $@2  */
+  YYSYMBOL_prefixset_l = 148,              /* prefixset_l  */
+  YYSYMBOL_prefixset_item = 149,           /* prefixset_item  */
+  YYSYMBOL_roa_set = 150,                  /* roa_set  */
+  YYSYMBOL_151_3 = 151,                    /* $@3  */
+  YYSYMBOL_origin_set = 152,               /* origin_set  */
+  YYSYMBOL_153_4 = 153,                    /* $@4  */
+  YYSYMBOL_roa_set_l = 154,                /* roa_set_l  */
+  YYSYMBOL_rtr = 155,                      /* rtr  */
+  YYSYMBOL_156_5 = 156,                    /* $@5  */
+  YYSYMBOL_rtropt_l = 157,                 /* rtropt_l  */
+  YYSYMBOL_rtropt = 158,                   /* rtropt  */
+  YYSYMBOL_conf_main = 159,                /* conf_main  */
+  YYSYMBOL_rib = 160,                      /* rib  */
+  YYSYMBOL_161_6 = 161,                    /* $@6  */
+  YYSYMBOL_ribopts = 162,                  /* ribopts  */
+  YYSYMBOL_fibupdate = 163,                /* fibupdate  */
+  YYSYMBOL_mrtdump = 164,                  /* mrtdump  */
+  YYSYMBOL_network = 165,                  /* network  */
+  YYSYMBOL_inout = 166,                    /* inout  */
+  YYSYMBOL_restricted = 167,               /* restricted  */
+  YYSYMBOL_address = 168,                  /* address  */
+  YYSYMBOL_prefix = 169,                   /* prefix  */
+  YYSYMBOL_addrspec = 170,                 /* addrspec  */
+  YYSYMBOL_optnumber = 171,                /* optnumber  */
+  YYSYMBOL_l3vpn = 172,                    /* l3vpn  */
+  YYSYMBOL_173_7 = 173,                    /* $@7  */
+  YYSYMBOL_l3vpnopts_l = 174,              /* l3vpnopts_l  */
+  YYSYMBOL_l3vpnopts = 175,                /* l3vpnopts  */
+  YYSYMBOL_neighbor = 176,                 /* neighbor  */
+  YYSYMBOL_177_8 = 177,                    /* $@8  */
+  YYSYMBOL_178_9 = 178,                    /* $@9  */
+  YYSYMBOL_group = 179,                    /* group  */
+  YYSYMBOL_180_10 = 180,                   /* $@10  */
+  YYSYMBOL_groupopts_l = 181,              /* groupopts_l  */
+  YYSYMBOL_peeropts_h = 182,               /* peeropts_h  */
+  YYSYMBOL_peeropts_l = 183,               /* peeropts_l  */
+  YYSYMBOL_peeropts = 184,                 /* peeropts  */
+  YYSYMBOL_restart = 185,                  /* restart  */
+  YYSYMBOL_family = 186,                   /* family  */
+  YYSYMBOL_safi = 187,                     /* safi  */
+  YYSYMBOL_nettype = 188,                  /* nettype  */
+  YYSYMBOL_espah = 189,                    /* espah  */
+  YYSYMBOL_encspec = 190,                  /* encspec  */
+  YYSYMBOL_filterrule = 191,               /* filterrule  */
+  YYSYMBOL_action = 192,                   /* action  */
+  YYSYMBOL_quick = 193,                    /* quick  */
+  YYSYMBOL_direction = 194,                /* direction  */
+  YYSYMBOL_filter_rib_h = 195,             /* filter_rib_h  */
+  YYSYMBOL_filter_rib_l = 196,             /* filter_rib_l  */
+  YYSYMBOL_filter_rib = 197,               /* filter_rib  */
+  YYSYMBOL_filter_peer_h = 198,            /* filter_peer_h  */
+  YYSYMBOL_filter_peer_l = 199,            /* filter_peer_l  */
+  YYSYMBOL_filter_peer = 200,              /* filter_peer  */
+  YYSYMBOL_filter_prefix_h = 201,          /* filter_prefix_h  */
+  YYSYMBOL_filter_prefix_m = 202,          /* filter_prefix_m  */
+  YYSYMBOL_filter_prefix_l = 203,          /* filter_prefix_l  */
+  YYSYMBOL_filter_prefix = 204,            /* filter_prefix  */
+  YYSYMBOL_filter_as_h = 205,              /* filter_as_h  */
+  YYSYMBOL_filter_as_t_l = 206,            /* filter_as_t_l  */
+  YYSYMBOL_filter_as_t = 207,              /* filter_as_t  */
+  YYSYMBOL_filter_as_l_h = 208,            /* filter_as_l_h  */
+  YYSYMBOL_filter_as_l = 209,              /* filter_as_l  */
+  YYSYMBOL_filter_as = 210,                /* filter_as  */
+  YYSYMBOL_filter_match_h = 211,           /* filter_match_h  */
+  YYSYMBOL_212_11 = 212,                   /* $@11  */
+  YYSYMBOL_filter_match = 213,             /* filter_match  */
+  YYSYMBOL_filter_elm = 214,               /* filter_elm  */
+  YYSYMBOL_prefixlenop = 215,              /* prefixlenop  */
+  YYSYMBOL_filter_as_type = 216,           /* filter_as_type  */
+  YYSYMBOL_filter_set = 217,               /* filter_set  */
+  YYSYMBOL_filter_set_l = 218,             /* filter_set_l  */
+  YYSYMBOL_community = 219,                /* community  */
+  YYSYMBOL_delete = 220,                   /* delete  */
+  YYSYMBOL_filter_set_opt = 221,           /* filter_set_opt  */
+  YYSYMBOL_origincode = 222,               /* origincode  */
+  YYSYMBOL_validity = 223,                 /* validity  */
+  YYSYMBOL_optnl = 224,                    /* optnl  */
+  YYSYMBOL_comma = 225,                    /* comma  */
+  YYSYMBOL_unaryop = 226,                  /* unaryop  */
+  YYSYMBOL_equalityop = 227,               /* equalityop  */
+  YYSYMBOL_binaryop = 228                  /* binaryop  */
+};
+typedef enum yysymbol_kind_t yysymbol_kind_t;
+
 
 
 
@@ -538,28 +786,87 @@ int yyparse (void);
 # undef short
 #endif
 
-#ifdef YYTYPE_UINT8
-typedef YYTYPE_UINT8 yytype_uint8;
-#else
-typedef unsigned char yytype_uint8;
+/* On compilers that do not define __PTRDIFF_MAX__ etc., make sure
+   <limits.h> and (if available) <stdint.h> are included
+   so that the code can choose integer types of a good width.  */
+
+#ifndef __PTRDIFF_MAX__
+# include <limits.h> /* INFRINGES ON USER NAME SPACE */
+# if defined __STDC_VERSION__ && 199901 <= __STDC_VERSION__
+#  include <stdint.h> /* INFRINGES ON USER NAME SPACE */
+#  define YY_STDINT_H
+# endif
 #endif
 
-#ifdef YYTYPE_INT8
-typedef YYTYPE_INT8 yytype_int8;
+/* Narrow types that promote to a signed type and that can represent a
+   signed or unsigned integer of at least N bits.  In tables they can
+   save space and decrease cache pressure.  Promoting to a signed type
+   helps avoid bugs in integer arithmetic.  */
+
+#ifdef __INT_LEAST8_MAX__
+typedef __INT_LEAST8_TYPE__ yytype_int8;
+#elif defined YY_STDINT_H
+typedef int_least8_t yytype_int8;
 #else
 typedef signed char yytype_int8;
 #endif
 
-#ifdef YYTYPE_UINT16
-typedef YYTYPE_UINT16 yytype_uint16;
-#else
-typedef unsigned short yytype_uint16;
-#endif
-
-#ifdef YYTYPE_INT16
-typedef YYTYPE_INT16 yytype_int16;
+#ifdef __INT_LEAST16_MAX__
+typedef __INT_LEAST16_TYPE__ yytype_int16;
+#elif defined YY_STDINT_H
+typedef int_least16_t yytype_int16;
 #else
 typedef short yytype_int16;
+#endif
+
+/* Work around bug in HP-UX 11.23, which defines these macros
+   incorrectly for preprocessor constants.  This workaround can likely
+   be removed in 2023, as HPE has promised support for HP-UX 11.23
+   (aka HP-UX 11i v2) only through the end of 2022; see Table 2 of
+   <https://h20195.www2.hpe.com/V2/getpdf.aspx/4AA4-7673ENW.pdf>.  */
+#ifdef __hpux
+# undef UINT_LEAST8_MAX
+# undef UINT_LEAST16_MAX
+# define UINT_LEAST8_MAX 255
+# define UINT_LEAST16_MAX 65535
+#endif
+
+#if defined __UINT_LEAST8_MAX__ && __UINT_LEAST8_MAX__ <= __INT_MAX__
+typedef __UINT_LEAST8_TYPE__ yytype_uint8;
+#elif (!defined __UINT_LEAST8_MAX__ && defined YY_STDINT_H \
+       && UINT_LEAST8_MAX <= INT_MAX)
+typedef uint_least8_t yytype_uint8;
+#elif !defined __UINT_LEAST8_MAX__ && UCHAR_MAX <= INT_MAX
+typedef unsigned char yytype_uint8;
+#else
+typedef short yytype_uint8;
+#endif
+
+#if defined __UINT_LEAST16_MAX__ && __UINT_LEAST16_MAX__ <= __INT_MAX__
+typedef __UINT_LEAST16_TYPE__ yytype_uint16;
+#elif (!defined __UINT_LEAST16_MAX__ && defined YY_STDINT_H \
+       && UINT_LEAST16_MAX <= INT_MAX)
+typedef uint_least16_t yytype_uint16;
+#elif !defined __UINT_LEAST16_MAX__ && USHRT_MAX <= INT_MAX
+typedef unsigned short yytype_uint16;
+#else
+typedef int yytype_uint16;
+#endif
+
+#ifndef YYPTRDIFF_T
+# if defined __PTRDIFF_TYPE__ && defined __PTRDIFF_MAX__
+#  define YYPTRDIFF_T __PTRDIFF_TYPE__
+#  define YYPTRDIFF_MAXIMUM __PTRDIFF_MAX__
+# elif defined PTRDIFF_MAX
+#  ifndef ptrdiff_t
+#   include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#  endif
+#  define YYPTRDIFF_T ptrdiff_t
+#  define YYPTRDIFF_MAXIMUM PTRDIFF_MAX
+# else
+#  define YYPTRDIFF_T long
+#  define YYPTRDIFF_MAXIMUM LONG_MAX
+# endif
 #endif
 
 #ifndef YYSIZE_T
@@ -567,7 +874,7 @@ typedef short yytype_int16;
 #  define YYSIZE_T __SIZE_TYPE__
 # elif defined size_t
 #  define YYSIZE_T size_t
-# elif ! defined YYSIZE_T
+# elif defined __STDC_VERSION__ && 199901 <= __STDC_VERSION__
 #  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
 #  define YYSIZE_T size_t
 # else
@@ -575,7 +882,20 @@ typedef short yytype_int16;
 # endif
 #endif
 
-#define YYSIZE_MAXIMUM ((YYSIZE_T) -1)
+#define YYSIZE_MAXIMUM                                  \
+  YY_CAST (YYPTRDIFF_T,                                 \
+           (YYPTRDIFF_MAXIMUM < YY_CAST (YYSIZE_T, -1)  \
+            ? YYPTRDIFF_MAXIMUM                         \
+            : YY_CAST (YYSIZE_T, -1)))
+
+#define YYSIZEOF(X) YY_CAST (YYPTRDIFF_T, sizeof (X))
+
+
+/* Stored state numbers (used for stacks). */
+typedef yytype_int16 yy_state_t;
+
+/* State numbers in computations.  */
+typedef int yy_state_fast_t;
 
 #ifndef YY_
 # if defined YYENABLE_NLS && YYENABLE_NLS
@@ -589,38 +909,37 @@ typedef short yytype_int16;
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE
-# if (defined __GNUC__                                               \
-      && (2 < __GNUC__ || (__GNUC__ == 2 && 96 <= __GNUC_MINOR__)))  \
-     || defined __SUNPRO_C && 0x5110 <= __SUNPRO_C
-#  define YY_ATTRIBUTE(Spec) __attribute__(Spec)
+
+#ifndef YY_ATTRIBUTE_PURE
+# if defined __GNUC__ && 2 < __GNUC__ + (96 <= __GNUC_MINOR__)
+#  define YY_ATTRIBUTE_PURE __attribute__ ((__pure__))
 # else
-#  define YY_ATTRIBUTE(Spec) /* empty */
+#  define YY_ATTRIBUTE_PURE
 # endif
 #endif
 
-#ifndef YY_ATTRIBUTE_PURE
-# define YY_ATTRIBUTE_PURE   YY_ATTRIBUTE ((__pure__))
-#endif
-
 #ifndef YY_ATTRIBUTE_UNUSED
-# define YY_ATTRIBUTE_UNUSED YY_ATTRIBUTE ((__unused__))
+# if defined __GNUC__ && 2 < __GNUC__ + (7 <= __GNUC_MINOR__)
+#  define YY_ATTRIBUTE_UNUSED __attribute__ ((__unused__))
+# else
+#  define YY_ATTRIBUTE_UNUSED
+# endif
 #endif
 
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
-# define YYUSE(E) ((void) (E))
+# define YY_USE(E) ((void) (E))
 #else
-# define YYUSE(E) /* empty */
+# define YY_USE(E) /* empty */
 #endif
 
 #if defined __GNUC__ && ! defined __ICC && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
 /* Suppress an incorrect diagnostic about yylval being uninitialized.  */
-# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN \
-    _Pragma ("GCC diagnostic push") \
-    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")\
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                            \
+    _Pragma ("GCC diagnostic push")                                     \
+    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")              \
     _Pragma ("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
-# define YY_IGNORE_MAYBE_UNINITIALIZED_END \
+# define YY_IGNORE_MAYBE_UNINITIALIZED_END      \
     _Pragma ("GCC diagnostic pop")
 #else
 # define YY_INITIAL_VALUE(Value) Value
@@ -633,8 +952,22 @@ typedef short yytype_int16;
 # define YY_INITIAL_VALUE(Value) /* Nothing. */
 #endif
 
+#if defined __cplusplus && defined __GNUC__ && ! defined __ICC && 6 <= __GNUC__
+# define YY_IGNORE_USELESS_CAST_BEGIN                          \
+    _Pragma ("GCC diagnostic push")                            \
+    _Pragma ("GCC diagnostic ignored \"-Wuseless-cast\"")
+# define YY_IGNORE_USELESS_CAST_END            \
+    _Pragma ("GCC diagnostic pop")
+#endif
+#ifndef YY_IGNORE_USELESS_CAST_BEGIN
+# define YY_IGNORE_USELESS_CAST_BEGIN
+# define YY_IGNORE_USELESS_CAST_END
+#endif
 
-#if ! defined yyoverflow || YYERROR_VERBOSE
+
+#define YY_ASSERT(E) ((void) (0 && (E)))
+
+#if !defined yyoverflow
 
 /* The parser invokes alloca or malloc; define the necessary symbols.  */
 
@@ -699,8 +1032,7 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 #   endif
 #  endif
 # endif
-#endif /* ! defined yyoverflow || YYERROR_VERBOSE */
-
+#endif /* !defined yyoverflow */
 
 #if (! defined yyoverflow \
      && (! defined __cplusplus \
@@ -709,17 +1041,17 @@ void free (void *); /* INFRINGES ON USER NAME SPACE */
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
-  yytype_int16 yyss_alloc;
+  yy_state_t yyss_alloc;
   YYSTYPE yyvs_alloc;
 };
 
 /* The size of the maximum gap between one aligned stack and the next.  */
-# define YYSTACK_GAP_MAXIMUM (sizeof (union yyalloc) - 1)
+# define YYSTACK_GAP_MAXIMUM (YYSIZEOF (union yyalloc) - 1)
 
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
 # define YYSTACK_BYTES(N) \
-     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
+     ((N) * (YYSIZEOF (yy_state_t) + YYSIZEOF (YYSTYPE)) \
       + YYSTACK_GAP_MAXIMUM)
 
 # define YYCOPY_NEEDED 1
@@ -732,11 +1064,11 @@ union yyalloc
 # define YYSTACK_RELOCATE(Stack_alloc, Stack)                           \
     do                                                                  \
       {                                                                 \
-        YYSIZE_T yynewbytes;                                            \
+        YYPTRDIFF_T yynewbytes;                                         \
         YYCOPY (&yyptr->Stack_alloc, Stack, yysize);                    \
         Stack = &yyptr->Stack_alloc;                                    \
-        yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
-        yyptr += yynewbytes / sizeof (*yyptr);                          \
+        yynewbytes = yystacksize * YYSIZEOF (*Stack) + YYSTACK_GAP_MAXIMUM; \
+        yyptr += yynewbytes / YYSIZEOF (*yyptr);                        \
       }                                                                 \
     while (0)
 
@@ -748,12 +1080,12 @@ union yyalloc
 # ifndef YYCOPY
 #  if defined __GNUC__ && 1 < __GNUC__
 #   define YYCOPY(Dst, Src, Count) \
-      __builtin_memcpy (Dst, Src, (Count) * sizeof (*(Src)))
+      __builtin_memcpy (Dst, Src, YY_CAST (YYSIZE_T, (Count)) * sizeof (*(Src)))
 #  else
 #   define YYCOPY(Dst, Src, Count)              \
       do                                        \
         {                                       \
-          YYSIZE_T yyi;                         \
+          YYPTRDIFF_T yyi;                      \
           for (yyi = 0; yyi < (Count); yyi++)   \
             (Dst)[yyi] = (Src)[yyi];            \
         }                                       \
@@ -776,13 +1108,16 @@ union yyalloc
 /* YYNSTATES -- Number of states.  */
 #define YYNSTATES  579
 
-#define YYUNDEFTOK  2
+/* YYMAXUTOK -- Last valid token kind.  */
 #define YYMAXUTOK   378
+
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
    as returned by yylex, with out-of-bounds checking.  */
-#define YYTRANSLATE(YYX)                                                \
-  ((unsigned) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
+#define YYTRANSLATE(YYX)                                \
+  (0 <= (YYX) && (YYX) <= YYMAXUTOK                     \
+   ? YY_CAST (yysymbol_kind_t, yytranslate[YYX])        \
+   : YYSYMBOL_YYUNDEF)
 
 /* YYTRANSLATE[TOKEN-NUM] -- Symbol number corresponding to TOKEN-NUM
    as returned by yylex.  */
@@ -830,7 +1165,7 @@ static const yytype_uint8 yytranslate[] =
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
-static const yytype_uint16 yyrline[] =
+static const yytype_int16 yyrline[] =
 {
        0,   251,   251,   252,   253,   254,   255,   256,   257,   258,
      259,   260,   261,   262,   263,   264,   265,   266,   269,   280,
@@ -867,41 +1202,48 @@ static const yytype_uint16 yyrline[] =
 };
 #endif
 
-#if YYDEBUG || YYERROR_VERBOSE || 0
+/** Accessing symbol of state STATE.  */
+#define YY_ACCESSING_SYMBOL(State) YY_CAST (yysymbol_kind_t, yystos[State])
+
+#if YYDEBUG || 0
+/* The user-facing name of the symbol whose (internal) number is
+   YYSYMBOL.  No bounds checking.  */
+static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
+
 /* YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
    First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
-  "$end", "error", "$undefined", "AS", "ROUTERID", "HOLDTIME", "YMIN",
-  "LISTEN", "ON", "FIBUPDATE", "FIBPRIORITY", "RTABLE", "NONE", "UNICAST",
-  "VPN", "RD", "EXPORT", "EXPORTTRGT", "IMPORTTRGT", "DEFAULTROUTE", "RDE",
-  "RIB", "EVALUATE", "IGNORE", "COMPARE", "RTR", "PORT", "GROUP",
-  "NEIGHBOR", "NETWORK", "EBGP", "IBGP", "LOCALAS", "REMOTEAS", "DESCR",
-  "LOCALADDR", "MULTIHOP", "PASSIVE", "MAXPREFIX", "RESTART", "ANNOUNCE",
-  "CAPABILITIES", "REFRESH", "AS4BYTE", "CONNECTRETRY", "DEMOTE",
-  "ENFORCE", "NEIGHBORAS", "ASOVERRIDE", "REFLECTOR", "DEPEND", "DOWN",
-  "DUMP", "IN", "OUT", "SOCKET", "RESTRICTED", "LOG", "TRANSPARENT", "TCP",
-  "MD5SIG", "PASSWORD", "KEY", "TTLSECURITY", "ALLOW", "DENY", "MATCH",
-  "QUICK", "FROM", "TO", "ANY", "CONNECTED", "STATIC", "COMMUNITY",
-  "EXTCOMMUNITY", "LARGECOMMUNITY", "DELETE", "PREFIX", "PREFIXLEN",
-  "PREFIXSET", "ROASET", "ORIGINSET", "OVS", "ASSET", "SOURCEAS",
-  "TRANSITAS", "PEERAS", "MAXASLEN", "MAXASSEQ", "SET", "LOCALPREF", "MED",
-  "METRIC", "NEXTHOP", "REJECT", "BLACKHOLE", "NOMODIFY", "SELF",
-  "PREPEND_SELF", "PREPEND_PEER", "PFTABLE", "WEIGHT", "RTLABEL", "ORIGIN",
-  "PRIORITY", "ERROR", "INCLUDE", "IPSEC", "ESP", "AH", "SPI", "IKE",
-  "IPV4", "IPV6", "QUALIFY", "VIA", "NE", "LE", "GE", "XRANGE", "LONGER",
-  "MAXLEN", "STRING", "NUMBER", "'\\n'", "'='", "'{'", "'}'", "'/'", "'+'",
-  "'-'", "','", "'<'", "'>'", "$accept", "grammar", "asnumber",
-  "as4number", "as4number_any", "string", "yesno", "varset", "include",
-  "as_set", "$@1", "as_set_l", "prefixset", "$@2", "prefixset_l",
-  "prefixset_item", "roa_set", "$@3", "origin_set", "$@4", "roa_set_l",
-  "rtr", "$@5", "rtropt_l", "rtropt", "conf_main", "rib", "$@6", "ribopts",
-  "fibupdate", "mrtdump", "network", "inout", "restricted", "address",
-  "prefix", "addrspec", "optnumber", "l3vpn", "$@7", "l3vpnopts_l",
-  "l3vpnopts", "neighbor", "$@8", "$@9", "group", "$@10", "groupopts_l",
-  "peeropts_h", "peeropts_l", "peeropts", "restart", "family", "safi",
-  "nettype", "espah", "encspec", "filterrule", "action", "quick",
-  "direction", "filter_rib_h", "filter_rib_l", "filter_rib",
+  "\"end of file\"", "error", "\"invalid token\"", "AS", "ROUTERID",
+  "HOLDTIME", "YMIN", "LISTEN", "ON", "FIBUPDATE", "FIBPRIORITY", "RTABLE",
+  "NONE", "UNICAST", "VPN", "RD", "EXPORT", "EXPORTTRGT", "IMPORTTRGT",
+  "DEFAULTROUTE", "RDE", "RIB", "EVALUATE", "IGNORE", "COMPARE", "RTR",
+  "PORT", "GROUP", "NEIGHBOR", "NETWORK", "EBGP", "IBGP", "LOCALAS",
+  "REMOTEAS", "DESCR", "LOCALADDR", "MULTIHOP", "PASSIVE", "MAXPREFIX",
+  "RESTART", "ANNOUNCE", "CAPABILITIES", "REFRESH", "AS4BYTE",
+  "CONNECTRETRY", "DEMOTE", "ENFORCE", "NEIGHBORAS", "ASOVERRIDE",
+  "REFLECTOR", "DEPEND", "DOWN", "DUMP", "IN", "OUT", "SOCKET",
+  "RESTRICTED", "LOG", "TRANSPARENT", "TCP", "MD5SIG", "PASSWORD", "KEY",
+  "TTLSECURITY", "ALLOW", "DENY", "MATCH", "QUICK", "FROM", "TO", "ANY",
+  "CONNECTED", "STATIC", "COMMUNITY", "EXTCOMMUNITY", "LARGECOMMUNITY",
+  "DELETE", "PREFIX", "PREFIXLEN", "PREFIXSET", "ROASET", "ORIGINSET",
+  "OVS", "ASSET", "SOURCEAS", "TRANSITAS", "PEERAS", "MAXASLEN",
+  "MAXASSEQ", "SET", "LOCALPREF", "MED", "METRIC", "NEXTHOP", "REJECT",
+  "BLACKHOLE", "NOMODIFY", "SELF", "PREPEND_SELF", "PREPEND_PEER",
+  "PFTABLE", "WEIGHT", "RTLABEL", "ORIGIN", "PRIORITY", "ERROR", "INCLUDE",
+  "IPSEC", "ESP", "AH", "SPI", "IKE", "IPV4", "IPV6", "QUALIFY", "VIA",
+  "NE", "LE", "GE", "XRANGE", "LONGER", "MAXLEN", "STRING", "NUMBER",
+  "'\\n'", "'='", "'{'", "'}'", "'/'", "'+'", "'-'", "','", "'<'", "'>'",
+  "$accept", "grammar", "asnumber", "as4number", "as4number_any", "string",
+  "yesno", "varset", "include", "as_set", "$@1", "as_set_l", "prefixset",
+  "$@2", "prefixset_l", "prefixset_item", "roa_set", "$@3", "origin_set",
+  "$@4", "roa_set_l", "rtr", "$@5", "rtropt_l", "rtropt", "conf_main",
+  "rib", "$@6", "ribopts", "fibupdate", "mrtdump", "network", "inout",
+  "restricted", "address", "prefix", "addrspec", "optnumber", "l3vpn",
+  "$@7", "l3vpnopts_l", "l3vpnopts", "neighbor", "$@8", "$@9", "group",
+  "$@10", "groupopts_l", "peeropts_h", "peeropts_l", "peeropts", "restart",
+  "family", "safi", "nettype", "espah", "encspec", "filterrule", "action",
+  "quick", "direction", "filter_rib_h", "filter_rib_l", "filter_rib",
   "filter_peer_h", "filter_peer_l", "filter_peer", "filter_prefix_h",
   "filter_prefix_m", "filter_prefix_l", "filter_prefix", "filter_as_h",
   "filter_as_t_l", "filter_as_t", "filter_as_l_h", "filter_as_l",
@@ -910,12 +1252,18 @@ static const char *const yytname[] =
   "community", "delete", "filter_set_opt", "origincode", "validity",
   "optnl", "comma", "unaryop", "equalityop", "binaryop", YY_NULLPTR
 };
+
+static const char *
+yysymbol_name (yysymbol_kind_t yysymbol)
+{
+  return yytname[yysymbol];
+}
 #endif
 
-# ifdef YYPRINT
+#ifdef YYPRINT
 /* YYTOKNUM[NUM] -- (External) token number corresponding to the
    (internal) symbol number NUM (which must be that of a token).  */
-static const yytype_uint16 yytoknum[] =
+static const yytype_int16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
@@ -932,16 +1280,16 @@ static const yytype_uint16 yytoknum[] =
      375,   376,   377,   378,    10,    61,   123,   125,    47,    43,
       45,    44,    60,    62
 };
-# endif
+#endif
 
-#define YYPACT_NINF -413
+#define YYPACT_NINF (-413)
 
-#define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-413)))
+#define yypact_value_is_default(Yyn) \
+  ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF -300
+#define YYTABLE_NINF (-300)
 
-#define yytable_value_is_error(Yytable_value) \
+#define yytable_value_is_error(Yyn) \
   0
 
   /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
@@ -1011,7 +1359,7 @@ static const yytype_int16 yypact[] =
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
      Performed when YYTABLE does not specify something else to do.  Zero
      means the default is an error.  */
-static const yytype_uint16 yydefact[] =
+static const yytype_int16 yydefact[] =
 {
        2,     0,     1,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
@@ -1091,7 +1439,7 @@ static const yytype_int16 yypgoto[] =
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-      -1,     1,   327,    54,   514,    71,   296,    33,    34,    35,
+       0,     1,   327,    54,   514,    71,   296,    33,    34,    35,
      245,   329,    36,   238,   314,   239,    37,   187,    38,   243,
      240,    39,   118,   265,   266,    40,    41,   153,   202,   203,
      297,    43,   135,   137,   255,   241,   149,   182,    44,   198,
@@ -1358,7 +1706,7 @@ static const yytype_uint8 yyr1[] =
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
-static const yytype_uint8 yyr2[] =
+static const yytype_int8 yyr2[] =
 {
        0,     2,     0,     2,     3,     3,     3,     3,     3,     3,
        3,     3,     3,     3,     3,     3,     3,     3,     1,     1,
@@ -1395,10 +1743,10 @@ static const yytype_uint8 yyr2[] =
 };
 
 
+enum { YYENOMEM = -2 };
+
 #define yyerrok         (yyerrstatus = 0)
 #define yyclearin       (yychar = YYEMPTY)
-#define YYEMPTY         (-2)
-#define YYEOF           0
 
 #define YYACCEPT        goto yyacceptlab
 #define YYABORT         goto yyabortlab
@@ -1424,10 +1772,9 @@ static const yytype_uint8 yyr2[] =
       }                                                           \
   while (0)
 
-/* Error token number */
-#define YYTERROR        1
-#define YYERRCODE       256
-
+/* Backward compatibility with an undocumented macro.
+   Use YYerror or YYUNDEF. */
+#define YYERRCODE YYUNDEF
 
 
 /* Enable debugging if requested.  */
@@ -1445,18 +1792,18 @@ do {                                            \
 } while (0)
 
 /* This macro is provided for backward compatibility. */
-#ifndef YY_LOCATION_PRINT
-# define YY_LOCATION_PRINT(File, Loc) ((void) 0)
-#endif
+# ifndef YY_LOCATION_PRINT
+#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
+# endif
 
 
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)                    \
+# define YY_SYMBOL_PRINT(Title, Kind, Value, Location)                    \
 do {                                                                      \
   if (yydebug)                                                            \
     {                                                                     \
       YYFPRINTF (stderr, "%s ", Title);                                   \
       yy_symbol_print (stderr,                                            \
-                  Type, Value); \
+                  Kind, Value); \
       YYFPRINTF (stderr, "\n");                                           \
     }                                                                     \
 } while (0)
@@ -1467,17 +1814,20 @@ do {                                                                      \
 `-----------------------------------*/
 
 static void
-yy_symbol_value_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_value_print (FILE *yyo,
+                       yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
 {
   FILE *yyoutput = yyo;
-  YYUSE (yyoutput);
+  YY_USE (yyoutput);
   if (!yyvaluep)
     return;
 # ifdef YYPRINT
-  if (yytype < YYNTOKENS)
-    YYPRINT (yyo, yytoknum[yytype], *yyvaluep);
+  if (yykind < YYNTOKENS)
+    YYPRINT (yyo, yytoknum[yykind], *yyvaluep);
 # endif
-  YYUSE (yytype);
+  YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
+  YY_USE (yykind);
+  YY_IGNORE_MAYBE_UNINITIALIZED_END
 }
 
 
@@ -1486,12 +1836,13 @@ yy_symbol_value_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
 `---------------------------*/
 
 static void
-yy_symbol_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
+yy_symbol_print (FILE *yyo,
+                 yysymbol_kind_t yykind, YYSTYPE const * const yyvaluep)
 {
   YYFPRINTF (yyo, "%s %s (",
-             yytype < YYNTOKENS ? "token" : "nterm", yytname[yytype]);
+             yykind < YYNTOKENS ? "token" : "nterm", yysymbol_name (yykind));
 
-  yy_symbol_value_print (yyo, yytype, yyvaluep);
+  yy_symbol_value_print (yyo, yykind, yyvaluep);
   YYFPRINTF (yyo, ")");
 }
 
@@ -1501,7 +1852,7 @@ yy_symbol_print (FILE *yyo, int yytype, YYSTYPE const * const yyvaluep)
 `------------------------------------------------------------------*/
 
 static void
-yy_stack_print (yytype_int16 *yybottom, yytype_int16 *yytop)
+yy_stack_print (yy_state_t *yybottom, yy_state_t *yytop)
 {
   YYFPRINTF (stderr, "Stack now");
   for (; yybottom <= yytop; yybottom++)
@@ -1524,21 +1875,21 @@ do {                                                            \
 `------------------------------------------------*/
 
 static void
-yy_reduce_print (yytype_int16 *yyssp, YYSTYPE *yyvsp, int yyrule)
+yy_reduce_print (yy_state_t *yyssp, YYSTYPE *yyvsp,
+                 int yyrule)
 {
-  unsigned long yylno = yyrline[yyrule];
+  int yylno = yyrline[yyrule];
   int yynrhs = yyr2[yyrule];
   int yyi;
-  YYFPRINTF (stderr, "Reducing stack by rule %d (line %lu):\n",
+  YYFPRINTF (stderr, "Reducing stack by rule %d (line %d):\n",
              yyrule - 1, yylno);
   /* The symbols being reduced.  */
   for (yyi = 0; yyi < yynrhs; yyi++)
     {
       YYFPRINTF (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr,
-                       yystos[yyssp[yyi + 1 - yynrhs]],
-                       &yyvsp[(yyi + 1) - (yynrhs)]
-                                              );
+                       YY_ACCESSING_SYMBOL (+yyssp[yyi + 1 - yynrhs]),
+                       &yyvsp[(yyi + 1) - (yynrhs)]);
       YYFPRINTF (stderr, "\n");
     }
 }
@@ -1553,8 +1904,8 @@ do {                                    \
    multiple parsers can coexist.  */
 int yydebug;
 #else /* !YYDEBUG */
-# define YYDPRINTF(Args)
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)
+# define YYDPRINTF(Args) ((void) 0)
+# define YY_SYMBOL_PRINT(Title, Kind, Value, Location)
 # define YY_STACK_PRINT(Bottom, Top)
 # define YY_REDUCE_PRINT(Rule)
 #endif /* !YYDEBUG */
@@ -1577,260 +1928,38 @@ int yydebug;
 #endif
 
 
-#if YYERROR_VERBOSE
 
-# ifndef yystrlen
-#  if defined __GLIBC__ && defined _STRING_H
-#   define yystrlen strlen
-#  else
-/* Return the length of YYSTR.  */
-static YYSIZE_T
-yystrlen (const char *yystr)
-{
-  YYSIZE_T yylen;
-  for (yylen = 0; yystr[yylen]; yylen++)
-    continue;
-  return yylen;
-}
-#  endif
-# endif
 
-# ifndef yystpcpy
-#  if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
-#   define yystpcpy stpcpy
-#  else
-/* Copy YYSRC to YYDEST, returning the address of the terminating '\0' in
-   YYDEST.  */
-static char *
-yystpcpy (char *yydest, const char *yysrc)
-{
-  char *yyd = yydest;
-  const char *yys = yysrc;
 
-  while ((*yyd++ = *yys++) != '\0')
-    continue;
-
-  return yyd - 1;
-}
-#  endif
-# endif
-
-# ifndef yytnamerr
-/* Copy to YYRES the contents of YYSTR after stripping away unnecessary
-   quotes and backslashes, so that it's suitable for yyerror.  The
-   heuristic is that double-quoting is unnecessary unless the string
-   contains an apostrophe, a comma, or backslash (other than
-   backslash-backslash).  YYSTR is taken from yytname.  If YYRES is
-   null, do not copy; instead, return the length of what the result
-   would have been.  */
-static YYSIZE_T
-yytnamerr (char *yyres, const char *yystr)
-{
-  if (*yystr == '"')
-    {
-      YYSIZE_T yyn = 0;
-      char const *yyp = yystr;
-
-      for (;;)
-        switch (*++yyp)
-          {
-          case '\'':
-          case ',':
-            goto do_not_strip_quotes;
-
-          case '\\':
-            if (*++yyp != '\\')
-              goto do_not_strip_quotes;
-            else
-              goto append;
-
-          append:
-          default:
-            if (yyres)
-              yyres[yyn] = *yyp;
-            yyn++;
-            break;
-
-          case '"':
-            if (yyres)
-              yyres[yyn] = '\0';
-            return yyn;
-          }
-    do_not_strip_quotes: ;
-    }
-
-  if (! yyres)
-    return yystrlen (yystr);
-
-  return (YYSIZE_T) (yystpcpy (yyres, yystr) - yyres);
-}
-# endif
-
-/* Copy into *YYMSG, which is of size *YYMSG_ALLOC, an error message
-   about the unexpected token YYTOKEN for the state stack whose top is
-   YYSSP.
-
-   Return 0 if *YYMSG was successfully written.  Return 1 if *YYMSG is
-   not large enough to hold the message.  In that case, also set
-   *YYMSG_ALLOC to the required number of bytes.  Return 2 if the
-   required number of bytes is too large to store.  */
-static int
-yysyntax_error (YYSIZE_T *yymsg_alloc, char **yymsg,
-                yytype_int16 *yyssp, int yytoken)
-{
-  YYSIZE_T yysize0 = yytnamerr (YY_NULLPTR, yytname[yytoken]);
-  YYSIZE_T yysize = yysize0;
-  enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
-  /* Internationalized format string. */
-  const char *yyformat = YY_NULLPTR;
-  /* Arguments of yyformat. */
-  char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
-  /* Number of reported tokens (one for the "unexpected", one per
-     "expected"). */
-  int yycount = 0;
-
-  /* There are many possibilities here to consider:
-     - If this state is a consistent state with a default action, then
-       the only way this function was invoked is if the default action
-       is an error action.  In that case, don't check for expected
-       tokens because there are none.
-     - The only way there can be no lookahead present (in yychar) is if
-       this state is a consistent state with a default action.  Thus,
-       detecting the absence of a lookahead is sufficient to determine
-       that there is no unexpected or expected token to report.  In that
-       case, just report a simple "syntax error".
-     - Don't assume there isn't a lookahead just because this state is a
-       consistent state with a default action.  There might have been a
-       previous inconsistent state, consistent state with a non-default
-       action, or user semantic action that manipulated yychar.
-     - Of course, the expected token list depends on states to have
-       correct lookahead information, and it depends on the parser not
-       to perform extra reductions after fetching a lookahead from the
-       scanner and before detecting a syntax error.  Thus, state merging
-       (from LALR or IELR) and default reductions corrupt the expected
-       token list.  However, the list is correct for canonical LR with
-       one exception: it will still contain any token that will not be
-       accepted due to an error action in a later state.
-  */
-  if (yytoken != YYEMPTY)
-    {
-      int yyn = yypact[*yyssp];
-      yyarg[yycount++] = yytname[yytoken];
-      if (!yypact_value_is_default (yyn))
-        {
-          /* Start YYX at -YYN if negative to avoid negative indexes in
-             YYCHECK.  In other words, skip the first -YYN actions for
-             this state because they are default actions.  */
-          int yyxbegin = yyn < 0 ? -yyn : 0;
-          /* Stay within bounds of both yycheck and yytname.  */
-          int yychecklim = YYLAST - yyn + 1;
-          int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
-          int yyx;
-
-          for (yyx = yyxbegin; yyx < yyxend; ++yyx)
-            if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR
-                && !yytable_value_is_error (yytable[yyx + yyn]))
-              {
-                if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
-                  {
-                    yycount = 1;
-                    yysize = yysize0;
-                    break;
-                  }
-                yyarg[yycount++] = yytname[yyx];
-                {
-                  YYSIZE_T yysize1 = yysize + yytnamerr (YY_NULLPTR, yytname[yyx]);
-                  if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
-                    yysize = yysize1;
-                  else
-                    return 2;
-                }
-              }
-        }
-    }
-
-  switch (yycount)
-    {
-# define YYCASE_(N, S)                      \
-      case N:                               \
-        yyformat = S;                       \
-      break
-    default: /* Avoid compiler warnings. */
-      YYCASE_(0, YY_("syntax error"));
-      YYCASE_(1, YY_("syntax error, unexpected %s"));
-      YYCASE_(2, YY_("syntax error, unexpected %s, expecting %s"));
-      YYCASE_(3, YY_("syntax error, unexpected %s, expecting %s or %s"));
-      YYCASE_(4, YY_("syntax error, unexpected %s, expecting %s or %s or %s"));
-      YYCASE_(5, YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s"));
-# undef YYCASE_
-    }
-
-  {
-    YYSIZE_T yysize1 = yysize + yystrlen (yyformat);
-    if (yysize <= yysize1 && yysize1 <= YYSTACK_ALLOC_MAXIMUM)
-      yysize = yysize1;
-    else
-      return 2;
-  }
-
-  if (*yymsg_alloc < yysize)
-    {
-      *yymsg_alloc = 2 * yysize;
-      if (! (yysize <= *yymsg_alloc
-             && *yymsg_alloc <= YYSTACK_ALLOC_MAXIMUM))
-        *yymsg_alloc = YYSTACK_ALLOC_MAXIMUM;
-      return 1;
-    }
-
-  /* Avoid sprintf, as that infringes on the user's name space.
-     Don't have undefined behavior even if the translation
-     produced a string with the wrong number of "%s"s.  */
-  {
-    char *yyp = *yymsg;
-    int yyi = 0;
-    while ((*yyp = *yyformat) != '\0')
-      if (*yyp == '%' && yyformat[1] == 's' && yyi < yycount)
-        {
-          yyp += yytnamerr (yyp, yyarg[yyi++]);
-          yyformat += 2;
-        }
-      else
-        {
-          yyp++;
-          yyformat++;
-        }
-  }
-  return 0;
-}
-#endif /* YYERROR_VERBOSE */
 
 /*-----------------------------------------------.
 | Release the memory associated to this symbol.  |
 `-----------------------------------------------*/
 
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep)
+yydestruct (const char *yymsg,
+            yysymbol_kind_t yykind, YYSTYPE *yyvaluep)
 {
-  YYUSE (yyvaluep);
+  YY_USE (yyvaluep);
   if (!yymsg)
     yymsg = "Deleting";
-  YY_SYMBOL_PRINT (yymsg, yytype, yyvaluep, yylocationp);
+  YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);
 
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-  YYUSE (yytype);
+  YY_USE (yykind);
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 }
 
 
-
-
-/* The lookahead symbol.  */
+/* Lookahead token kind.  */
 int yychar;
 
 /* The semantic value of the lookahead symbol.  */
 YYSTYPE yylval;
 /* Number of syntax errors so far.  */
 int yynerrs;
+
+
 
 
 /*----------.
@@ -1840,43 +1969,36 @@ int yynerrs;
 int
 yyparse (void)
 {
-    int yystate;
+    yy_state_fast_t yystate = 0;
     /* Number of tokens to shift before error messages enabled.  */
-    int yyerrstatus;
+    int yyerrstatus = 0;
 
-    /* The stacks and their tools:
-       'yyss': related to states.
-       'yyvs': related to semantic values.
-
-       Refer to the stacks through separate pointers, to allow yyoverflow
+    /* Refer to the stacks through separate pointers, to allow yyoverflow
        to reallocate them elsewhere.  */
 
-    /* The state stack.  */
-    yytype_int16 yyssa[YYINITDEPTH];
-    yytype_int16 *yyss;
-    yytype_int16 *yyssp;
+    /* Their size.  */
+    YYPTRDIFF_T yystacksize = YYINITDEPTH;
 
-    /* The semantic value stack.  */
+    /* The state stack: array, bottom, top.  */
+    yy_state_t yyssa[YYINITDEPTH];
+    yy_state_t *yyss = yyssa;
+    yy_state_t *yyssp = yyss;
+
+    /* The semantic value stack: array, bottom, top.  */
     YYSTYPE yyvsa[YYINITDEPTH];
-    YYSTYPE *yyvs;
-    YYSTYPE *yyvsp;
-
-    YYSIZE_T yystacksize;
+    YYSTYPE *yyvs = yyvsa;
+    YYSTYPE *yyvsp = yyvs;
 
   int yyn;
+  /* The return value of yyparse.  */
   int yyresult;
-  /* Lookahead token as an internal (translated) token number.  */
-  int yytoken = 0;
+  /* Lookahead symbol kind.  */
+  yysymbol_kind_t yytoken = YYSYMBOL_YYEMPTY;
   /* The variables used to return semantic value and location from the
      action routines.  */
   YYSTYPE yyval;
 
-#if YYERROR_VERBOSE
-  /* Buffer for error messages, and its allocated size.  */
-  char yymsgbuf[128];
-  char *yymsg = yymsgbuf;
-  YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
-#endif
+
 
 #define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
 
@@ -1884,15 +2006,8 @@ yyparse (void)
      Keep to zero when no symbol should be popped.  */
   int yylen = 0;
 
-  yyssp = yyss = yyssa;
-  yyvsp = yyvs = yyvsa;
-  yystacksize = YYINITDEPTH;
-
   YYDPRINTF ((stderr, "Starting parse\n"));
 
-  yystate = 0;
-  yyerrstatus = 0;
-  yynerrs = 0;
   yychar = YYEMPTY; /* Cause a token to be read.  */
   goto yysetstate;
 
@@ -1907,10 +2022,15 @@ yynewstate:
 
 
 /*--------------------------------------------------------------------.
-| yynewstate -- set current state (the top of the stack) to yystate.  |
+| yysetstate -- set current state (the top of the stack) to yystate.  |
 `--------------------------------------------------------------------*/
 yysetstate:
-  *yyssp = (yytype_int16) yystate;
+  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
+  YY_ASSERT (0 <= yystate && yystate < YYNSTATES);
+  YY_IGNORE_USELESS_CAST_BEGIN
+  *yyssp = YY_CAST (yy_state_t, yystate);
+  YY_IGNORE_USELESS_CAST_END
+  YY_STACK_PRINT (yyss, yyssp);
 
   if (yyss + yystacksize - 1 <= yyssp)
 #if !defined yyoverflow && !defined YYSTACK_RELOCATE
@@ -1918,23 +2038,23 @@ yysetstate:
 #else
     {
       /* Get the current used size of the three stacks, in elements.  */
-      YYSIZE_T yysize = (YYSIZE_T) (yyssp - yyss + 1);
+      YYPTRDIFF_T yysize = yyssp - yyss + 1;
 
 # if defined yyoverflow
       {
         /* Give user a chance to reallocate the stack.  Use copies of
            these so that the &'s don't force the real ones into
            memory.  */
+        yy_state_t *yyss1 = yyss;
         YYSTYPE *yyvs1 = yyvs;
-        yytype_int16 *yyss1 = yyss;
 
         /* Each stack pointer address is followed by the size of the
            data in use in that stack, in bytes.  This used to be a
            conditional around just the two extra args, but that might
            be undefined if yyoverflow is a macro.  */
         yyoverflow (YY_("memory exhausted"),
-                    &yyss1, yysize * sizeof (*yyssp),
-                    &yyvs1, yysize * sizeof (*yyvsp),
+                    &yyss1, yysize * YYSIZEOF (*yyssp),
+                    &yyvs1, yysize * YYSIZEOF (*yyvsp),
                     &yystacksize);
         yyss = yyss1;
         yyvs = yyvs1;
@@ -1948,14 +2068,15 @@ yysetstate:
         yystacksize = YYMAXDEPTH;
 
       {
-        yytype_int16 *yyss1 = yyss;
+        yy_state_t *yyss1 = yyss;
         union yyalloc *yyptr =
-          (union yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
+          YY_CAST (union yyalloc *,
+                   YYSTACK_ALLOC (YY_CAST (YYSIZE_T, YYSTACK_BYTES (yystacksize))));
         if (! yyptr)
           goto yyexhaustedlab;
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
-# undef YYSTACK_RELOCATE
+#  undef YYSTACK_RELOCATE
         if (yyss1 != yyssa)
           YYSTACK_FREE (yyss1);
       }
@@ -1964,15 +2085,15 @@ yysetstate:
       yyssp = yyss + yysize - 1;
       yyvsp = yyvs + yysize - 1;
 
-      YYDPRINTF ((stderr, "Stack size increased to %lu\n",
-                  (unsigned long) yystacksize));
+      YY_IGNORE_USELESS_CAST_BEGIN
+      YYDPRINTF ((stderr, "Stack size increased to %ld\n",
+                  YY_CAST (long, yystacksize)));
+      YY_IGNORE_USELESS_CAST_END
 
       if (yyss + yystacksize - 1 <= yyssp)
         YYABORT;
     }
 #endif /* !defined yyoverflow && !defined YYSTACK_RELOCATE */
-
-  YYDPRINTF ((stderr, "Entering state %d\n", yystate));
 
   if (yystate == YYFINAL)
     YYACCEPT;
@@ -1994,17 +2115,28 @@ yybackup:
 
   /* Not known => get a lookahead token if don't already have one.  */
 
-  /* YYCHAR is either YYEMPTY or YYEOF or a valid lookahead symbol.  */
+  /* YYCHAR is either empty, or end-of-input, or a valid lookahead.  */
   if (yychar == YYEMPTY)
     {
-      YYDPRINTF ((stderr, "Reading a token: "));
+      YYDPRINTF ((stderr, "Reading a token\n"));
       yychar = yylex ();
     }
 
   if (yychar <= YYEOF)
     {
-      yychar = yytoken = YYEOF;
+      yychar = YYEOF;
+      yytoken = YYSYMBOL_YYEOF;
       YYDPRINTF ((stderr, "Now at end of input.\n"));
+    }
+  else if (yychar == YYerror)
+    {
+      /* The scanner already issued an error message, process directly
+         to error recovery.  But do not keep the error token as
+         lookahead, it is too special and may lead us to an endless
+         loop in error recovery. */
+      yychar = YYUNDEF;
+      yytoken = YYSYMBOL_YYerror;
+      goto yyerrlab1;
     }
   else
     {
@@ -2033,15 +2165,13 @@ yybackup:
 
   /* Shift the lookahead token.  */
   YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
-
-  /* Discard the shifted token.  */
-  yychar = YYEMPTY;
-
   yystate = yyn;
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   *++yyvsp = yylval;
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 
+  /* Discard the shifted token.  */
+  yychar = YYEMPTY;
   goto yynewstate;
 
 
@@ -2076,15 +2206,15 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-        case 17:
-#line 266 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { file->errors++; }
-#line 2083 "parse.c" /* yacc.c:1652  */
+  case 17: /* grammar: grammar error '\n'  */
+#line 266 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { file->errors++; }
+#line 2213 "parse.c"
     break;
 
-  case 18:
-#line 269 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 18: /* asnumber: NUMBER  */
+#line 269 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			/*
 			 * According to iana 65535 and 4294967295 are reserved
 			 * but enforcing this is not duty of the parser.
@@ -2094,12 +2224,12 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 2098 "parse.c" /* yacc.c:1652  */
+#line 2228 "parse.c"
     break;
 
-  case 19:
-#line 280 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 19: /* as4number: STRING  */
+#line 280 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			const char	*errstr;
 			char		*dot;
 			u_int32_t	 uvalh = 0, uval;
@@ -2131,12 +2261,12 @@ yyreduce:
 			}
 			(yyval.v.number) = uval | (uvalh << 16);
 		}
-#line 2135 "parse.c" /* yacc.c:1652  */
+#line 2265 "parse.c"
     break;
 
-  case 20:
-#line 312 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 20: /* as4number: asnumber  */
+#line 312 "../../../openbgpd-portable/src/bgpd/parse.y"
+                           {
 			if ((yyvsp[0].v.number) == AS_TRANS || (yyvsp[0].v.number) == 0) {
 				yyerror("AS %u is reserved and may not be used",
 				    (u_int32_t)(yyvsp[0].v.number));
@@ -2144,12 +2274,12 @@ yyreduce:
 			}
 			(yyval.v.number) = (yyvsp[0].v.number);
 		}
-#line 2148 "parse.c" /* yacc.c:1652  */
+#line 2278 "parse.c"
     break;
 
-  case 21:
-#line 322 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 21: /* as4number_any: STRING  */
+#line 322 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			const char	*errstr;
 			char		*dot;
 			u_int32_t	 uvalh = 0, uval;
@@ -2176,31 +2306,31 @@ yyreduce:
 			}
 			(yyval.v.number) = uval | (uvalh << 16);
 		}
-#line 2180 "parse.c" /* yacc.c:1652  */
+#line 2310 "parse.c"
     break;
 
-  case 22:
-#line 349 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 22: /* as4number_any: asnumber  */
+#line 349 "../../../openbgpd-portable/src/bgpd/parse.y"
+                           {
 			(yyval.v.number) = (yyvsp[0].v.number);
 		}
-#line 2188 "parse.c" /* yacc.c:1652  */
+#line 2318 "parse.c"
     break;
 
-  case 23:
-#line 354 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 23: /* string: string STRING  */
+#line 354 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (asprintf(&(yyval.v.string), "%s %s", (yyvsp[-1].v.string), (yyvsp[0].v.string)) == -1)
 				fatal("string: asprintf");
 			free((yyvsp[-1].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 2199 "parse.c" /* yacc.c:1652  */
+#line 2329 "parse.c"
     break;
 
-  case 25:
-#line 363 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 25: /* yesno: STRING  */
+#line 363 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (!strcmp((yyvsp[0].v.string), "yes"))
 				(yyval.v.number) = 1;
 			else if (!strcmp((yyvsp[0].v.string), "no"))
@@ -2213,12 +2343,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2217 "parse.c" /* yacc.c:1652  */
+#line 2347 "parse.c"
     break;
 
-  case 26:
-#line 378 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 26: /* varset: STRING '=' string  */
+#line 378 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			char *s = (yyvsp[-2].v.string);
 			if (cmd_opts & BGPD_OPT_VERBOSE)
 				printf("%s = \"%s\"\n", (yyvsp[-2].v.string), (yyvsp[0].v.string));
@@ -2236,12 +2366,12 @@ yyreduce:
 			free((yyvsp[-2].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 2240 "parse.c" /* yacc.c:1652  */
+#line 2370 "parse.c"
     break;
 
-  case 27:
-#line 398 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 27: /* include: INCLUDE STRING  */
+#line 398 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			struct file	*nfile;
 
 			if ((nfile = pushfile((yyvsp[0].v.string), 1)) == NULL) {
@@ -2254,12 +2384,12 @@ yyreduce:
 			file = nfile;
 			lungetc('\n');
 		}
-#line 2258 "parse.c" /* yacc.c:1652  */
+#line 2388 "parse.c"
     break;
 
-  case 28:
-#line 413 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 28: /* $@1: %empty  */
+#line 413 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (strlen((yyvsp[-2].v.string)) >= SET_NAME_LEN) {
 				yyerror("as-set name %s too long", (yyvsp[-2].v.string));
 				free((yyvsp[-2].v.string));
@@ -2271,65 +2401,65 @@ yyreduce:
 			}
 			free((yyvsp[-2].v.string));
 		}
-#line 2275 "parse.c" /* yacc.c:1652  */
+#line 2405 "parse.c"
     break;
 
-  case 29:
-#line 424 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 29: /* as_set: ASSET STRING '{' optnl $@1 as_set_l optnl '}'  */
+#line 424 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                     {
 			done_as_set();
 		}
-#line 2283 "parse.c" /* yacc.c:1652  */
+#line 2413 "parse.c"
     break;
 
-  case 30:
-#line 427 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 30: /* as_set: ASSET STRING '{' optnl '}'  */
+#line 427 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (new_as_set((yyvsp[-3].v.string)) != 0) {
 				free((yyvsp[-3].v.string));
 				YYERROR;
 			}
 			free((yyvsp[-3].v.string));
 		}
-#line 2295 "parse.c" /* yacc.c:1652  */
+#line 2425 "parse.c"
     break;
 
-  case 31:
-#line 435 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { add_as_set((yyvsp[0].v.number)); }
-#line 2301 "parse.c" /* yacc.c:1652  */
+  case 31: /* as_set_l: as4number_any  */
+#line 435 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { add_as_set((yyvsp[0].v.number)); }
+#line 2431 "parse.c"
     break;
 
-  case 32:
-#line 436 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { add_as_set((yyvsp[0].v.number)); }
-#line 2307 "parse.c" /* yacc.c:1652  */
+  case 32: /* as_set_l: as_set_l comma as4number_any  */
+#line 436 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { add_as_set((yyvsp[0].v.number)); }
+#line 2437 "parse.c"
     break;
 
-  case 33:
-#line 438 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 33: /* $@2: %empty  */
+#line 438 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((curpset = new_prefix_set((yyvsp[-2].v.string), 0)) == NULL) {
 				free((yyvsp[-2].v.string));
 				YYERROR;
 			}
 			free((yyvsp[-2].v.string));
 		}
-#line 2319 "parse.c" /* yacc.c:1652  */
+#line 2449 "parse.c"
     break;
 
-  case 34:
-#line 444 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 34: /* prefixset: PREFIXSET STRING '{' optnl $@2 prefixset_l optnl '}'  */
+#line 444 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			SIMPLEQ_INSERT_TAIL(&conf->prefixsets, curpset, entry);
 			curpset = NULL;
 		}
-#line 2328 "parse.c" /* yacc.c:1652  */
+#line 2458 "parse.c"
     break;
 
-  case 35:
-#line 448 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 35: /* prefixset: PREFIXSET STRING '{' optnl '}'  */
+#line 448 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((curpset = new_prefix_set((yyvsp[-3].v.string), 0)) == NULL) {
 				free((yyvsp[-3].v.string));
 				YYERROR;
@@ -2338,12 +2468,12 @@ yyreduce:
 			SIMPLEQ_INSERT_TAIL(&conf->prefixsets, curpset, entry);
 			curpset = NULL;
 		}
-#line 2342 "parse.c" /* yacc.c:1652  */
+#line 2472 "parse.c"
     break;
 
-  case 36:
-#line 458 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 36: /* prefixset_l: prefixset_item  */
+#line 458 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			struct prefixset_item	*psi;
 			if ((yyvsp[0].v.prefixset_item)->p.op != OP_NONE)
 				curpset->sflags |= PREFIXSET_FLAG_OPS;
@@ -2357,12 +2487,12 @@ yyreduce:
 				free((yyvsp[0].v.prefixset_item));
 			}
 		}
-#line 2361 "parse.c" /* yacc.c:1652  */
+#line 2491 "parse.c"
     break;
 
-  case 37:
-#line 472 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 37: /* prefixset_l: prefixset_l comma prefixset_item  */
+#line 472 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			struct prefixset_item	*psi;
 			if ((yyvsp[0].v.prefixset_item)->p.op != OP_NONE)
 				curpset->sflags |= PREFIXSET_FLAG_OPS;
@@ -2376,12 +2506,12 @@ yyreduce:
 				free((yyvsp[0].v.prefixset_item));
 			}
 		}
-#line 2380 "parse.c" /* yacc.c:1652  */
+#line 2510 "parse.c"
     break;
 
-  case 38:
-#line 488 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 38: /* prefixset_item: prefix prefixlenop  */
+#line 488 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.prefixlen).op != OP_NONE && (yyvsp[0].v.prefixlen).op != OP_RANGE) {
 				yyerror("unsupported prefixlen operation in "
 				    "prefix-set");
@@ -2396,28 +2526,28 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 2400 "parse.c" /* yacc.c:1652  */
+#line 2530 "parse.c"
     break;
 
-  case 39:
-#line 505 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 39: /* $@3: %empty  */
+#line 505 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			curroatree = &conf->roa;
 		}
-#line 2408 "parse.c" /* yacc.c:1652  */
+#line 2538 "parse.c"
     break;
 
-  case 40:
-#line 507 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 40: /* roa_set: ROASET '{' optnl $@3 roa_set_l optnl '}'  */
+#line 507 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			curroatree = NULL;
 		}
-#line 2416 "parse.c" /* yacc.c:1652  */
+#line 2546 "parse.c"
     break;
 
-  case 42:
-#line 513 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 42: /* $@4: %empty  */
+#line 513 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((curoset = new_prefix_set((yyvsp[-2].v.string), 1)) == NULL) {
 				free((yyvsp[-2].v.string));
 				YYERROR;
@@ -2425,22 +2555,22 @@ yyreduce:
 			curroatree = &curoset->roaitems;
 			free((yyvsp[-2].v.string));
 		}
-#line 2429 "parse.c" /* yacc.c:1652  */
+#line 2559 "parse.c"
     break;
 
-  case 43:
-#line 520 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 43: /* origin_set: ORIGINSET STRING '{' optnl $@4 roa_set_l optnl '}'  */
+#line 520 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			SIMPLEQ_INSERT_TAIL(&conf->originsets, curoset, entry);
 			curoset = NULL;
 			curroatree = NULL;
 		}
-#line 2439 "parse.c" /* yacc.c:1652  */
+#line 2569 "parse.c"
     break;
 
-  case 44:
-#line 525 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 44: /* origin_set: ORIGINSET STRING '{' optnl '}'  */
+#line 525 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                {
 			if ((curoset = new_prefix_set((yyvsp[-3].v.string), 1)) == NULL) {
 				free((yyvsp[-3].v.string));
 				YYERROR;
@@ -2450,12 +2580,12 @@ yyreduce:
 			curoset = NULL;
 			curroatree = NULL;
 		}
-#line 2454 "parse.c" /* yacc.c:1652  */
+#line 2584 "parse.c"
     break;
 
-  case 45:
-#line 537 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 45: /* roa_set_l: prefixset_item SOURCEAS as4number_any  */
+#line 537 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                        {
 			if ((yyvsp[-2].v.prefixset_item)->p.len_min != (yyvsp[-2].v.prefixset_item)->p.len) {
 				yyerror("unsupported prefixlen operation in "
 				    "roa-set");
@@ -2465,12 +2595,12 @@ yyreduce:
 			add_roa_set((yyvsp[-2].v.prefixset_item), (yyvsp[0].v.number), (yyvsp[-2].v.prefixset_item)->p.len_max);
 			free((yyvsp[-2].v.prefixset_item));
 		}
-#line 2469 "parse.c" /* yacc.c:1652  */
+#line 2599 "parse.c"
     break;
 
-  case 46:
-#line 547 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 46: /* roa_set_l: roa_set_l comma prefixset_item SOURCEAS as4number_any  */
+#line 547 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                        {
 			if ((yyvsp[-2].v.prefixset_item)->p.len_min != (yyvsp[-2].v.prefixset_item)->p.len) {
 				yyerror("unsupported prefixlen operation in "
 				    "roa-set");
@@ -2480,12 +2610,12 @@ yyreduce:
 			add_roa_set((yyvsp[-2].v.prefixset_item), (yyvsp[0].v.number), (yyvsp[-2].v.prefixset_item)->p.len_max);
 			free((yyvsp[-2].v.prefixset_item));
 		}
-#line 2484 "parse.c" /* yacc.c:1652  */
+#line 2614 "parse.c"
     break;
 
-  case 47:
-#line 559 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 47: /* rtr: RTR address  */
+#line 559 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			currtr = get_rtr(&(yyvsp[0].v.addr));
 			currtr->remote_port = 323;
 			if (insert_rtr(currtr) == -1) {
@@ -2494,33 +2624,33 @@ yyreduce:
 			}
 			currtr = NULL;
 		}
-#line 2498 "parse.c" /* yacc.c:1652  */
+#line 2628 "parse.c"
     break;
 
-  case 48:
-#line 568 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 48: /* $@5: %empty  */
+#line 568 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			currtr = get_rtr(&(yyvsp[0].v.addr));
 			currtr->remote_port = 323;
 		}
-#line 2507 "parse.c" /* yacc.c:1652  */
+#line 2637 "parse.c"
     break;
 
-  case 49:
-#line 571 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 49: /* rtr: RTR address $@5 '{' optnl rtropt_l optnl '}'  */
+#line 571 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                               {
 			if (insert_rtr(currtr) == -1) {
 				free(currtr);
 				YYERROR;
 			}
 			currtr = NULL;
 		}
-#line 2519 "parse.c" /* yacc.c:1652  */
+#line 2649 "parse.c"
     break;
 
-  case 52:
-#line 583 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 52: /* rtropt: DESCR STRING  */
+#line 583 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (strlcpy(currtr->descr, (yyvsp[0].v.string),
 			    sizeof(currtr->descr)) >=
 			    sizeof(currtr->descr)) {
@@ -2531,12 +2661,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2535 "parse.c" /* yacc.c:1652  */
+#line 2665 "parse.c"
     break;
 
-  case 53:
-#line 594 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 53: /* rtropt: LOCALADDR address  */
+#line 594 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.addr).aid != currtr->remote_addr.aid) {
 				yyerror("Bad address family %s for "
 				    "local-addr", aid2str((yyvsp[0].v.addr).aid));
@@ -2544,12 +2674,12 @@ yyreduce:
 			}
 			currtr->local_addr = (yyvsp[0].v.addr);
 		}
-#line 2548 "parse.c" /* yacc.c:1652  */
+#line 2678 "parse.c"
     break;
 
-  case 54:
-#line 602 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 54: /* rtropt: PORT NUMBER  */
+#line 602 "../../../openbgpd-portable/src/bgpd/parse.y"
+                              {
 			if ((yyvsp[0].v.number) < 1 || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("local-port must be between %u and %u",
 				    1, USHRT_MAX);
@@ -2557,45 +2687,45 @@ yyreduce:
 			}
 			currtr->remote_port = (yyvsp[0].v.number);
 		}
-#line 2561 "parse.c" /* yacc.c:1652  */
+#line 2691 "parse.c"
     break;
 
-  case 55:
-#line 612 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 55: /* conf_main: AS as4number  */
+#line 612 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			conf->as = (yyvsp[0].v.number);
 			if ((yyvsp[0].v.number) > USHRT_MAX)
 				conf->short_as = AS_TRANS;
 			else
 				conf->short_as = (yyvsp[0].v.number);
 		}
-#line 2573 "parse.c" /* yacc.c:1652  */
+#line 2703 "parse.c"
     break;
 
-  case 56:
-#line 619 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 56: /* conf_main: AS as4number asnumber  */
+#line 619 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			conf->as = (yyvsp[-1].v.number);
 			conf->short_as = (yyvsp[0].v.number);
 		}
-#line 2582 "parse.c" /* yacc.c:1652  */
+#line 2712 "parse.c"
     break;
 
-  case 57:
-#line 623 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 57: /* conf_main: ROUTERID address  */
+#line 623 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.addr).aid != AID_INET) {
 				yyerror("router-id must be an IPv4 address");
 				YYERROR;
 			}
 			conf->bgpid = (yyvsp[0].v.addr).v4.s_addr;
 		}
-#line 2594 "parse.c" /* yacc.c:1652  */
+#line 2724 "parse.c"
     break;
 
-  case 58:
-#line 630 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 58: /* conf_main: HOLDTIME NUMBER  */
+#line 630 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) < MIN_HOLDTIME || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("holdtime must be between %u and %u",
 				    MIN_HOLDTIME, USHRT_MAX);
@@ -2603,12 +2733,12 @@ yyreduce:
 			}
 			conf->holdtime = (yyvsp[0].v.number);
 		}
-#line 2607 "parse.c" /* yacc.c:1652  */
+#line 2737 "parse.c"
     break;
 
-  case 59:
-#line 638 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 59: /* conf_main: HOLDTIME YMIN NUMBER  */
+#line 638 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) < MIN_HOLDTIME || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("holdtime must be between %u and %u",
 				    MIN_HOLDTIME, USHRT_MAX);
@@ -2616,12 +2746,12 @@ yyreduce:
 			}
 			conf->min_holdtime = (yyvsp[0].v.number);
 		}
-#line 2620 "parse.c" /* yacc.c:1652  */
+#line 2750 "parse.c"
     break;
 
-  case 60:
-#line 646 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 60: /* conf_main: LISTEN ON address  */
+#line 646 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			struct listen_addr	*la;
 			struct sockaddr		*sa;
 
@@ -2635,24 +2765,24 @@ yyreduce:
 			memcpy(&la->sa, sa, la->sa_len);
 			TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
 		}
-#line 2639 "parse.c" /* yacc.c:1652  */
+#line 2769 "parse.c"
     break;
 
-  case 61:
-#line 660 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 61: /* conf_main: FIBPRIORITY NUMBER  */
+#line 660 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.number) <= RTP_NONE || (yyvsp[0].v.number) > RTP_MAX) {
 				yyerror("invalid fib-priority");
 				YYERROR;
 			}
 			conf->fib_priority = (yyvsp[0].v.number);
 		}
-#line 2651 "parse.c" /* yacc.c:1652  */
+#line 2781 "parse.c"
     break;
 
-  case 62:
-#line 667 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 62: /* conf_main: FIBUPDATE yesno  */
+#line 667 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			struct rde_rib *rr;
 			rr = find_rib("Loc-RIB");
 			if (rr == NULL)
@@ -2663,34 +2793,34 @@ yyreduce:
 			else
 				rr->flags &= ~F_RIB_NOFIBSYNC;
 		}
-#line 2667 "parse.c" /* yacc.c:1652  */
+#line 2797 "parse.c"
     break;
 
-  case 63:
-#line 678 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 63: /* conf_main: TRANSPARENT yesno  */
+#line 678 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) == 1)
 				conf->flags |= BGPD_FLAG_DECISION_TRANS_AS;
 			else
 				conf->flags &= ~BGPD_FLAG_DECISION_TRANS_AS;
 		}
-#line 2678 "parse.c" /* yacc.c:1652  */
+#line 2808 "parse.c"
     break;
 
-  case 64:
-#line 684 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 64: /* conf_main: REJECT ASSET yesno  */
+#line 684 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) == 1)
 				conf->flags |= BGPD_FLAG_NO_AS_SET;
 			else
 				conf->flags &= ~BGPD_FLAG_NO_AS_SET;
 		}
-#line 2689 "parse.c" /* yacc.c:1652  */
+#line 2819 "parse.c"
     break;
 
-  case 65:
-#line 690 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 65: /* conf_main: LOG STRING  */
+#line 690 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (!strcmp((yyvsp[0].v.string), "updates"))
 				conf->log |= BGPD_LOG_UPDATES;
 			else {
@@ -2699,12 +2829,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2703 "parse.c" /* yacc.c:1652  */
+#line 2833 "parse.c"
     break;
 
-  case 67:
-#line 700 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 67: /* conf_main: DUMP STRING STRING optnumber  */
+#line 700 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			int action;
 
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
@@ -2732,12 +2862,12 @@ yyreduce:
 			}
 			free((yyvsp[-1].v.string));
 		}
-#line 2736 "parse.c" /* yacc.c:1652  */
+#line 2866 "parse.c"
     break;
 
-  case 68:
-#line 728 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 68: /* conf_main: DUMP RIB STRING STRING STRING optnumber  */
+#line 728 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                        {
 			int action;
 
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
@@ -2769,12 +2899,12 @@ yyreduce:
 			free((yyvsp[-3].v.string));
 			free((yyvsp[-1].v.string));
 		}
-#line 2773 "parse.c" /* yacc.c:1652  */
+#line 2903 "parse.c"
     break;
 
-  case 70:
-#line 761 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 70: /* conf_main: RDE STRING EVALUATE  */
+#line 761 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (!strcmp((yyvsp[-1].v.string), "route-age"))
 				conf->flags |= BGPD_FLAG_DECISION_ROUTEAGE;
 			else {
@@ -2784,12 +2914,12 @@ yyreduce:
 			}
 			free((yyvsp[-1].v.string));
 		}
-#line 2788 "parse.c" /* yacc.c:1652  */
+#line 2918 "parse.c"
     break;
 
-  case 71:
-#line 771 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 71: /* conf_main: RDE STRING IGNORE  */
+#line 771 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (!strcmp((yyvsp[-1].v.string), "route-age"))
 				conf->flags &= ~BGPD_FLAG_DECISION_ROUTEAGE;
 			else {
@@ -2799,12 +2929,12 @@ yyreduce:
 			}
 			free((yyvsp[-1].v.string));
 		}
-#line 2803 "parse.c" /* yacc.c:1652  */
+#line 2933 "parse.c"
     break;
 
-  case 72:
-#line 781 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 72: /* conf_main: RDE MED COMPARE STRING  */
+#line 781 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (!strcmp((yyvsp[0].v.string), "always"))
 				conf->flags |= BGPD_FLAG_DECISION_MED_ALWAYS;
 			else if (!strcmp((yyvsp[0].v.string), "strict"))
@@ -2817,12 +2947,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2821 "parse.c" /* yacc.c:1652  */
+#line 2951 "parse.c"
     break;
 
-  case 73:
-#line 794 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 73: /* conf_main: RDE EVALUATE STRING  */
+#line 794 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                      {
 			if (!strcmp((yyvsp[0].v.string), "all"))
 				conf->flags |= BGPD_FLAG_DECISION_ALL_PATHS;
 			else if (!strcmp((yyvsp[0].v.string), "default"))
@@ -2835,12 +2965,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2839 "parse.c" /* yacc.c:1652  */
+#line 2969 "parse.c"
     break;
 
-  case 74:
-#line 807 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 74: /* conf_main: NEXTHOP QUALIFY VIA STRING  */
+#line 807 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (!strcmp((yyvsp[0].v.string), "bgp"))
 				conf->flags |= BGPD_FLAG_NEXTHOP_BGP;
 			else if (!strcmp((yyvsp[0].v.string), "default"))
@@ -2853,12 +2983,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2857 "parse.c" /* yacc.c:1652  */
+#line 2987 "parse.c"
     break;
 
-  case 75:
-#line 820 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 75: /* conf_main: RTABLE NUMBER  */
+#line 820 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			struct rde_rib *rr;
 			if ((yyvsp[0].v.number) > RT_TABLEID_MAX) {
 				yyerror("rtable %llu too big: max %u", (yyvsp[0].v.number),
@@ -2874,24 +3004,24 @@ yyreduce:
 				fatalx("RTABLE can not find the main RIB!");
 			rr->rtableid = (yyvsp[0].v.number);
 		}
-#line 2878 "parse.c" /* yacc.c:1652  */
+#line 3008 "parse.c"
     break;
 
-  case 76:
-#line 836 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 76: /* conf_main: CONNECTRETRY NUMBER  */
+#line 836 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                      {
 			if ((yyvsp[0].v.number) > USHRT_MAX || (yyvsp[0].v.number) < 1) {
 				yyerror("invalid connect-retry");
 				YYERROR;
 			}
 			conf->connectretry = (yyvsp[0].v.number);
 		}
-#line 2890 "parse.c" /* yacc.c:1652  */
+#line 3020 "parse.c"
     break;
 
-  case 77:
-#line 843 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 77: /* conf_main: SOCKET STRING restricted  */
+#line 843 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                           {
 			if (strlen((yyvsp[-1].v.string)) >=
 			    sizeof(((struct sockaddr_un *)0)->sun_path)) {
 				yyerror("socket path too long");
@@ -2905,32 +3035,32 @@ yyreduce:
 				conf->csock = (yyvsp[-1].v.string);
 			}
 		}
-#line 2909 "parse.c" /* yacc.c:1652  */
+#line 3039 "parse.c"
     break;
 
-  case 78:
-#line 859 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 78: /* $@6: %empty  */
+#line 859 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                 {
 			if ((currib = add_rib((yyvsp[0].v.string))) == NULL) {
 				free((yyvsp[0].v.string));
 				YYERROR;
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2921 "parse.c" /* yacc.c:1652  */
+#line 3051 "parse.c"
     break;
 
-  case 79:
-#line 865 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 79: /* rib: RDE RIB STRING $@6 ribopts  */
+#line 865 "../../../openbgpd-portable/src/bgpd/parse.y"
+                          {
 			currib = NULL;
 		}
-#line 2929 "parse.c" /* yacc.c:1652  */
+#line 3059 "parse.c"
     break;
 
-  case 81:
-#line 870 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 81: /* ribopts: RTABLE NUMBER fibupdate  */
+#line 870 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                          {
 			if ((yyvsp[-1].v.number) > RT_TABLEID_MAX) {
 				yyerror("rtable %llu too big: max %u", (yyvsp[-1].v.number),
 				    RT_TABLEID_MAX);
@@ -2939,35 +3069,35 @@ yyreduce:
 			if (rib_add_fib(currib, (yyvsp[-1].v.number)) == -1)
 				YYERROR;
 		}
-#line 2943 "parse.c" /* yacc.c:1652  */
+#line 3073 "parse.c"
     break;
 
-  case 82:
-#line 879 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 82: /* ribopts: yesno EVALUATE  */
+#line 879 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                 {
 			if ((yyvsp[-1].v.number)) {
 				yyerror("bad rde rib definition");
 				YYERROR;
 			}
 			currib->flags |= F_RIB_NOEVALUATE;
 		}
-#line 2955 "parse.c" /* yacc.c:1652  */
+#line 3085 "parse.c"
     break;
 
-  case 84:
-#line 889 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 84: /* fibupdate: FIBUPDATE yesno  */
+#line 889 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                  {
 			if ((yyvsp[0].v.number) == 0)
 				currib->flags |= F_RIB_NOFIBSYNC;
 			else
 				currib->flags &= ~F_RIB_NOFIBSYNC;
 		}
-#line 2966 "parse.c" /* yacc.c:1652  */
+#line 3096 "parse.c"
     break;
 
-  case 85:
-#line 897 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 85: /* mrtdump: DUMP STRING inout STRING optnumber  */
+#line 897 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			int action;
 
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
@@ -2995,12 +3125,12 @@ yyreduce:
 			free((yyvsp[-3].v.string));
 			free((yyvsp[-1].v.string));
 		}
-#line 2999 "parse.c" /* yacc.c:1652  */
+#line 3129 "parse.c"
     break;
 
-  case 86:
-#line 927 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 86: /* network: NETWORK prefix filter_set  */
+#line 927 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			struct network	*n, *m;
 
 			if ((n = calloc(1, sizeof(struct network))) == NULL)
@@ -3021,12 +3151,12 @@ yyreduce:
 
 			TAILQ_INSERT_TAIL(netconf, n, entry);
 		}
-#line 3025 "parse.c" /* yacc.c:1652  */
+#line 3155 "parse.c"
     break;
 
-  case 87:
-#line 948 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 87: /* network: NETWORK PREFIXSET STRING filter_set  */
+#line 948 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			struct prefixset *ps;
 			struct network	*n;
 			if ((ps = find_prefixset((yyvsp[-1].v.string), &conf->prefixsets))
@@ -3055,12 +3185,12 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			free((yyvsp[0].v.filter_set_head));
 		}
-#line 3059 "parse.c" /* yacc.c:1652  */
+#line 3189 "parse.c"
     break;
 
-  case 88:
-#line 977 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 88: /* network: NETWORK family RTLABEL STRING filter_set  */
+#line 977 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                {
 			struct network	*n;
 
 			if ((n = calloc(1, sizeof(struct network))) == NULL)
@@ -3079,12 +3209,12 @@ yyreduce:
 
 			TAILQ_INSERT_TAIL(netconf, n, entry);
 		}
-#line 3083 "parse.c" /* yacc.c:1652  */
+#line 3213 "parse.c"
     break;
 
-  case 89:
-#line 996 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 89: /* network: NETWORK family PRIORITY NUMBER filter_set  */
+#line 996 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                {
 			struct network	*n;
 			if ((yyvsp[-1].v.number) < RTP_LOCAL && (yyvsp[-1].v.number) > RTP_MAX) {
 				yyerror("priority %lld > max %d or < min %d", (yyvsp[-1].v.number),
@@ -3108,12 +3238,12 @@ yyreduce:
 
 			TAILQ_INSERT_TAIL(netconf, n, entry);
 		}
-#line 3112 "parse.c" /* yacc.c:1652  */
+#line 3242 "parse.c"
     break;
 
-  case 90:
-#line 1020 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 90: /* network: NETWORK family nettype filter_set  */
+#line 1020 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			struct network	*n;
 
 			if ((n = calloc(1, sizeof(struct network))) == NULL)
@@ -3131,36 +3261,36 @@ yyreduce:
 
 			TAILQ_INSERT_TAIL(netconf, n, entry);
 		}
-#line 3135 "parse.c" /* yacc.c:1652  */
+#line 3265 "parse.c"
     break;
 
-  case 91:
-#line 1040 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 1; }
-#line 3141 "parse.c" /* yacc.c:1652  */
+  case 91: /* inout: IN  */
+#line 1040 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = 1; }
+#line 3271 "parse.c"
     break;
 
-  case 92:
-#line 1041 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 0; }
-#line 3147 "parse.c" /* yacc.c:1652  */
+  case 92: /* inout: OUT  */
+#line 1041 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = 0; }
+#line 3277 "parse.c"
     break;
 
-  case 93:
-#line 1044 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 1; }
-#line 3153 "parse.c" /* yacc.c:1652  */
+  case 93: /* restricted: RESTRICTED  */
+#line 1044 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = 1; }
+#line 3283 "parse.c"
     break;
 
-  case 94:
-#line 1045 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 0; }
-#line 3159 "parse.c" /* yacc.c:1652  */
+  case 94: /* restricted: %empty  */
+#line 1045 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = 0; }
+#line 3289 "parse.c"
     break;
 
-  case 95:
-#line 1048 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 95: /* address: STRING  */
+#line 1048 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			u_int8_t	len;
 
 			if (!host((yyvsp[0].v.string), &(yyval.v.addr), &len)) {
@@ -3179,12 +3309,12 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3183 "parse.c" /* yacc.c:1652  */
+#line 3313 "parse.c"
     break;
 
-  case 96:
-#line 1069 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 96: /* prefix: STRING '/' NUMBER  */
+#line 1069 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			char	*s;
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
 				yyerror("bad prefixlen %lld", (yyvsp[0].v.number));
@@ -3202,12 +3332,12 @@ yyreduce:
 			}
 			free(s);
 		}
-#line 3206 "parse.c" /* yacc.c:1652  */
+#line 3336 "parse.c"
     break;
 
-  case 97:
-#line 1087 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 97: /* prefix: NUMBER '/' NUMBER  */
+#line 1087 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			char	*s;
 
 			/* does not match IPv6 */
@@ -3225,30 +3355,30 @@ yyreduce:
 			}
 			free(s);
 		}
-#line 3229 "parse.c" /* yacc.c:1652  */
+#line 3359 "parse.c"
     break;
 
-  case 98:
-#line 1107 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 98: /* addrspec: address  */
+#line 1107 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			memcpy(&(yyval.v.prefix).prefix, &(yyvsp[0].v.addr), sizeof(struct bgpd_addr));
 			if ((yyval.v.prefix).prefix.aid == AID_INET)
 				(yyval.v.prefix).len = 32;
 			else
 				(yyval.v.prefix).len = 128;
 		}
-#line 3241 "parse.c" /* yacc.c:1652  */
+#line 3371 "parse.c"
     break;
 
-  case 100:
-#line 1117 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 0; }
-#line 3247 "parse.c" /* yacc.c:1652  */
+  case 100: /* optnumber: %empty  */
+#line 1117 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        { (yyval.v.number) = 0; }
+#line 3377 "parse.c"
     break;
 
-  case 102:
-#line 1121 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 102: /* $@7: %empty  */
+#line 1121 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			u_int rdomain, label;
 
 			if (get_mpe_config((yyvsp[0].v.string), &rdomain, &label) == -1) {
@@ -3286,23 +3416,23 @@ yyreduce:
 			curvpn->rtableid = rdomain;
 			netconf = &curvpn->net_l;
 		}
-#line 3290 "parse.c" /* yacc.c:1652  */
+#line 3420 "parse.c"
     break;
 
-  case 103:
-#line 1158 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 103: /* l3vpn: VPN STRING ON STRING $@7 '{' l3vpnopts_l '}'  */
+#line 1158 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			/* insert into list */
 			SIMPLEQ_INSERT_TAIL(&conf->l3vpns, curvpn, entry);
 			curvpn = NULL;
 			netconf = &conf->networks;
 		}
-#line 3301 "parse.c" /* yacc.c:1652  */
+#line 3431 "parse.c"
     break;
 
-  case 108:
-#line 1172 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 108: /* l3vpnopts: RD STRING  */
+#line 1172 "../../../openbgpd-portable/src/bgpd/parse.y"
+                            {
 			struct community	ext;
 
 			memset(&ext, 0, sizeof(ext));
@@ -3320,12 +3450,12 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3324 "parse.c" /* yacc.c:1652  */
+#line 3454 "parse.c"
     break;
 
-  case 109:
-#line 1190 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 109: /* l3vpnopts: EXPORTTRGT STRING STRING  */
+#line 1190 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			struct filter_set	*set;
 
 			if ((set = calloc(1, sizeof(struct filter_set))) ==
@@ -3343,12 +3473,12 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			TAILQ_INSERT_TAIL(&curvpn->export, set, entry);
 		}
-#line 3347 "parse.c" /* yacc.c:1652  */
+#line 3477 "parse.c"
     break;
 
-  case 110:
-#line 1208 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 110: /* l3vpnopts: IMPORTTRGT STRING STRING  */
+#line 1208 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			struct filter_set	*set;
 
 			if ((set = calloc(1, sizeof(struct filter_set))) ==
@@ -3366,29 +3496,29 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			TAILQ_INSERT_TAIL(&curvpn->import, set, entry);
 		}
-#line 3370 "parse.c" /* yacc.c:1652  */
+#line 3500 "parse.c"
     break;
 
-  case 111:
-#line 1226 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 111: /* l3vpnopts: FIBUPDATE yesno  */
+#line 1226 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.number) == 0)
 				curvpn->flags |= F_RIB_NOFIBSYNC;
 			else
 				curvpn->flags &= ~F_RIB_NOFIBSYNC;
 		}
-#line 3381 "parse.c" /* yacc.c:1652  */
+#line 3511 "parse.c"
     break;
 
-  case 113:
-#line 1235 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {	curpeer = new_peer(); }
-#line 3387 "parse.c" /* yacc.c:1652  */
+  case 113: /* $@8: %empty  */
+#line 1235 "../../../openbgpd-portable/src/bgpd/parse.y"
+                  {	curpeer = new_peer(); }
+#line 3517 "parse.c"
     break;
 
-  case 114:
-#line 1236 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 114: /* $@9: %empty  */
+#line 1236 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                      {
 			memcpy(&curpeer->conf.remote_addr, &(yyvsp[0].v.prefix).prefix,
 			    sizeof(curpeer->conf.remote_addr));
 			curpeer->conf.remote_masklen = (yyvsp[0].v.prefix).len;
@@ -3402,12 +3532,12 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3406 "parse.c" /* yacc.c:1652  */
+#line 3536 "parse.c"
     break;
 
-  case 115:
-#line 1250 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 115: /* neighbor: $@8 NEIGHBOR addrspec $@9 peeropts_h  */
+#line 1250 "../../../openbgpd-portable/src/bgpd/parse.y"
+                               {
 			if (curpeer_filter[0] != NULL)
 				TAILQ_INSERT_TAIL(peerfilter_l,
 				    curpeer_filter[0], entry);
@@ -3425,12 +3555,12 @@ yyreduce:
 				fatalx("%s: peer tree is corrupt", __func__);
 			curpeer = curgroup;
 		}
-#line 3429 "parse.c" /* yacc.c:1652  */
+#line 3559 "parse.c"
     break;
 
-  case 116:
-#line 1270 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 116: /* $@10: %empty  */
+#line 1270 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			curgroup = curpeer = new_group();
 			if (strlcpy(curgroup->conf.group, (yyvsp[0].v.string),
 			    sizeof(curgroup->conf.group)) >=
@@ -3448,12 +3578,12 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3452 "parse.c" /* yacc.c:1652  */
+#line 3582 "parse.c"
     break;
 
-  case 117:
-#line 1287 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 117: /* group: GROUP string $@10 '{' groupopts_l '}'  */
+#line 1287 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (curgroup_filter[0] != NULL)
 				TAILQ_INSERT_TAIL(groupfilter_l,
 				    curgroup_filter[0], entry);
@@ -3466,41 +3596,41 @@ yyreduce:
 			free(curgroup);
 			curgroup = NULL;
 		}
-#line 3470 "parse.c" /* yacc.c:1652  */
+#line 3600 "parse.c"
     break;
 
-  case 130:
-#line 1320 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 130: /* peeropts: REMOTEAS as4number  */
+#line 1320 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			curpeer->conf.remote_as = (yyvsp[0].v.number);
 		}
-#line 3478 "parse.c" /* yacc.c:1652  */
+#line 3608 "parse.c"
     break;
 
-  case 131:
-#line 1323 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 131: /* peeropts: LOCALAS as4number  */
+#line 1323 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			curpeer->conf.local_as = (yyvsp[0].v.number);
 			if ((yyvsp[0].v.number) > USHRT_MAX)
 				curpeer->conf.local_short_as = AS_TRANS;
 			else
 				curpeer->conf.local_short_as = (yyvsp[0].v.number);
 		}
-#line 3490 "parse.c" /* yacc.c:1652  */
+#line 3620 "parse.c"
     break;
 
-  case 132:
-#line 1330 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 132: /* peeropts: LOCALAS as4number asnumber  */
+#line 1330 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                             {
 			curpeer->conf.local_as = (yyvsp[-1].v.number);
 			curpeer->conf.local_short_as = (yyvsp[0].v.number);
 		}
-#line 3499 "parse.c" /* yacc.c:1652  */
+#line 3629 "parse.c"
     break;
 
-  case 133:
-#line 1334 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 133: /* peeropts: DESCR string  */
+#line 1334 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (strlcpy(curpeer->conf.descr, (yyvsp[0].v.string),
 			    sizeof(curpeer->conf.descr)) >=
 			    sizeof(curpeer->conf.descr)) {
@@ -3511,12 +3641,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3515 "parse.c" /* yacc.c:1652  */
+#line 3645 "parse.c"
     break;
 
-  case 134:
-#line 1345 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 134: /* peeropts: LOCALADDR address  */
+#line 1345 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.addr).aid == AID_INET)
 				memcpy(&curpeer->conf.local_addr_v4, &(yyvsp[0].v.addr),
 				    sizeof(curpeer->conf.local_addr_v4));
@@ -3529,12 +3659,12 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3533 "parse.c" /* yacc.c:1652  */
+#line 3663 "parse.c"
     break;
 
-  case 135:
-#line 1358 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 135: /* peeropts: yesno LOCALADDR  */
+#line 1358 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[-1].v.number)) {
 				yyerror("bad local-address definition");
 				YYERROR;
@@ -3544,40 +3674,40 @@ yyreduce:
 			memset(&curpeer->conf.local_addr_v6, 0,
 			    sizeof(curpeer->conf.local_addr_v6));
 		}
-#line 3548 "parse.c" /* yacc.c:1652  */
+#line 3678 "parse.c"
     break;
 
-  case 136:
-#line 1368 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 136: /* peeropts: MULTIHOP NUMBER  */
+#line 1368 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) < 2 || (yyvsp[0].v.number) > 255) {
 				yyerror("invalid multihop distance %lld", (yyvsp[0].v.number));
 				YYERROR;
 			}
 			curpeer->conf.distance = (yyvsp[0].v.number);
 		}
-#line 3560 "parse.c" /* yacc.c:1652  */
+#line 3690 "parse.c"
     break;
 
-  case 137:
-#line 1375 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 137: /* peeropts: PASSIVE  */
+#line 1375 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			curpeer->conf.passive = 1;
 		}
-#line 3568 "parse.c" /* yacc.c:1652  */
+#line 3698 "parse.c"
     break;
 
-  case 138:
-#line 1378 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 138: /* peeropts: DOWN  */
+#line 1378 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			curpeer->conf.down = 1;
 		}
-#line 3576 "parse.c" /* yacc.c:1652  */
+#line 3706 "parse.c"
     break;
 
-  case 139:
-#line 1381 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 139: /* peeropts: DOWN STRING  */
+#line 1381 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			curpeer->conf.down = 1;
 			if (strlcpy(curpeer->conf.reason, (yyvsp[0].v.string),
 				sizeof(curpeer->conf.reason)) >=
@@ -3588,12 +3718,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3592 "parse.c" /* yacc.c:1652  */
+#line 3722 "parse.c"
     break;
 
-  case 140:
-#line 1392 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 140: /* peeropts: RIB STRING  */
+#line 1392 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			if (!find_rib((yyvsp[0].v.string))) {
 				yyerror("rib \"%s\" does not exist.", (yyvsp[0].v.string));
 				free((yyvsp[0].v.string));
@@ -3609,12 +3739,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3613 "parse.c" /* yacc.c:1652  */
+#line 3743 "parse.c"
     break;
 
-  case 141:
-#line 1408 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 141: /* peeropts: HOLDTIME NUMBER  */
+#line 1408 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) < MIN_HOLDTIME || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("holdtime must be between %u and %u",
 				    MIN_HOLDTIME, USHRT_MAX);
@@ -3622,12 +3752,12 @@ yyreduce:
 			}
 			curpeer->conf.holdtime = (yyvsp[0].v.number);
 		}
-#line 3626 "parse.c" /* yacc.c:1652  */
+#line 3756 "parse.c"
     break;
 
-  case 142:
-#line 1416 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 142: /* peeropts: HOLDTIME YMIN NUMBER  */
+#line 1416 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) < MIN_HOLDTIME || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("holdtime must be between %u and %u",
 				    MIN_HOLDTIME, USHRT_MAX);
@@ -3635,12 +3765,12 @@ yyreduce:
 			}
 			curpeer->conf.min_holdtime = (yyvsp[0].v.number);
 		}
-#line 3639 "parse.c" /* yacc.c:1652  */
+#line 3769 "parse.c"
     break;
 
-  case 143:
-#line 1424 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 143: /* peeropts: ANNOUNCE family safi  */
+#line 1424 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                       {
 			u_int8_t	aid, safi;
 			u_int16_t	afi;
 
@@ -3659,82 +3789,82 @@ yyreduce:
 				curpeer->conf.capabilities.mp[aid] = 1;
 			}
 		}
-#line 3663 "parse.c" /* yacc.c:1652  */
+#line 3793 "parse.c"
     break;
 
-  case 144:
-#line 1443 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 144: /* peeropts: ANNOUNCE CAPABILITIES yesno  */
+#line 1443 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                              {
 			curpeer->conf.announce_capa = (yyvsp[0].v.number);
 		}
-#line 3671 "parse.c" /* yacc.c:1652  */
+#line 3801 "parse.c"
     break;
 
-  case 145:
-#line 1446 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 145: /* peeropts: ANNOUNCE REFRESH yesno  */
+#line 1446 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                         {
 			curpeer->conf.capabilities.refresh = (yyvsp[0].v.number);
 		}
-#line 3679 "parse.c" /* yacc.c:1652  */
+#line 3809 "parse.c"
     break;
 
-  case 146:
-#line 1449 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 146: /* peeropts: ANNOUNCE RESTART yesno  */
+#line 1449 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                         {
 			curpeer->conf.capabilities.grestart.restart = (yyvsp[0].v.number);
 		}
-#line 3687 "parse.c" /* yacc.c:1652  */
+#line 3817 "parse.c"
     break;
 
-  case 147:
-#line 1452 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 147: /* peeropts: ANNOUNCE AS4BYTE yesno  */
+#line 1452 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                         {
 			curpeer->conf.capabilities.as4byte = (yyvsp[0].v.number);
 		}
-#line 3695 "parse.c" /* yacc.c:1652  */
+#line 3825 "parse.c"
     break;
 
-  case 148:
-#line 1455 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 148: /* peeropts: EXPORT NONE  */
+#line 1455 "../../../openbgpd-portable/src/bgpd/parse.y"
+                              {
 			curpeer->conf.export_type = EXPORT_NONE;
 		}
-#line 3703 "parse.c" /* yacc.c:1652  */
+#line 3833 "parse.c"
     break;
 
-  case 149:
-#line 1458 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 149: /* peeropts: EXPORT DEFAULTROUTE  */
+#line 1458 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                      {
 			curpeer->conf.export_type = EXPORT_DEFAULT_ROUTE;
 		}
-#line 3711 "parse.c" /* yacc.c:1652  */
+#line 3841 "parse.c"
     break;
 
-  case 150:
-#line 1461 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 150: /* peeropts: ENFORCE NEIGHBORAS yesno  */
+#line 1461 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                           {
 			if ((yyvsp[0].v.number))
 				curpeer->conf.enforce_as = ENFORCE_AS_ON;
 			else
 				curpeer->conf.enforce_as = ENFORCE_AS_OFF;
 		}
-#line 3722 "parse.c" /* yacc.c:1652  */
+#line 3852 "parse.c"
     break;
 
-  case 151:
-#line 1467 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 151: /* peeropts: ENFORCE LOCALAS yesno  */
+#line 1467 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number))
 				curpeer->conf.enforce_local_as = ENFORCE_AS_ON;
 			else
 				curpeer->conf.enforce_local_as = ENFORCE_AS_OFF;
 		}
-#line 3733 "parse.c" /* yacc.c:1652  */
+#line 3863 "parse.c"
     break;
 
-  case 152:
-#line 1473 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 152: /* peeropts: ASOVERRIDE yesno  */
+#line 1473 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                   {
 			if ((yyvsp[0].v.number)) {
 				struct filter_rule	*r;
 				struct filter_set	*s;
@@ -3749,12 +3879,12 @@ yyreduce:
 					YYERROR;
 			}
 		}
-#line 3753 "parse.c" /* yacc.c:1652  */
+#line 3883 "parse.c"
     break;
 
-  case 153:
-#line 1488 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 153: /* peeropts: MAXPREFIX NUMBER restart  */
+#line 1488 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                           {
 			if ((yyvsp[-1].v.number) < 0 || (yyvsp[-1].v.number) > UINT_MAX) {
 				yyerror("bad maximum number of prefixes");
 				YYERROR;
@@ -3762,12 +3892,12 @@ yyreduce:
 			curpeer->conf.max_prefix = (yyvsp[-1].v.number);
 			curpeer->conf.max_prefix_restart = (yyvsp[0].v.number);
 		}
-#line 3766 "parse.c" /* yacc.c:1652  */
+#line 3896 "parse.c"
     break;
 
-  case 154:
-#line 1496 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 154: /* peeropts: MAXPREFIX NUMBER OUT restart  */
+#line 1496 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                               {
 			if ((yyvsp[-2].v.number) < 0 || (yyvsp[-2].v.number) > UINT_MAX) {
 				yyerror("bad maximum number of prefixes");
 				YYERROR;
@@ -3775,12 +3905,12 @@ yyreduce:
 			curpeer->conf.max_out_prefix = (yyvsp[-2].v.number);
 			curpeer->conf.max_out_prefix_restart = (yyvsp[0].v.number);
 		}
-#line 3779 "parse.c" /* yacc.c:1652  */
+#line 3909 "parse.c"
     break;
 
-  case 155:
-#line 1504 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 155: /* peeropts: TCP MD5SIG PASSWORD string  */
+#line 1504 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                             {
 			if (curpeer->conf.auth.method) {
 				yyerror("auth method cannot be redefined");
 				free((yyvsp[0].v.string));
@@ -3798,12 +3928,12 @@ yyreduce:
 			curpeer->conf.auth.md5key_len = strlen((yyvsp[0].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 3802 "parse.c" /* yacc.c:1652  */
+#line 3932 "parse.c"
     break;
 
-  case 156:
-#line 1522 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 156: /* peeropts: TCP MD5SIG KEY string  */
+#line 1522 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (curpeer->conf.auth.method) {
 				yyerror("auth method cannot be redefined");
 				free((yyvsp[0].v.string));
@@ -3819,12 +3949,12 @@ yyreduce:
 			curpeer->conf.auth.md5key_len = strlen((yyvsp[0].v.string)) / 2;
 			free((yyvsp[0].v.string));
 		}
-#line 3823 "parse.c" /* yacc.c:1652  */
+#line 3953 "parse.c"
     break;
 
-  case 157:
-#line 1538 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 157: /* peeropts: IPSEC espah IKE  */
+#line 1538 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                  {
 			if (curpeer->conf.auth.method) {
 				yyerror("auth method cannot be redefined");
 				YYERROR;
@@ -3834,12 +3964,12 @@ yyreduce:
 			else
 				curpeer->conf.auth.method = AUTH_IPSEC_IKE_AH;
 		}
-#line 3838 "parse.c" /* yacc.c:1652  */
+#line 3968 "parse.c"
     break;
 
-  case 158:
-#line 1548 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 158: /* peeropts: IPSEC espah inout SPI NUMBER STRING STRING encspec  */
+#line 1548 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                     {
 			u_int32_t	auth_alg;
 			u_int8_t	keylen;
 
@@ -3932,32 +4062,32 @@ yyreduce:
 			}
 			free((yyvsp[-1].v.string));
 		}
-#line 3936 "parse.c" /* yacc.c:1652  */
+#line 4066 "parse.c"
     break;
 
-  case 159:
-#line 1641 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 159: /* peeropts: TTLSECURITY yesno  */
+#line 1641 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			curpeer->conf.ttlsec = (yyvsp[0].v.number);
 		}
-#line 3944 "parse.c" /* yacc.c:1652  */
+#line 4074 "parse.c"
     break;
 
-  case 160:
-#line 1644 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 160: /* peeropts: SET filter_set_opt  */
+#line 1644 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			struct filter_rule	*r;
 
 			r = get_rule((yyvsp[0].v.filter_set)->type);
 			if (merge_filterset(&r->set, (yyvsp[0].v.filter_set)) == -1)
 				YYERROR;
 		}
-#line 3956 "parse.c" /* yacc.c:1652  */
+#line 4086 "parse.c"
     break;
 
-  case 161:
-#line 1651 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 161: /* peeropts: SET '{' optnl filter_set_l optnl '}'  */
+#line 1651 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			struct filter_rule	*r;
 			struct filter_set	*s;
 
@@ -3969,12 +4099,12 @@ yyreduce:
 			}
 			free((yyvsp[-2].v.filter_set_head));
 		}
-#line 3973 "parse.c" /* yacc.c:1652  */
+#line 4103 "parse.c"
     break;
 
-  case 163:
-#line 1664 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 163: /* peeropts: REFLECTOR  */
+#line 1664 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((conf->flags & BGPD_FLAG_REFLECTOR) &&
 			    conf->clusterid != 0) {
 				yyerror("only one route reflector "
@@ -3984,12 +4114,12 @@ yyreduce:
 			conf->flags |= BGPD_FLAG_REFLECTOR;
 			curpeer->conf.reflector_client = 1;
 		}
-#line 3988 "parse.c" /* yacc.c:1652  */
+#line 4118 "parse.c"
     break;
 
-  case 164:
-#line 1674 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 164: /* peeropts: REFLECTOR address  */
+#line 1674 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.addr).aid != AID_INET) {
 				yyerror("route reflector cluster-id must be "
 				    "an IPv4 address");
@@ -4005,12 +4135,12 @@ yyreduce:
 			curpeer->conf.reflector_client = 1;
 			conf->clusterid = (yyvsp[0].v.addr).v4.s_addr;
 		}
-#line 4009 "parse.c" /* yacc.c:1652  */
+#line 4139 "parse.c"
     break;
 
-  case 165:
-#line 1690 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 165: /* peeropts: DEPEND ON STRING  */
+#line 1690 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (strlcpy(curpeer->conf.if_depend, (yyvsp[0].v.string),
 			    sizeof(curpeer->conf.if_depend)) >=
 			    sizeof(curpeer->conf.if_depend)) {
@@ -4022,12 +4152,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4026 "parse.c" /* yacc.c:1652  */
+#line 4156 "parse.c"
     break;
 
-  case 166:
-#line 1702 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 166: /* peeropts: DEMOTE STRING  */
+#line 1702 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 #ifdef HAVE_CARP
 			if (strlcpy(curpeer->conf.demote_group, (yyvsp[0].v.string),
 			    sizeof(curpeer->conf.demote_group)) >=
@@ -4051,23 +4181,23 @@ yyreduce:
 			YYERROR;
 #endif
 		}
-#line 4055 "parse.c" /* yacc.c:1652  */
+#line 4185 "parse.c"
     break;
 
-  case 167:
-#line 1726 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 167: /* peeropts: TRANSPARENT yesno  */
+#line 1726 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) == 1)
 				curpeer->conf.flags |= PEERFLAG_TRANS_AS;
 			else
 				curpeer->conf.flags &= ~PEERFLAG_TRANS_AS;
 		}
-#line 4066 "parse.c" /* yacc.c:1652  */
+#line 4196 "parse.c"
     break;
 
-  case 168:
-#line 1732 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 168: /* peeropts: LOG STRING  */
+#line 1732 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (!strcmp((yyvsp[0].v.string), "updates"))
 				curpeer->conf.flags |= PEERFLAG_LOG_UPDATES;
 			else if (!strcmp((yyvsp[0].v.string), "no"))
@@ -4078,23 +4208,23 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4082 "parse.c" /* yacc.c:1652  */
+#line 4212 "parse.c"
     break;
 
-  case 169:
-#line 1743 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 169: /* peeropts: REJECT ASSET yesno  */
+#line 1743 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) == 1)
 				curpeer->conf.flags |= PEERFLAG_NO_AS_SET;
 			else
 				curpeer->conf.flags &= ~PEERFLAG_NO_AS_SET;
 		}
-#line 4093 "parse.c" /* yacc.c:1652  */
+#line 4223 "parse.c"
     break;
 
-  case 170:
-#line 1749 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 170: /* peeropts: RDE EVALUATE STRING  */
+#line 1749 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                      {
 			if (!strcmp((yyvsp[0].v.string), "all"))
 				curpeer->conf.flags |= PEERFLAG_EVALUATE_ALL;
 			else if (!strcmp((yyvsp[0].v.string), "default"))
@@ -4107,18 +4237,18 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4111 "parse.c" /* yacc.c:1652  */
+#line 4241 "parse.c"
     break;
 
-  case 171:
-#line 1764 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 0; }
-#line 4117 "parse.c" /* yacc.c:1652  */
+  case 171: /* restart: %empty  */
+#line 1764 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        { (yyval.v.number) = 0; }
+#line 4247 "parse.c"
     break;
 
-  case 172:
-#line 1765 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 172: /* restart: RESTART NUMBER  */
+#line 1765 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if ((yyvsp[0].v.number) < 1 || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("restart out of range. 1 to %u minutes",
 				    USHRT_MAX);
@@ -4126,74 +4256,74 @@ yyreduce:
 			}
 			(yyval.v.number) = (yyvsp[0].v.number);
 		}
-#line 4130 "parse.c" /* yacc.c:1652  */
+#line 4260 "parse.c"
     break;
 
-  case 173:
-#line 1775 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = AFI_IPv4; }
-#line 4136 "parse.c" /* yacc.c:1652  */
+  case 173: /* family: IPV4  */
+#line 1775 "../../../openbgpd-portable/src/bgpd/parse.y"
+                        { (yyval.v.number) = AFI_IPv4; }
+#line 4266 "parse.c"
     break;
 
-  case 174:
-#line 1776 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = AFI_IPv6; }
-#line 4142 "parse.c" /* yacc.c:1652  */
+  case 174: /* family: IPV6  */
+#line 1776 "../../../openbgpd-portable/src/bgpd/parse.y"
+                        { (yyval.v.number) = AFI_IPv6; }
+#line 4272 "parse.c"
     break;
 
-  case 175:
-#line 1779 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = SAFI_NONE; }
-#line 4148 "parse.c" /* yacc.c:1652  */
+  case 175: /* safi: NONE  */
+#line 1779 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = SAFI_NONE; }
+#line 4278 "parse.c"
     break;
 
-  case 176:
-#line 1780 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = SAFI_UNICAST; }
-#line 4154 "parse.c" /* yacc.c:1652  */
+  case 176: /* safi: UNICAST  */
+#line 1780 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = SAFI_UNICAST; }
+#line 4284 "parse.c"
     break;
 
-  case 177:
-#line 1781 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = SAFI_MPLSVPN; }
-#line 4160 "parse.c" /* yacc.c:1652  */
+  case 177: /* safi: VPN  */
+#line 1781 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = SAFI_MPLSVPN; }
+#line 4290 "parse.c"
     break;
 
-  case 178:
-#line 1784 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 1; }
-#line 4166 "parse.c" /* yacc.c:1652  */
+  case 178: /* nettype: STATIC  */
+#line 1784 "../../../openbgpd-portable/src/bgpd/parse.y"
+                         { (yyval.v.number) = 1; }
+#line 4296 "parse.c"
     break;
 
-  case 179:
-#line 1785 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 0; }
-#line 4172 "parse.c" /* yacc.c:1652  */
+  case 179: /* nettype: CONNECTED  */
+#line 1785 "../../../openbgpd-portable/src/bgpd/parse.y"
+                            { (yyval.v.number) = 0; }
+#line 4302 "parse.c"
     break;
 
-  case 180:
-#line 1788 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 1; }
-#line 4178 "parse.c" /* yacc.c:1652  */
+  case 180: /* espah: ESP  */
+#line 1788 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = 1; }
+#line 4308 "parse.c"
     break;
 
-  case 181:
-#line 1789 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.number) = 0; }
-#line 4184 "parse.c" /* yacc.c:1652  */
+  case 181: /* espah: AH  */
+#line 1789 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = 0; }
+#line 4314 "parse.c"
     break;
 
-  case 182:
-#line 1792 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 182: /* encspec: %empty  */
+#line 1792 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			bzero(&(yyval.v.encspec), sizeof((yyval.v.encspec)));
 		}
-#line 4192 "parse.c" /* yacc.c:1652  */
+#line 4322 "parse.c"
     break;
 
-  case 183:
-#line 1795 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 183: /* encspec: STRING STRING  */
+#line 1795 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			bzero(&(yyval.v.encspec), sizeof((yyval.v.encspec)));
 			if (!strcmp((yyvsp[-1].v.string), "3des") || !strcmp((yyvsp[-1].v.string), "3des-cbc")) {
 				(yyval.v.encspec).enc_alg = SADB_EALG_3DESCBC;
@@ -4224,12 +4354,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4228 "parse.c" /* yacc.c:1652  */
+#line 4358 "parse.c"
     break;
 
-  case 184:
-#line 1830 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 184: /* filterrule: action quick filter_rib_h direction filter_peer_h filter_match_h filter_set  */
+#line 1830 "../../../openbgpd-portable/src/bgpd/parse.y"
+                {
 			struct filter_rule	 r;
 			struct filter_rib_l	 *rb, *rbnext;
 
@@ -4252,87 +4382,87 @@ yyreduce:
 			if (expand_rule(&r, (yyvsp[-4].v.filter_rib), (yyvsp[-2].v.filter_peers), &(yyvsp[-1].v.filter_match), (yyvsp[0].v.filter_set_head)) == -1)
 				YYERROR;
 		}
-#line 4256 "parse.c" /* yacc.c:1652  */
+#line 4386 "parse.c"
     break;
 
-  case 185:
-#line 1855 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = ACTION_ALLOW; }
-#line 4262 "parse.c" /* yacc.c:1652  */
+  case 185: /* action: ALLOW  */
+#line 1855 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = ACTION_ALLOW; }
+#line 4392 "parse.c"
     break;
 
-  case 186:
-#line 1856 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = ACTION_DENY; }
-#line 4268 "parse.c" /* yacc.c:1652  */
+  case 186: /* action: DENY  */
+#line 1856 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = ACTION_DENY; }
+#line 4398 "parse.c"
     break;
 
-  case 187:
-#line 1857 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = ACTION_NONE; }
-#line 4274 "parse.c" /* yacc.c:1652  */
+  case 187: /* action: MATCH  */
+#line 1857 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = ACTION_NONE; }
+#line 4404 "parse.c"
     break;
 
-  case 188:
-#line 1860 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = 0; }
-#line 4280 "parse.c" /* yacc.c:1652  */
+  case 188: /* quick: %empty  */
+#line 1860 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = 0; }
+#line 4410 "parse.c"
     break;
 
-  case 189:
-#line 1861 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = 1; }
-#line 4286 "parse.c" /* yacc.c:1652  */
+  case 189: /* quick: QUICK  */
+#line 1861 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = 1; }
+#line 4416 "parse.c"
     break;
 
-  case 190:
-#line 1864 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = DIR_IN; }
-#line 4292 "parse.c" /* yacc.c:1652  */
+  case 190: /* direction: FROM  */
+#line 1864 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = DIR_IN; }
+#line 4422 "parse.c"
     break;
 
-  case 191:
-#line 1865 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = DIR_OUT; }
-#line 4298 "parse.c" /* yacc.c:1652  */
+  case 191: /* direction: TO  */
+#line 1865 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = DIR_OUT; }
+#line 4428 "parse.c"
     break;
 
-  case 192:
-#line 1868 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_rib) = NULL; }
-#line 4304 "parse.c" /* yacc.c:1652  */
+  case 192: /* filter_rib_h: %empty  */
+#line 1868 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { (yyval.v.filter_rib) = NULL; }
+#line 4434 "parse.c"
     break;
 
-  case 193:
-#line 1869 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_rib) = (yyvsp[0].v.filter_rib); }
-#line 4310 "parse.c" /* yacc.c:1652  */
+  case 193: /* filter_rib_h: RIB filter_rib  */
+#line 1869 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { (yyval.v.filter_rib) = (yyvsp[0].v.filter_rib); }
+#line 4440 "parse.c"
     break;
 
-  case 194:
-#line 1870 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_rib) = (yyvsp[-2].v.filter_rib); }
-#line 4316 "parse.c" /* yacc.c:1652  */
+  case 194: /* filter_rib_h: RIB '{' optnl filter_rib_l optnl '}'  */
+#line 1870 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        { (yyval.v.filter_rib) = (yyvsp[-2].v.filter_rib); }
+#line 4446 "parse.c"
     break;
 
-  case 195:
-#line 1872 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_rib) = (yyvsp[0].v.filter_rib); }
-#line 4322 "parse.c" /* yacc.c:1652  */
+  case 195: /* filter_rib_l: filter_rib  */
+#line 1872 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { (yyval.v.filter_rib) = (yyvsp[0].v.filter_rib); }
+#line 4452 "parse.c"
     break;
 
-  case 196:
-#line 1873 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 196: /* filter_rib_l: filter_rib_l comma filter_rib  */
+#line 1873 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			(yyvsp[0].v.filter_rib)->next = (yyvsp[-2].v.filter_rib);
 			(yyval.v.filter_rib) = (yyvsp[0].v.filter_rib);
 		}
-#line 4331 "parse.c" /* yacc.c:1652  */
+#line 4461 "parse.c"
     break;
 
-  case 197:
-#line 1879 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 197: /* filter_rib: STRING  */
+#line 1879 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			if (!find_rib((yyvsp[0].v.string))) {
 				yyerror("rib \"%s\" does not exist.", (yyvsp[0].v.string));
 				free((yyvsp[0].v.string));
@@ -4352,45 +4482,45 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4356 "parse.c" /* yacc.c:1652  */
+#line 4486 "parse.c"
     break;
 
-  case 199:
-#line 1902 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_peers) = (yyvsp[-2].v.filter_peers); }
-#line 4362 "parse.c" /* yacc.c:1652  */
+  case 199: /* filter_peer_h: '{' optnl filter_peer_l optnl '}'  */
+#line 1902 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        { (yyval.v.filter_peers) = (yyvsp[-2].v.filter_peers); }
+#line 4492 "parse.c"
     break;
 
-  case 200:
-#line 1905 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_peers) = (yyvsp[0].v.filter_peers); }
-#line 4368 "parse.c" /* yacc.c:1652  */
+  case 200: /* filter_peer_l: filter_peer  */
+#line 1905 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        { (yyval.v.filter_peers) = (yyvsp[0].v.filter_peers); }
+#line 4498 "parse.c"
     break;
 
-  case 201:
-#line 1906 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 201: /* filter_peer_l: filter_peer_l comma filter_peer  */
+#line 1906 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			(yyvsp[0].v.filter_peers)->next = (yyvsp[-2].v.filter_peers);
 			(yyval.v.filter_peers) = (yyvsp[0].v.filter_peers);
 		}
-#line 4377 "parse.c" /* yacc.c:1652  */
+#line 4507 "parse.c"
     break;
 
-  case 202:
-#line 1912 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 202: /* filter_peer: ANY  */
+#line 1912 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
 			    NULL)
 				fatal(NULL);
 			(yyval.v.filter_peers)->p.peerid = (yyval.v.filter_peers)->p.groupid = 0;
 			(yyval.v.filter_peers)->next = NULL;
 		}
-#line 4389 "parse.c" /* yacc.c:1652  */
+#line 4519 "parse.c"
     break;
 
-  case 203:
-#line 1919 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 203: /* filter_peer: address  */
+#line 1919 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			struct peer *p;
 
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
@@ -4410,24 +4540,24 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 4414 "parse.c" /* yacc.c:1652  */
+#line 4544 "parse.c"
     break;
 
-  case 204:
-#line 1939 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 204: /* filter_peer: AS as4number  */
+#line 1939 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
 			    NULL)
 				fatal(NULL);
 			(yyval.v.filter_peers)->p.groupid = (yyval.v.filter_peers)->p.peerid = 0;
 			(yyval.v.filter_peers)->p.remote_as = (yyvsp[0].v.number);
 		}
-#line 4426 "parse.c" /* yacc.c:1652  */
+#line 4556 "parse.c"
     break;
 
-  case 205:
-#line 1946 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 205: /* filter_peer: GROUP STRING  */
+#line 1946 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			struct peer *p;
 
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
@@ -4448,34 +4578,34 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4452 "parse.c" /* yacc.c:1652  */
+#line 4582 "parse.c"
     break;
 
-  case 206:
-#line 1967 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 206: /* filter_peer: EBGP  */
+#line 1967 "../../../openbgpd-portable/src/bgpd/parse.y"
+                       {
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
 			    NULL)
 				fatal(NULL);
 			(yyval.v.filter_peers)->p.ebgp = 1;
 		}
-#line 4463 "parse.c" /* yacc.c:1652  */
+#line 4593 "parse.c"
     break;
 
-  case 207:
-#line 1973 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 207: /* filter_peer: IBGP  */
+#line 1973 "../../../openbgpd-portable/src/bgpd/parse.y"
+                       {
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
 			    NULL)
 				fatal(NULL);
 			(yyval.v.filter_peers)->p.ibgp = 1;
 		}
-#line 4474 "parse.c" /* yacc.c:1652  */
+#line 4604 "parse.c"
     break;
 
-  case 208:
-#line 1981 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 208: /* filter_prefix_h: IPV4 prefixlenop  */
+#line 1981 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                         {
 			if ((yyvsp[0].v.prefixlen).op == OP_NONE) {
 				(yyvsp[0].v.prefixlen).op = OP_RANGE;
 				(yyvsp[0].v.prefixlen).len_min = 0;
@@ -4490,12 +4620,12 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 4494 "parse.c" /* yacc.c:1652  */
+#line 4624 "parse.c"
     break;
 
-  case 209:
-#line 1996 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 209: /* filter_prefix_h: IPV6 prefixlenop  */
+#line 1996 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.prefixlen).op == OP_NONE) {
 				(yyvsp[0].v.prefixlen).op = OP_RANGE;
 				(yyvsp[0].v.prefixlen).len_min = 0;
@@ -4510,30 +4640,30 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 4514 "parse.c" /* yacc.c:1652  */
+#line 4644 "parse.c"
     break;
 
-  case 210:
-#line 2011 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_prefix) = (yyvsp[0].v.filter_prefix); }
-#line 4520 "parse.c" /* yacc.c:1652  */
+  case 210: /* filter_prefix_h: PREFIX filter_prefix  */
+#line 2011 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        { (yyval.v.filter_prefix) = (yyvsp[0].v.filter_prefix); }
+#line 4650 "parse.c"
     break;
 
-  case 211:
-#line 2012 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_prefix) = (yyvsp[-1].v.filter_prefix); }
-#line 4526 "parse.c" /* yacc.c:1652  */
+  case 211: /* filter_prefix_h: PREFIX '{' filter_prefix_m '}'  */
+#line 2012 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        { (yyval.v.filter_prefix) = (yyvsp[-1].v.filter_prefix); }
+#line 4656 "parse.c"
     break;
 
-  case 213:
-#line 2016 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_prefix) = (yyvsp[-1].v.filter_prefix); }
-#line 4532 "parse.c" /* yacc.c:1652  */
+  case 213: /* filter_prefix_m: '{' filter_prefix_l '}'  */
+#line 2016 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        { (yyval.v.filter_prefix) = (yyvsp[-1].v.filter_prefix); }
+#line 4662 "parse.c"
     break;
 
-  case 214:
-#line 2018 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 214: /* filter_prefix_m: '{' filter_prefix_l '}' filter_prefix_m  */
+#line 2018 "../../../openbgpd-portable/src/bgpd/parse.y"
+                {
 			struct filter_prefix_l  *p;
 
 			/* merge, both can be lists */
@@ -4543,27 +4673,27 @@ yyreduce:
 				p->next = (yyvsp[0].v.filter_prefix);
 			(yyval.v.filter_prefix) = (yyvsp[-2].v.filter_prefix);
 		}
-#line 4547 "parse.c" /* yacc.c:1652  */
+#line 4677 "parse.c"
     break;
 
-  case 215:
-#line 2029 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_prefix) = (yyvsp[0].v.filter_prefix); }
-#line 4553 "parse.c" /* yacc.c:1652  */
+  case 215: /* filter_prefix_l: filter_prefix  */
+#line 2029 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { (yyval.v.filter_prefix) = (yyvsp[0].v.filter_prefix); }
+#line 4683 "parse.c"
     break;
 
-  case 216:
-#line 2030 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 216: /* filter_prefix_l: filter_prefix_l comma filter_prefix  */
+#line 2030 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			(yyvsp[0].v.filter_prefix)->next = (yyvsp[-2].v.filter_prefix);
 			(yyval.v.filter_prefix) = (yyvsp[0].v.filter_prefix);
 		}
-#line 4562 "parse.c" /* yacc.c:1652  */
+#line 4692 "parse.c"
     break;
 
-  case 217:
-#line 2036 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 217: /* filter_prefix: prefix prefixlenop  */
+#line 2036 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if (((yyval.v.filter_prefix) = calloc(1, sizeof(struct filter_prefix_l))) ==
 			    NULL)
 				fatal(NULL);
@@ -4576,18 +4706,18 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 4580 "parse.c" /* yacc.c:1652  */
+#line 4710 "parse.c"
     break;
 
-  case 219:
-#line 2052 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_as) = (yyvsp[-1].v.filter_as); }
-#line 4586 "parse.c" /* yacc.c:1652  */
+  case 219: /* filter_as_h: '{' filter_as_t_l '}'  */
+#line 2052 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { (yyval.v.filter_as) = (yyvsp[-1].v.filter_as); }
+#line 4716 "parse.c"
     break;
 
-  case 221:
-#line 2056 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 221: /* filter_as_t_l: filter_as_t_l comma filter_as_t  */
+#line 2056 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                {
 			struct filter_as_l	*a;
 
 			/* merge, both can be lists */
@@ -4597,33 +4727,33 @@ yyreduce:
 				a->next = (yyvsp[0].v.filter_as);
 			(yyval.v.filter_as) = (yyvsp[-2].v.filter_as);
 		}
-#line 4601 "parse.c" /* yacc.c:1652  */
+#line 4731 "parse.c"
     break;
 
-  case 222:
-#line 2068 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 222: /* filter_as_t: filter_as_type filter_as  */
+#line 2068 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                {
 			(yyval.v.filter_as) = (yyvsp[0].v.filter_as);
 			(yyval.v.filter_as)->a.type = (yyvsp[-1].v.u8);
 		}
-#line 4610 "parse.c" /* yacc.c:1652  */
+#line 4740 "parse.c"
     break;
 
-  case 223:
-#line 2072 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 223: /* filter_as_t: filter_as_type '{' filter_as_l_h '}'  */
+#line 2072 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			struct filter_as_l	*a;
 
 			(yyval.v.filter_as) = (yyvsp[-1].v.filter_as);
 			for (a = (yyval.v.filter_as); a != NULL; a = a->next)
 				a->a.type = (yyvsp[-3].v.u8);
 		}
-#line 4622 "parse.c" /* yacc.c:1652  */
+#line 4752 "parse.c"
     break;
 
-  case 224:
-#line 2079 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 224: /* filter_as_t: filter_as_type ASSET STRING  */
+#line 2079 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                              {
 			if (as_sets_lookup(&conf->as_sets, (yyvsp[0].v.string)) == NULL) {
 				yyerror("as-set \"%s\" not defined", (yyvsp[0].v.string));
 				free((yyvsp[0].v.string));
@@ -4644,18 +4774,18 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4648 "parse.c" /* yacc.c:1652  */
+#line 4778 "parse.c"
     break;
 
-  case 226:
-#line 2103 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_as) = (yyvsp[-1].v.filter_as); }
-#line 4654 "parse.c" /* yacc.c:1652  */
+  case 226: /* filter_as_l_h: '{' filter_as_l '}'  */
+#line 2103 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        { (yyval.v.filter_as) = (yyvsp[-1].v.filter_as); }
+#line 4784 "parse.c"
     break;
 
-  case 227:
-#line 2105 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 227: /* filter_as_l_h: '{' filter_as_l '}' filter_as_l_h  */
+#line 2105 "../../../openbgpd-portable/src/bgpd/parse.y"
+                {
 			struct filter_as_l	*a;
 
 			/* merge, both can be lists */
@@ -4665,21 +4795,21 @@ yyreduce:
 				a->next = (yyvsp[0].v.filter_as);
 			(yyval.v.filter_as) = (yyvsp[-2].v.filter_as);
 		}
-#line 4669 "parse.c" /* yacc.c:1652  */
+#line 4799 "parse.c"
     break;
 
-  case 229:
-#line 2118 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 229: /* filter_as_l: filter_as_l comma filter_as  */
+#line 2118 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			(yyvsp[0].v.filter_as)->next = (yyvsp[-2].v.filter_as);
 			(yyval.v.filter_as) = (yyvsp[0].v.filter_as);
 		}
-#line 4678 "parse.c" /* yacc.c:1652  */
+#line 4808 "parse.c"
     break;
 
-  case 230:
-#line 2124 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 230: /* filter_as: as4number_any  */
+#line 2124 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (((yyval.v.filter_as) = calloc(1, sizeof(struct filter_as_l))) ==
 			    NULL)
 				fatal(NULL);
@@ -4687,23 +4817,23 @@ yyreduce:
 			(yyval.v.filter_as)->a.as_max = (yyvsp[0].v.number);
 			(yyval.v.filter_as)->a.op = OP_EQ;
 		}
-#line 4691 "parse.c" /* yacc.c:1652  */
+#line 4821 "parse.c"
     break;
 
-  case 231:
-#line 2132 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 231: /* filter_as: NEIGHBORAS  */
+#line 2132 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (((yyval.v.filter_as) = calloc(1, sizeof(struct filter_as_l))) ==
 			    NULL)
 				fatal(NULL);
 			(yyval.v.filter_as)->a.flags = AS_FLAG_NEIGHBORAS;
 		}
-#line 4702 "parse.c" /* yacc.c:1652  */
+#line 4832 "parse.c"
     break;
 
-  case 232:
-#line 2138 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 232: /* filter_as: equalityop as4number_any  */
+#line 2138 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (((yyval.v.filter_as) = calloc(1, sizeof(struct filter_as_l))) ==
 			    NULL)
 				fatal(NULL);
@@ -4711,12 +4841,12 @@ yyreduce:
 			(yyval.v.filter_as)->a.as_min = (yyvsp[0].v.number);
 			(yyval.v.filter_as)->a.as_max = (yyvsp[0].v.number);
 		}
-#line 4715 "parse.c" /* yacc.c:1652  */
+#line 4845 "parse.c"
     break;
 
-  case 233:
-#line 2146 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 233: /* filter_as: as4number_any binaryop as4number_any  */
+#line 2146 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                       {
 			if (((yyval.v.filter_as) = calloc(1, sizeof(struct filter_as_l))) ==
 			    NULL)
 				fatal(NULL);
@@ -4728,36 +4858,36 @@ yyreduce:
 			(yyval.v.filter_as)->a.as_min = (yyvsp[-2].v.number);
 			(yyval.v.filter_as)->a.as_max = (yyvsp[0].v.number);
 		}
-#line 4732 "parse.c" /* yacc.c:1652  */
+#line 4862 "parse.c"
     break;
 
-  case 234:
-#line 2160 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 234: /* filter_match_h: %empty  */
+#line 2160 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			bzero(&(yyval.v.filter_match), sizeof((yyval.v.filter_match)));
 		}
-#line 4740 "parse.c" /* yacc.c:1652  */
+#line 4870 "parse.c"
     break;
 
-  case 235:
-#line 2163 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 235: /* $@11: %empty  */
+#line 2163 "../../../openbgpd-portable/src/bgpd/parse.y"
+                  {
 			bzero(&fmopts, sizeof(fmopts));
 		}
-#line 4748 "parse.c" /* yacc.c:1652  */
+#line 4878 "parse.c"
     break;
 
-  case 236:
-#line 2166 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 236: /* filter_match_h: $@11 filter_match  */
+#line 2166 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			memcpy(&(yyval.v.filter_match), &fmopts, sizeof((yyval.v.filter_match)));
 		}
-#line 4756 "parse.c" /* yacc.c:1652  */
+#line 4886 "parse.c"
     break;
 
-  case 239:
-#line 2175 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 239: /* filter_elm: filter_prefix_h  */
+#line 2175 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (fmopts.prefix_l != NULL) {
 				yyerror("\"prefix\" already specified");
 				YYERROR;
@@ -4770,24 +4900,24 @@ yyreduce:
 			}
 			fmopts.prefix_l = (yyvsp[0].v.filter_prefix);
 		}
-#line 4774 "parse.c" /* yacc.c:1652  */
+#line 4904 "parse.c"
     break;
 
-  case 240:
-#line 2188 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 240: /* filter_elm: filter_as_h  */
+#line 2188 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (fmopts.as_l != NULL) {
 				yyerror("AS filters already specified");
 				YYERROR;
 			}
 			fmopts.as_l = (yyvsp[0].v.filter_as);
 		}
-#line 4786 "parse.c" /* yacc.c:1652  */
+#line 4916 "parse.c"
     break;
 
-  case 241:
-#line 2195 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 241: /* filter_elm: MAXASLEN NUMBER  */
+#line 2195 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (fmopts.m.aslen.type != ASLEN_NONE) {
 				yyerror("AS length filters already specified");
 				YYERROR;
@@ -4799,12 +4929,12 @@ yyreduce:
 			fmopts.m.aslen.type = ASLEN_MAX;
 			fmopts.m.aslen.aslen = (yyvsp[0].v.number);
 		}
-#line 4803 "parse.c" /* yacc.c:1652  */
+#line 4933 "parse.c"
     break;
 
-  case 242:
-#line 2207 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 242: /* filter_elm: MAXASSEQ NUMBER  */
+#line 2207 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (fmopts.m.aslen.type != ASLEN_NONE) {
 				yyerror("AS length filters already specified");
 				YYERROR;
@@ -4816,12 +4946,12 @@ yyreduce:
 			fmopts.m.aslen.type = ASLEN_SEQ;
 			fmopts.m.aslen.aslen = (yyvsp[0].v.number);
 		}
-#line 4820 "parse.c" /* yacc.c:1652  */
+#line 4950 "parse.c"
     break;
 
-  case 243:
-#line 2219 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 243: /* filter_elm: community STRING  */
+#line 2219 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			int i;
 			for (i = 0; i < MAX_COMM_MATCH; i++) {
 				if (fmopts.m.community[i].flags == 0)
@@ -4839,12 +4969,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4843 "parse.c" /* yacc.c:1652  */
+#line 4973 "parse.c"
     break;
 
-  case 244:
-#line 2237 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 244: /* filter_elm: EXTCOMMUNITY STRING STRING  */
+#line 2237 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                             {
 			int i;
 			for (i = 0; i < MAX_COMM_MATCH; i++) {
 				if (fmopts.m.community[i].flags == 0)
@@ -4866,12 +4996,12 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 4870 "parse.c" /* yacc.c:1652  */
+#line 5000 "parse.c"
     break;
 
-  case 245:
-#line 2259 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 245: /* filter_elm: EXTCOMMUNITY OVS STRING  */
+#line 2259 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                          {
 			int i;
 			for (i = 0; i < MAX_COMM_MATCH; i++) {
 				if (fmopts.m.community[i].flags == 0)
@@ -4890,12 +5020,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4894 "parse.c" /* yacc.c:1652  */
+#line 5024 "parse.c"
     break;
 
-  case 246:
-#line 2278 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 246: /* filter_elm: NEXTHOP address  */
+#line 2278 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (fmopts.m.nexthop.flags) {
 				yyerror("nexthop already specified");
 				YYERROR;
@@ -4903,24 +5033,24 @@ yyreduce:
 			fmopts.m.nexthop.addr = (yyvsp[0].v.addr);
 			fmopts.m.nexthop.flags = FILTER_NEXTHOP_ADDR;
 		}
-#line 4907 "parse.c" /* yacc.c:1652  */
+#line 5037 "parse.c"
     break;
 
-  case 247:
-#line 2286 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 247: /* filter_elm: NEXTHOP NEIGHBOR  */
+#line 2286 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (fmopts.m.nexthop.flags) {
 				yyerror("nexthop already specified");
 				YYERROR;
 			}
 			fmopts.m.nexthop.flags = FILTER_NEXTHOP_NEIGHBOR;
 		}
-#line 4919 "parse.c" /* yacc.c:1652  */
+#line 5049 "parse.c"
     break;
 
-  case 248:
-#line 2293 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 248: /* filter_elm: PREFIXSET STRING prefixlenop  */
+#line 2293 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                               {
 			struct prefixset *ps;
 			if (fmopts.prefix_l != NULL) {
 				yyerror("\"prefix\" already specified, cannot "
@@ -4969,12 +5099,12 @@ yyreduce:
 			fmopts.m.prefixset.flags |= PREFIXSET_FLAG_FILTER;
 			free((yyvsp[-1].v.string));
 		}
-#line 4973 "parse.c" /* yacc.c:1652  */
+#line 5103 "parse.c"
     break;
 
-  case 249:
-#line 2342 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 249: /* filter_elm: ORIGINSET STRING  */
+#line 2342 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                   {
 			if (fmopts.m.originset.name[0] != '\0') {
 				yyerror("origin-set filter already specified");
 				free((yyvsp[0].v.string));
@@ -4994,12 +5124,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4998 "parse.c" /* yacc.c:1652  */
+#line 5128 "parse.c"
     break;
 
-  case 250:
-#line 2362 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 250: /* filter_elm: OVS validity  */
+#line 2362 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (fmopts.m.ovs.is_set) {
 				yyerror("ovs filter already specified");
 				YYERROR;
@@ -5007,29 +5137,29 @@ yyreduce:
 			fmopts.m.ovs.validity = (yyvsp[0].v.number);
 			fmopts.m.ovs.is_set = 1;
 		}
-#line 5011 "parse.c" /* yacc.c:1652  */
+#line 5141 "parse.c"
     break;
 
-  case 251:
-#line 2372 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen))); }
-#line 5017 "parse.c" /* yacc.c:1652  */
+  case 251: /* prefixlenop: %empty  */
+#line 2372 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                { bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen))); }
+#line 5147 "parse.c"
     break;
 
-  case 252:
-#line 2373 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 252: /* prefixlenop: LONGER  */
+#line 2373 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen)));
 			(yyval.v.prefixlen).op = OP_RANGE;
 			(yyval.v.prefixlen).len_min = -1;
 			(yyval.v.prefixlen).len_max = -1;
 		}
-#line 5028 "parse.c" /* yacc.c:1652  */
+#line 5158 "parse.c"
     break;
 
-  case 253:
-#line 2379 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 253: /* prefixlenop: MAXLEN NUMBER  */
+#line 2379 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen)));
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
 				yyerror("prefixlen must be >= 0 and <= 128");
@@ -5040,12 +5170,12 @@ yyreduce:
 			(yyval.v.prefixlen).len_min = -1;
 			(yyval.v.prefixlen).len_max = (yyvsp[0].v.number);
 		}
-#line 5044 "parse.c" /* yacc.c:1652  */
+#line 5174 "parse.c"
     break;
 
-  case 254:
-#line 2390 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 254: /* prefixlenop: PREFIXLEN unaryop NUMBER  */
+#line 2390 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			int min, max;
 
 			bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen)));
@@ -5088,12 +5218,12 @@ yyreduce:
 			(yyval.v.prefixlen).len_min = min;
 			(yyval.v.prefixlen).len_max = max;
 		}
-#line 5092 "parse.c" /* yacc.c:1652  */
+#line 5222 "parse.c"
     break;
 
-  case 255:
-#line 2433 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 255: /* prefixlenop: PREFIXLEN NUMBER binaryop NUMBER  */
+#line 2433 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen)));
 			if ((yyvsp[-2].v.number) < 0 || (yyvsp[-2].v.number) > 128 || (yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
 				yyerror("prefixlen must be < 128");
@@ -5107,106 +5237,106 @@ yyreduce:
 			(yyval.v.prefixlen).len_min = (yyvsp[-2].v.number);
 			(yyval.v.prefixlen).len_max = (yyvsp[0].v.number);
 		}
-#line 5111 "parse.c" /* yacc.c:1652  */
+#line 5241 "parse.c"
     break;
 
-  case 256:
-#line 2449 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = AS_ALL; }
-#line 5117 "parse.c" /* yacc.c:1652  */
+  case 256: /* filter_as_type: AS  */
+#line 2449 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = AS_ALL; }
+#line 5247 "parse.c"
     break;
 
-  case 257:
-#line 2450 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = AS_SOURCE; }
-#line 5123 "parse.c" /* yacc.c:1652  */
+  case 257: /* filter_as_type: SOURCEAS  */
+#line 2450 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = AS_SOURCE; }
+#line 5253 "parse.c"
     break;
 
-  case 258:
-#line 2451 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = AS_TRANSIT; }
-#line 5129 "parse.c" /* yacc.c:1652  */
+  case 258: /* filter_as_type: TRANSITAS  */
+#line 2451 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = AS_TRANSIT; }
+#line 5259 "parse.c"
     break;
 
-  case 259:
-#line 2452 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = AS_PEER; }
-#line 5135 "parse.c" /* yacc.c:1652  */
+  case 259: /* filter_as_type: PEERAS  */
+#line 2452 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = AS_PEER; }
+#line 5265 "parse.c"
     break;
 
-  case 260:
-#line 2455 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_set_head) = NULL; }
-#line 5141 "parse.c" /* yacc.c:1652  */
+  case 260: /* filter_set: %empty  */
+#line 2455 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                { (yyval.v.filter_set_head) = NULL; }
+#line 5271 "parse.c"
     break;
 
-  case 261:
-#line 2456 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 261: /* filter_set: SET filter_set_opt  */
+#line 2456 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                {
 			if (((yyval.v.filter_set_head) = calloc(1, sizeof(struct filter_set_head))) ==
 			    NULL)
 				fatal(NULL);
 			TAILQ_INIT((yyval.v.filter_set_head));
 			TAILQ_INSERT_TAIL((yyval.v.filter_set_head), (yyvsp[0].v.filter_set), entry);
 		}
-#line 5153 "parse.c" /* yacc.c:1652  */
+#line 5283 "parse.c"
     break;
 
-  case 262:
-#line 2463 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.filter_set_head) = (yyvsp[-2].v.filter_set_head); }
-#line 5159 "parse.c" /* yacc.c:1652  */
+  case 262: /* filter_set: SET '{' optnl filter_set_l optnl '}'  */
+#line 2463 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        { (yyval.v.filter_set_head) = (yyvsp[-2].v.filter_set_head); }
+#line 5289 "parse.c"
     break;
 
-  case 263:
-#line 2466 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 263: /* filter_set_l: filter_set_l comma filter_set_opt  */
+#line 2466 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			(yyval.v.filter_set_head) = (yyvsp[-2].v.filter_set_head);
 			if (merge_filterset((yyval.v.filter_set_head), (yyvsp[0].v.filter_set)) == 1)
 				YYERROR;
 		}
-#line 5169 "parse.c" /* yacc.c:1652  */
+#line 5299 "parse.c"
     break;
 
-  case 264:
-#line 2471 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 264: /* filter_set_l: filter_set_opt  */
+#line 2471 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                 {
 			if (((yyval.v.filter_set_head) = calloc(1, sizeof(struct filter_set_head))) ==
 			    NULL)
 				fatal(NULL);
 			TAILQ_INIT((yyval.v.filter_set_head));
 			TAILQ_INSERT_TAIL((yyval.v.filter_set_head), (yyvsp[0].v.filter_set), entry);
 		}
-#line 5181 "parse.c" /* yacc.c:1652  */
+#line 5311 "parse.c"
     break;
 
-  case 265:
-#line 2480 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = COMMUNITY_TYPE_BASIC; }
-#line 5187 "parse.c" /* yacc.c:1652  */
+  case 265: /* community: COMMUNITY  */
+#line 2480 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        { (yyval.v.u8) = COMMUNITY_TYPE_BASIC; }
+#line 5317 "parse.c"
     break;
 
-  case 266:
-#line 2481 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = COMMUNITY_TYPE_LARGE; }
-#line 5193 "parse.c" /* yacc.c:1652  */
+  case 266: /* community: LARGECOMMUNITY  */
+#line 2481 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        { (yyval.v.u8) = COMMUNITY_TYPE_LARGE; }
+#line 5323 "parse.c"
     break;
 
-  case 267:
-#line 2484 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = 0; }
-#line 5199 "parse.c" /* yacc.c:1652  */
+  case 267: /* delete: %empty  */
+#line 2484 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = 0; }
+#line 5329 "parse.c"
     break;
 
-  case 268:
-#line 2485 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = 1; }
-#line 5205 "parse.c" /* yacc.c:1652  */
+  case 268: /* delete: DELETE  */
+#line 2485 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = 1; }
+#line 5335 "parse.c"
     break;
 
-  case 269:
-#line 2488 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 269: /* filter_set_opt: LOCALPREF NUMBER  */
+#line 2488 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.number) < -INT_MAX || (yyvsp[0].v.number) > UINT_MAX) {
 				yyerror("bad localpref %lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5221,12 +5351,12 @@ yyreduce:
 				(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 			}
 		}
-#line 5225 "parse.c" /* yacc.c:1652  */
+#line 5355 "parse.c"
     break;
 
-  case 270:
-#line 2503 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 270: /* filter_set_opt: LOCALPREF '+' NUMBER  */
+#line 2503 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad localpref +%lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5236,12 +5366,12 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_LOCALPREF;
 			(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 		}
-#line 5240 "parse.c" /* yacc.c:1652  */
+#line 5370 "parse.c"
     break;
 
-  case 271:
-#line 2513 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 271: /* filter_set_opt: LOCALPREF '-' NUMBER  */
+#line 2513 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad localpref -%lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5251,12 +5381,12 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_LOCALPREF;
 			(yyval.v.filter_set)->action.relative = -(yyvsp[0].v.number);
 		}
-#line 5255 "parse.c" /* yacc.c:1652  */
+#line 5385 "parse.c"
     break;
 
-  case 272:
-#line 2523 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 272: /* filter_set_opt: MED NUMBER  */
+#line 2523 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.number) < -INT_MAX || (yyvsp[0].v.number) > UINT_MAX) {
 				yyerror("bad metric %lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5271,12 +5401,12 @@ yyreduce:
 				(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 			}
 		}
-#line 5275 "parse.c" /* yacc.c:1652  */
+#line 5405 "parse.c"
     break;
 
-  case 273:
-#line 2538 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 273: /* filter_set_opt: MED '+' NUMBER  */
+#line 2538 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad metric +%lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5286,12 +5416,12 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_MED;
 			(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 		}
-#line 5290 "parse.c" /* yacc.c:1652  */
+#line 5420 "parse.c"
     break;
 
-  case 274:
-#line 2548 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 274: /* filter_set_opt: MED '-' NUMBER  */
+#line 2548 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad metric -%lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5301,12 +5431,12 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_MED;
 			(yyval.v.filter_set)->action.relative = -(yyvsp[0].v.number);
 		}
-#line 5305 "parse.c" /* yacc.c:1652  */
+#line 5435 "parse.c"
     break;
 
-  case 275:
-#line 2558 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {	/* alias for MED */
+  case 275: /* filter_set_opt: METRIC NUMBER  */
+#line 2558 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {	/* alias for MED */
 			if ((yyvsp[0].v.number) < -INT_MAX || (yyvsp[0].v.number) > UINT_MAX) {
 				yyerror("bad metric %lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5321,12 +5451,12 @@ yyreduce:
 				(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 			}
 		}
-#line 5325 "parse.c" /* yacc.c:1652  */
+#line 5455 "parse.c"
     break;
 
-  case 276:
-#line 2573 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 276: /* filter_set_opt: METRIC '+' NUMBER  */
+#line 2573 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad metric +%lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5336,12 +5466,12 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_MED;
 			(yyval.v.filter_set)->action.metric = (yyvsp[0].v.number);
 		}
-#line 5340 "parse.c" /* yacc.c:1652  */
+#line 5470 "parse.c"
     break;
 
-  case 277:
-#line 2583 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 277: /* filter_set_opt: METRIC '-' NUMBER  */
+#line 2583 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad metric -%lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5351,12 +5481,12 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_MED;
 			(yyval.v.filter_set)->action.relative = -(yyvsp[0].v.number);
 		}
-#line 5355 "parse.c" /* yacc.c:1652  */
+#line 5485 "parse.c"
     break;
 
-  case 278:
-#line 2593 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 278: /* filter_set_opt: WEIGHT NUMBER  */
+#line 2593 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.number) < -INT_MAX || (yyvsp[0].v.number) > UINT_MAX) {
 				yyerror("bad weight %lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5371,12 +5501,12 @@ yyreduce:
 				(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 			}
 		}
-#line 5375 "parse.c" /* yacc.c:1652  */
+#line 5505 "parse.c"
     break;
 
-  case 279:
-#line 2608 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 279: /* filter_set_opt: WEIGHT '+' NUMBER  */
+#line 2608 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad weight +%lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5386,12 +5516,12 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_WEIGHT;
 			(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 		}
-#line 5390 "parse.c" /* yacc.c:1652  */
+#line 5520 "parse.c"
     break;
 
-  case 280:
-#line 2618 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 280: /* filter_set_opt: WEIGHT '-' NUMBER  */
+#line 2618 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad weight -%lld", (yyvsp[0].v.number));
 				YYERROR;
@@ -5401,64 +5531,64 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_WEIGHT;
 			(yyval.v.filter_set)->action.relative = -(yyvsp[0].v.number);
 		}
-#line 5405 "parse.c" /* yacc.c:1652  */
+#line 5535 "parse.c"
     break;
 
-  case 281:
-#line 2628 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 281: /* filter_set_opt: NEXTHOP address  */
+#line 2628 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP;
 			memcpy(&(yyval.v.filter_set)->action.nexthop, &(yyvsp[0].v.addr),
 			    sizeof((yyval.v.filter_set)->action.nexthop));
 		}
-#line 5417 "parse.c" /* yacc.c:1652  */
+#line 5547 "parse.c"
     break;
 
-  case 282:
-#line 2635 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 282: /* filter_set_opt: NEXTHOP BLACKHOLE  */
+#line 2635 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP_BLACKHOLE;
 		}
-#line 5427 "parse.c" /* yacc.c:1652  */
+#line 5557 "parse.c"
     break;
 
-  case 283:
-#line 2640 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 283: /* filter_set_opt: NEXTHOP REJECT  */
+#line 2640 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP_REJECT;
 		}
-#line 5437 "parse.c" /* yacc.c:1652  */
+#line 5567 "parse.c"
     break;
 
-  case 284:
-#line 2645 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 284: /* filter_set_opt: NEXTHOP NOMODIFY  */
+#line 2645 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP_NOMODIFY;
 		}
-#line 5447 "parse.c" /* yacc.c:1652  */
+#line 5577 "parse.c"
     break;
 
-  case 285:
-#line 2650 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 285: /* filter_set_opt: NEXTHOP SELF  */
+#line 2650 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP_SELF;
 		}
-#line 5457 "parse.c" /* yacc.c:1652  */
+#line 5587 "parse.c"
     break;
 
-  case 286:
-#line 2655 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 286: /* filter_set_opt: PREPEND_SELF NUMBER  */
+#line 2655 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
 				yyerror("bad number of prepends");
 				YYERROR;
@@ -5468,12 +5598,12 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_PREPEND_SELF;
 			(yyval.v.filter_set)->action.prepend = (yyvsp[0].v.number);
 		}
-#line 5472 "parse.c" /* yacc.c:1652  */
+#line 5602 "parse.c"
     break;
 
-  case 287:
-#line 2665 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 287: /* filter_set_opt: PREPEND_PEER NUMBER  */
+#line 2665 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
 				yyerror("bad number of prepends");
 				YYERROR;
@@ -5483,22 +5613,22 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_PREPEND_PEER;
 			(yyval.v.filter_set)->action.prepend = (yyvsp[0].v.number);
 		}
-#line 5487 "parse.c" /* yacc.c:1652  */
+#line 5617 "parse.c"
     break;
 
-  case 288:
-#line 2675 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 288: /* filter_set_opt: ASOVERRIDE  */
+#line 2675 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_AS_OVERRIDE;
 		}
-#line 5497 "parse.c" /* yacc.c:1652  */
+#line 5627 "parse.c"
     break;
 
-  case 289:
-#line 2680 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 289: /* filter_set_opt: PFTABLE STRING  */
+#line 2680 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_PFTABLE;
@@ -5525,12 +5655,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5529 "parse.c" /* yacc.c:1652  */
+#line 5659 "parse.c"
     break;
 
-  case 290:
-#line 2707 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 290: /* filter_set_opt: RTLABEL STRING  */
+#line 2707 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_RTLABEL;
@@ -5544,12 +5674,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5548 "parse.c" /* yacc.c:1652  */
+#line 5678 "parse.c"
     break;
 
-  case 291:
-#line 2721 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 291: /* filter_set_opt: community delete STRING  */
+#line 2721 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                {
 			u_int8_t f1, f2, f3;
 
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
@@ -5577,12 +5707,12 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 5581 "parse.c" /* yacc.c:1652  */
+#line 5711 "parse.c"
     break;
 
-  case 292:
-#line 2749 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 292: /* filter_set_opt: EXTCOMMUNITY delete STRING STRING  */
+#line 2749 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                    {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			if ((yyvsp[-2].v.u8))
@@ -5600,12 +5730,12 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 5604 "parse.c" /* yacc.c:1652  */
+#line 5734 "parse.c"
     break;
 
-  case 293:
-#line 2767 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 293: /* filter_set_opt: EXTCOMMUNITY delete OVS STRING  */
+#line 2767 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                 {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			if ((yyvsp[-2].v.u8))
@@ -5621,23 +5751,23 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5625 "parse.c" /* yacc.c:1652  */
+#line 5755 "parse.c"
     break;
 
-  case 294:
-#line 2783 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 294: /* filter_set_opt: ORIGIN origincode  */
+#line 2783 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                    {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_ORIGIN;
 			(yyval.v.filter_set)->action.origin = (yyvsp[0].v.number);
 		}
-#line 5636 "parse.c" /* yacc.c:1652  */
+#line 5766 "parse.c"
     break;
 
-  case 295:
-#line 2791 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 295: /* origincode: STRING  */
+#line 2791 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			if (!strcmp((yyvsp[0].v.string), "egp"))
 				(yyval.v.number) = ORIGIN_EGP;
 			else if (!strcmp((yyvsp[0].v.string), "igp"))
@@ -5651,12 +5781,12 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5655 "parse.c" /* yacc.c:1652  */
+#line 5785 "parse.c"
     break;
 
-  case 296:
-#line 2806 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    {
+  case 296: /* validity: STRING  */
+#line 2806 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                {
 			if (!strcmp((yyvsp[0].v.string), "not-found"))
 				(yyval.v.number) = ROA_NOTFOUND;
 			else if (!strcmp((yyvsp[0].v.string), "invalid"))
@@ -5670,71 +5800,72 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5674 "parse.c" /* yacc.c:1652  */
+#line 5804 "parse.c"
     break;
 
-  case 303:
-#line 2831 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_EQ; }
-#line 5680 "parse.c" /* yacc.c:1652  */
+  case 303: /* unaryop: '='  */
+#line 2831 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_EQ; }
+#line 5810 "parse.c"
     break;
 
-  case 304:
-#line 2832 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_NE; }
-#line 5686 "parse.c" /* yacc.c:1652  */
+  case 304: /* unaryop: NE  */
+#line 2832 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_NE; }
+#line 5816 "parse.c"
     break;
 
-  case 305:
-#line 2833 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_LE; }
-#line 5692 "parse.c" /* yacc.c:1652  */
+  case 305: /* unaryop: LE  */
+#line 2833 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_LE; }
+#line 5822 "parse.c"
     break;
 
-  case 306:
-#line 2834 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_LT; }
-#line 5698 "parse.c" /* yacc.c:1652  */
+  case 306: /* unaryop: '<'  */
+#line 2834 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_LT; }
+#line 5828 "parse.c"
     break;
 
-  case 307:
-#line 2835 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_GE; }
-#line 5704 "parse.c" /* yacc.c:1652  */
+  case 307: /* unaryop: GE  */
+#line 2835 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_GE; }
+#line 5834 "parse.c"
     break;
 
-  case 308:
-#line 2836 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_GT; }
-#line 5710 "parse.c" /* yacc.c:1652  */
+  case 308: /* unaryop: '>'  */
+#line 2836 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_GT; }
+#line 5840 "parse.c"
     break;
 
-  case 309:
-#line 2839 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_EQ; }
-#line 5716 "parse.c" /* yacc.c:1652  */
+  case 309: /* equalityop: '='  */
+#line 2839 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_EQ; }
+#line 5846 "parse.c"
     break;
 
-  case 310:
-#line 2840 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_NE; }
-#line 5722 "parse.c" /* yacc.c:1652  */
+  case 310: /* equalityop: NE  */
+#line 2840 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_NE; }
+#line 5852 "parse.c"
     break;
 
-  case 311:
-#line 2843 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_RANGE; }
-#line 5728 "parse.c" /* yacc.c:1652  */
+  case 311: /* binaryop: '-'  */
+#line 2843 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_RANGE; }
+#line 5858 "parse.c"
     break;
 
-  case 312:
-#line 2844 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1652  */
-    { (yyval.v.u8) = OP_XRANGE; }
-#line 5734 "parse.c" /* yacc.c:1652  */
+  case 312: /* binaryop: XRANGE  */
+#line 2844 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.u8) = OP_XRANGE; }
+#line 5864 "parse.c"
     break;
 
 
-#line 5738 "parse.c" /* yacc.c:1652  */
+#line 5868 "parse.c"
+
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -5748,11 +5879,10 @@ yyreduce:
      case of YYERROR or YYBACKUP, subsequent parser actions might lead
      to an incorrect destructor call or verbose syntax error message
      before the lookahead is translated.  */
-  YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
+  YY_SYMBOL_PRINT ("-> $$ =", YY_CAST (yysymbol_kind_t, yyr1[yyn]), &yyval, &yyloc);
 
   YYPOPSTACK (yylen);
   yylen = 0;
-  YY_STACK_PRINT (yyss, yyssp);
 
   *++yyvsp = yyval;
 
@@ -5776,49 +5906,13 @@ yyreduce:
 yyerrlab:
   /* Make sure we have latest lookahead translation.  See comments at
      user semantic actions for why this is necessary.  */
-  yytoken = yychar == YYEMPTY ? YYEMPTY : YYTRANSLATE (yychar);
-
+  yytoken = yychar == YYEMPTY ? YYSYMBOL_YYEMPTY : YYTRANSLATE (yychar);
   /* If not already recovering from an error, report this error.  */
   if (!yyerrstatus)
     {
       ++yynerrs;
-#if ! YYERROR_VERBOSE
       yyerror (YY_("syntax error"));
-#else
-# define YYSYNTAX_ERROR yysyntax_error (&yymsg_alloc, &yymsg, \
-                                        yyssp, yytoken)
-      {
-        char const *yymsgp = YY_("syntax error");
-        int yysyntax_error_status;
-        yysyntax_error_status = YYSYNTAX_ERROR;
-        if (yysyntax_error_status == 0)
-          yymsgp = yymsg;
-        else if (yysyntax_error_status == 1)
-          {
-            if (yymsg != yymsgbuf)
-              YYSTACK_FREE (yymsg);
-            yymsg = (char *) YYSTACK_ALLOC (yymsg_alloc);
-            if (!yymsg)
-              {
-                yymsg = yymsgbuf;
-                yymsg_alloc = sizeof yymsgbuf;
-                yysyntax_error_status = 2;
-              }
-            else
-              {
-                yysyntax_error_status = YYSYNTAX_ERROR;
-                yymsgp = yymsg;
-              }
-          }
-        yyerror (yymsgp);
-        if (yysyntax_error_status == 2)
-          goto yyexhaustedlab;
-      }
-# undef YYSYNTAX_ERROR
-#endif
     }
-
-
 
   if (yyerrstatus == 3)
     {
@@ -5868,13 +5962,14 @@ yyerrorlab:
 yyerrlab1:
   yyerrstatus = 3;      /* Each real token shifted decrements this.  */
 
+  /* Pop stack until we find a state that shifts the error token.  */
   for (;;)
     {
       yyn = yypact[yystate];
       if (!yypact_value_is_default (yyn))
         {
-          yyn += YYTERROR;
-          if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYTERROR)
+          yyn += YYSYMBOL_YYerror;
+          if (0 <= yyn && yyn <= YYLAST && yycheck[yyn] == YYSYMBOL_YYerror)
             {
               yyn = yytable[yyn];
               if (0 < yyn)
@@ -5888,7 +5983,7 @@ yyerrlab1:
 
 
       yydestruct ("Error: popping",
-                  yystos[yystate], yyvsp);
+                  YY_ACCESSING_SYMBOL (yystate), yyvsp);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -5900,7 +5995,7 @@ yyerrlab1:
 
 
   /* Shift the error token.  */
-  YY_SYMBOL_PRINT ("Shifting", yystos[yyn], yyvsp, yylsp);
+  YY_SYMBOL_PRINT ("Shifting", YY_ACCESSING_SYMBOL (yyn), yyvsp, yylsp);
 
   yystate = yyn;
   goto yynewstate;
@@ -5922,20 +6017,20 @@ yyabortlab:
   goto yyreturn;
 
 
-#if !defined yyoverflow || YYERROR_VERBOSE
+#if !defined yyoverflow
 /*-------------------------------------------------.
 | yyexhaustedlab -- memory exhaustion comes here.  |
 `-------------------------------------------------*/
 yyexhaustedlab:
   yyerror (YY_("memory exhausted"));
   yyresult = 2;
-  /* Fall through.  */
+  goto yyreturn;
 #endif
 
 
-/*-----------------------------------------------------.
-| yyreturn -- parsing is finished, return the result.  |
-`-----------------------------------------------------*/
+/*-------------------------------------------------------.
+| yyreturn -- parsing is finished, clean up and return.  |
+`-------------------------------------------------------*/
 yyreturn:
   if (yychar != YYEMPTY)
     {
@@ -5952,20 +6047,18 @@ yyreturn:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-                  yystos[*yyssp], yyvsp);
+                  YY_ACCESSING_SYMBOL (+*yyssp), yyvsp);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
   if (yyss != yyssa)
     YYSTACK_FREE (yyss);
 #endif
-#if YYERROR_VERBOSE
-  if (yymsg != yymsgbuf)
-    YYSTACK_FREE (yymsg);
-#endif
+
   return yyresult;
 }
-#line 2847 "../../../openbgpd-portable/src/bgpd/parse.y" /* yacc.c:1918  */
+
+#line 2847 "../../../openbgpd-portable/src/bgpd/parse.y"
 
 
 struct keywords {
@@ -7126,6 +7219,7 @@ add_mrtconfig(enum mrt_type type, char *name, int timeout, struct peer *p,
 		fatal("add_mrtconfig");
 
 	n->type = type;
+	n->state = MRT_STATE_OPEN;
 	if (strlcpy(MRT2MC(n)->name, name, sizeof(MRT2MC(n)->name)) >=
 	    sizeof(MRT2MC(n)->name)) {
 		yyerror("filename \"%s\" too long: max %zu",
@@ -7140,7 +7234,7 @@ add_mrtconfig(enum mrt_type type, char *name, int timeout, struct peer *p,
 			n->group_id = p->conf.id;
 		} else {
 			n->peer_id = p->conf.id;
-			n->group_id = 0;
+			n->group_id = p->conf.groupid;
 		}
 	}
 	if (rib) {

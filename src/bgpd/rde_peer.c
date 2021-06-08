@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_peer.c,v 1.6 2020/12/04 11:57:13 claudio Exp $ */
+/*	$OpenBSD: rde_peer.c,v 1.9 2021/05/27 14:32:08 claudio Exp $ */
 
 /*
  * Copyright (c) 2019 Claudio Jeker <claudio@openbsd.org>
@@ -43,6 +43,18 @@ struct iq {
 };
 
 extern struct filter_head      *out_rules;
+
+int
+peer_has_as4byte(struct rde_peer *peer)
+{
+	return (peer->capa.as4byte);
+}
+
+int
+peer_accept_no_as_set(struct rde_peer *peer)
+{
+	return (peer->flags & PEERFLAG_NO_AS_SET);
+}
 
 void
 peer_init(u_int32_t hashsize)
@@ -170,6 +182,8 @@ peer_add(u_int32_t id, struct peer_config *p_conf)
 	if (peer->loc_rib_id == RIB_NOTFOUND)
 		fatalx("King Bula's new peer met an unknown RIB");
 	peer->state = PEER_NONE;
+	peer->export_type = peer->conf.export_type;
+	peer->flags = peer->conf.flags;
 	SIMPLEQ_INIT(&peer->imsg_queue);
 
 	head = PEER_HASH(id);
@@ -396,13 +410,13 @@ peer_flush(struct rde_peer *peer, u_int8_t aid, time_t staletime)
 
 /*
  * During graceful restart mark a peer as stale if the session goes down.
- * For the specified AID the Adj-RIB-Out as marked stale and the staletime
+ * For the specified AID the Adj-RIB-Out is marked stale and the staletime
  * is set to the current timestamp for identifying stale routes in Adj-RIB-In.
  */
 void
 peer_stale(struct rde_peer *peer, u_int8_t aid)
 {
-	time_t			 now;
+	time_t now;
 
 	/* flush the now even staler routes out */
 	if (peer->staletime[aid])
@@ -429,11 +443,11 @@ peer_stale(struct rde_peer *peer, u_int8_t aid)
 void
 peer_dump(struct rde_peer *peer, u_int8_t aid)
 {
-	if (peer->conf.export_type == EXPORT_NONE) {
+	if (peer->export_type == EXPORT_NONE) {
 		/* nothing to send apart from the marker */
 		if (peer->capa.grestart.restart)
 			prefix_add_eor(peer, aid);
-	} else if (peer->conf.export_type == EXPORT_DEFAULT_ROUTE) {
+	} else if (peer->export_type == EXPORT_DEFAULT_ROUTE) {
 		up_generate_default(out_rules, peer, aid);
 		rde_up_dump_done(peer, aid);
 	} else {
