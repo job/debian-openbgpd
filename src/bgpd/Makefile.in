@@ -430,7 +430,7 @@ bgpd_SOURCES = bgpd.c session.c log.c logmsg.c parse.y config.c rde.c \
 	$(am__append_7) name2id.c util.c $(am__append_8) \
 	$(am__append_9) timer.c rde_peer.c rtr.c rtr_proto.c
 bgpd_DEPENDENCIES = $(man_MANS)
-noinst_HEADERS = bgpd.h log.h mrt.h rde.h session.h
+noinst_HEADERS = bgpd.h log.h mrt.h rde.h session.h version.h
 all: all-am
 
 .SUFFIXES:
