@@ -1,4 +1,4 @@
-/*	$OpenBSD: session.c,v 1.420 2021/05/27 09:15:51 claudio Exp $ */
+/*	$OpenBSD: session.c,v 1.422 2021/06/24 09:26:18 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004, 2005 Henning Brauer <henning@openbsd.org>
@@ -1475,9 +1475,9 @@ session_open(struct peer *p)
 		u_int8_t	aplen;
 
 		if (mpcapa)
-			aplen = 2 + 4 * mpcapa;
+			aplen = 4 * mpcapa;
 		else	/* AID_INET */
-			aplen = 2 + 4;
+			aplen = 4;
 		errs += session_capa_add(opb, CAPA_ADD_PATH, aplen);
 		if (mpcapa) {
 			for (i = AID_MIN; i < AID_MAX; i++) {
@@ -2261,6 +2261,7 @@ parse_update(struct peer *peer)
 int
 parse_rrefresh(struct peer *peer)
 {
+	struct route_refresh rr;
 	u_int16_t afi, datalen;
 	u_int8_t aid, safi, subtype;
 	u_char *p;
@@ -2348,7 +2349,10 @@ parse_rrefresh(struct peer *peer)
 		return (0);
 	}
 
-	if (imsg_rde(IMSG_REFRESH, peer->conf.id, &aid, sizeof(aid)) == -1)
+	rr.aid = aid;
+	rr.subtype = subtype;
+
+	if (imsg_rde(IMSG_REFRESH, peer->conf.id, &rr, sizeof(rr)) == -1)
 		return (-1);
 
 	return (0);
@@ -2773,6 +2777,7 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 {
 	struct imsg		 imsg;
 	struct mrt		 xmrt;
+	struct route_refresh	 rr;
 	struct mrt		*mrt;
 	struct imsgbuf		*i;
 	struct peer		*p;
@@ -3099,6 +3104,23 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 				bgp_fsm(p, EVNT_CON_FATAL);
 				break;
 			}
+			break;
+		case IMSG_REFRESH:
+			if (idx != PFD_PIPE_ROUTE)
+				fatalx("route refresh request not from RDE");
+			if (imsg.hdr.len < IMSG_HEADER_SIZE + sizeof(rr)) {
+				log_warnx("RDE sent invalid refresh msg");
+				break;
+			}
+			if ((p = getpeerbyid(conf, imsg.hdr.peerid)) == NULL) {
+				log_warnx("no such peer: id=%u",
+				    imsg.hdr.peerid);
+				break;
+			}
+			memcpy(&rr, imsg.data, sizeof(rr));
+			if (rr.aid >= AID_MAX)
+				fatalx("IMSG_REFRESH: bad AID");
+			session_rrefresh(p, rr.aid, rr.subtype);
 			break;
 		case IMSG_SESSION_RESTARTED:
 			if (idx != PFD_PIPE_ROUTE)

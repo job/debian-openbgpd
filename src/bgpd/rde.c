@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde.c,v 1.524 2021/05/27 16:32:13 claudio Exp $ */
+/*	$OpenBSD: rde.c,v 1.528 2021/06/24 13:03:31 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -1068,6 +1068,7 @@ rde_dispatch_imsg_rtr(struct imsgbuf *ibuf)
 void
 rde_dispatch_imsg_peer(struct rde_peer *peer, void *bula)
 {
+	struct route_refresh rr;
 	struct session_up sup;
 	struct imsg imsg;
 	u_int8_t aid;
@@ -1097,7 +1098,6 @@ rde_dispatch_imsg_peer(struct rde_peer *peer, void *bula)
 	case IMSG_SESSION_STALE:
 	case IMSG_SESSION_FLUSH:
 	case IMSG_SESSION_RESTARTED:
-	case IMSG_REFRESH:
 		if (imsg.hdr.len - IMSG_HEADER_SIZE != sizeof(aid)) {
 			log_warnx("%s: wrong imsg len", __func__);
 			break;
@@ -1119,8 +1119,44 @@ rde_dispatch_imsg_peer(struct rde_peer *peer, void *bula)
 			if (peer->staletime[aid])
 				peer_flush(peer, aid, peer->staletime[aid]);
 			break;
-		case IMSG_REFRESH:
-			peer_dump(peer, aid);
+		}
+		break;
+	case IMSG_REFRESH:
+		if (imsg.hdr.len - IMSG_HEADER_SIZE != sizeof(rr)) {
+			log_warnx("%s: wrong imsg len", __func__);
+			break;
+		}
+		memcpy(&rr, imsg.data, sizeof(rr));
+		if (rr.aid >= AID_MAX) {
+			log_warnx("%s: bad AID", __func__);
+			break;
+		}
+		switch (rr.subtype) {
+		case ROUTE_REFRESH_REQUEST:
+			peer_dump(peer, rr.aid);
+			break;
+		case ROUTE_REFRESH_BEGIN_RR:
+			/* check if graceful restart EOR was received */
+			if ((peer->recv_eor & (1 << rr.aid)) == 0) {
+				log_peer_warnx(&peer->conf,
+				    "received %s BoRR before EoR",
+				    aid2str(rr.aid));
+				break;
+			}
+			peer_begin_rrefresh(peer, rr.aid);
+			break;
+		case ROUTE_REFRESH_END_RR:
+			if ((peer->recv_eor & (1 << rr.aid)) != 0 &&
+			    peer->staletime[rr.aid])
+				peer_flush(peer, rr.aid,
+				    peer->staletime[rr.aid]);
+			else
+				log_peer_warnx(&peer->conf,
+				    "received unexpected %s EoRR",
+				    aid2str(rr.aid));
+			break;
+		default:
+			log_warnx("%s: bad subtype %d", __func__, rr.subtype);
 			break;
 		}
 		break;
@@ -1302,9 +1338,9 @@ rde_update_dispatch(struct rde_peer *peer, struct imsg *imsg)
 			rde_peer_recv_eor(peer, aid);
 		}
 
-		switch (aid) {
-		case AID_INET6:
-			while (mplen > 0) {
+		while (mplen > 0) {
+			switch (aid) {
+			case AID_INET6:
 				if ((pos = nlri_get_prefix6(mpp, mplen,
 				    &prefix, &prefixlen)) == -1) {
 					log_peer_warnx(&peer->conf,
@@ -1314,14 +1350,8 @@ rde_update_dispatch(struct rde_peer *peer, struct imsg *imsg)
 					    mpa.unreach, mpa.unreach_len);
 					goto done;
 				}
-				mpp += pos;
-				mplen -= pos;
-
-				rde_update_withdraw(peer, &prefix, prefixlen);
-			}
-			break;
-		case AID_VPN_IPv4:
-			while (mplen > 0) {
+				break;
+			case AID_VPN_IPv4:
 				if ((pos = nlri_get_vpn4(mpp, mplen,
 				    &prefix, &prefixlen, 1)) == -1) {
 					log_peer_warnx(&peer->conf,
@@ -1331,14 +1361,8 @@ rde_update_dispatch(struct rde_peer *peer, struct imsg *imsg)
 					    mpa.unreach, mpa.unreach_len);
 					goto done;
 				}
-				mpp += pos;
-				mplen -= pos;
-
-				rde_update_withdraw(peer, &prefix, prefixlen);
-			}
-			break;
-		case AID_VPN_IPv6:
-			while (mplen > 0) {
+				break;
+			case AID_VPN_IPv6:
 				if ((pos = nlri_get_vpn6(mpp, mplen,
 				    &prefix, &prefixlen, 1)) == -1) {
 					log_peer_warnx(&peer->conf,
@@ -1348,15 +1372,16 @@ rde_update_dispatch(struct rde_peer *peer, struct imsg *imsg)
 					    mpa.unreach_len);
 					goto done;
 				}
-				mpp += pos;
-				mplen -= pos;
-
-				rde_update_withdraw(peer, &prefix, prefixlen);
+				break;
+			default:
+				/* ignore unsupported multiprotocol AF */
+				break;
 			}
-			break;
-		default:
-			/* silently ignore unsupported multiprotocol AF */
-			break;
+
+			mpp += pos;
+			mplen -= pos;
+
+			rde_update_withdraw(peer, &prefix, prefixlen);
 		}
 
 		if ((state.aspath.flags & ~F_ATTR_MP_UNREACH) == 0)
@@ -1430,9 +1455,9 @@ rde_update_dispatch(struct rde_peer *peer, struct imsg *imsg)
 		mpp += pos;
 		mplen -= pos;
 
-		switch (aid) {
-		case AID_INET6:
-			while (mplen > 0) {
+		while (mplen > 0) {
+			switch (aid) {
+			case AID_INET6:
 				if ((pos = nlri_get_prefix6(mpp, mplen,
 				    &prefix, &prefixlen)) == -1) {
 					log_peer_warnx(&peer->conf,
@@ -1442,16 +1467,8 @@ rde_update_dispatch(struct rde_peer *peer, struct imsg *imsg)
 					    mpa.reach, mpa.reach_len);
 					goto done;
 				}
-				mpp += pos;
-				mplen -= pos;
-
-				if (rde_update_update(peer, &state, &prefix,
-				    prefixlen) == -1)
-					goto done;
-			}
-			break;
-		case AID_VPN_IPv4:
-			while (mplen > 0) {
+				break;
+			case AID_VPN_IPv4:
 				if ((pos = nlri_get_vpn4(mpp, mplen,
 				    &prefix, &prefixlen, 0)) == -1) {
 					log_peer_warnx(&peer->conf,
@@ -1461,16 +1478,8 @@ rde_update_dispatch(struct rde_peer *peer, struct imsg *imsg)
 					    mpa.reach, mpa.reach_len);
 					goto done;
 				}
-				mpp += pos;
-				mplen -= pos;
-
-				if (rde_update_update(peer, &state, &prefix,
-				    prefixlen) == -1)
-					goto done;
-			}
-			break;
-		case AID_VPN_IPv6:
-			while (mplen > 0) {
+				break;
+			case AID_VPN_IPv6:
 				if ((pos = nlri_get_vpn6(mpp, mplen,
 				    &prefix, &prefixlen, 0)) == -1) {
 					log_peer_warnx(&peer->conf,
@@ -1480,17 +1489,18 @@ rde_update_dispatch(struct rde_peer *peer, struct imsg *imsg)
 					    mpa.reach, mpa.reach_len);
 					goto done;
 				}
-				mpp += pos;
-				mplen -= pos;
-
-				if (rde_update_update(peer, &state, &prefix,
-				    prefixlen) == -1)
-					goto done;
+				break;
+			default:
+				/* ignore unsupported multiprotocol AF */
+				break;
 			}
-			break;
-		default:
-			/* silently ignore unsupported multiprotocol AF */
-			break;
+
+			mpp += pos;
+			mplen -= pos;
+
+			if (rde_update_update(peer, &state,
+			    &prefix, prefixlen) == -1)
+				goto done;
 		}
 	}
 
@@ -2879,6 +2889,28 @@ rde_evaluate_all(void)
 	return rde_eval_all;
 }
 
+static int
+rde_skip_peer(struct rde_peer *peer, u_int16_t rib_id, u_int8_t aid)
+{
+	/* skip ourself */
+	if (peer == peerself)
+		return 1;
+	if (peer->state != PEER_UP)
+		return 1;
+	/* skip peers using a different rib */
+	if (peer->loc_rib_id != rib_id)
+		return 1;
+	/* check if peer actually supports the address family */
+	if (peer->capa.mp[aid] == 0)
+		return 1;
+	/* skip peers with special export types */
+	if (peer->export_type == EXPORT_NONE ||
+	    peer->export_type == EXPORT_DEFAULT_ROUTE)
+		return 1;
+
+	return 0;
+}
+
 void
 rde_generate_updates(struct rib *rib, struct prefix *new, struct prefix *old,
     int eval_all)
@@ -2903,33 +2935,23 @@ rde_generate_updates(struct rib *rib, struct prefix *new, struct prefix *old,
 		aid = old->pt->aid;
 
 	LIST_FOREACH(peer, &peerlist, peer_l) {
-		/* skip ourself */
-		if (peer == peerself)
+		if (rde_skip_peer(peer, rib->id, aid))
 			continue;
-		if (peer->state != PEER_UP)
-			continue;
+		/* skip regular peers if the best path didn't change */
 		if ((peer->flags & PEERFLAG_EVALUATE_ALL) == 0 && eval_all)
-			/* skip default peers if the best path didn't change */
-			continue;
-		/* skip peers using a different rib */
-		if (peer->loc_rib_id != rib->id)
-			continue;
-		/* check if peer actually supports the address family */
-		if (peer->capa.mp[aid] == 0)
-			continue;
-		/* skip peers with special export types */
-		if (peer->export_type == EXPORT_NONE ||
-		    peer->export_type == EXPORT_DEFAULT_ROUTE)
 			continue;
 
 		up_generate_updates(out_rules, peer, new, old);
 	}
 }
 
+/* flush Adj-RIB-Out by withdrawing all prefixes */
 static void
 rde_up_flush_upcall(struct prefix *p, void *ptr)
 {
-	up_generate_updates(out_rules, prefix_peer(p), NULL, p);
+	struct rde_peer *peer = ptr;
+
+	up_generate_updates(out_rules, peer, NULL, p);
 }
 
 u_char	queue_buf[4096];
@@ -3004,8 +3026,14 @@ rde_update_queue_runner(void)
 					    __func__, __LINE__);
 				sent++;
 			}
-			if (eor)
-				rde_peer_send_eor(peer, AID_INET);
+			if (eor) {
+				int sent_eor = peer->sent_eor & (1 << AID_INET);
+				if (peer->capa.grestart.restart && !sent_eor)
+					rde_peer_send_eor(peer, AID_INET);
+				if (peer->capa.enhanced_rr && sent_eor)
+					rde_peer_send_rrefresh(peer, AID_INET,
+					    ROUTE_REFRESH_END_RR);
+			}
 		}
 		max -= sent;
 	} while (sent != 0 && max > 0);
@@ -3055,7 +3083,12 @@ rde_update6_queue_runner(u_int8_t aid)
 				continue;
 			len = sizeof(queue_buf) - MSGSIZE_HEADER;
 			if (up_is_eor(peer, aid)) {
-				rde_peer_send_eor(peer, aid);
+				int sent_eor = peer->sent_eor & (1 << aid);
+				if (peer->capa.grestart.restart && !sent_eor)
+					rde_peer_send_eor(peer, aid);
+				if (peer->capa.enhanced_rr && sent_eor)
+					rde_peer_send_rrefresh(peer, aid,
+					    ROUTE_REFRESH_END_RR);
 				continue;
 			}
 			r = up_dump_mp_reach(queue_buf, len, peer, aid);
@@ -3310,7 +3343,7 @@ rde_reload_done(void)
 
 		if (peer->reconf_rib) {
 			if (prefix_dump_new(peer, AID_UNSPEC,
-			    RDE_RUNNER_ROUNDS, NULL, rde_up_flush_upcall,
+			    RDE_RUNNER_ROUNDS, peer, rde_up_flush_upcall,
 			    rde_softreconfig_in_done, NULL) == -1)
 				fatal("%s: prefix_dump_new", __func__);
 			log_peer_info(&peer->conf, "flushing Adj-RIB-Out");
@@ -3561,15 +3594,21 @@ rde_softreconfig_out(struct rib_entry *re, void *bula)
 {
 	struct prefix		*p = re->active;
 	struct rde_peer		*peer;
+	u_int8_t		 aid = re->prefix->aid;
 
 	if (p == NULL)
 		/* no valid path for prefix */
 		return;
 
 	LIST_FOREACH(peer, &peerlist, peer_l) {
-		if (peer->loc_rib_id == re->rib_id && peer->reconf_out)
-			/* Regenerate all updates. */
-			up_generate_updates(out_rules, peer, p, p);
+		if (rde_skip_peer(peer, re->rib_id, aid))
+			continue;
+		/* skip peers which don't need to reconfigure */
+		if (peer->reconf_out == 0)
+			continue;
+
+		/* Regenerate all updates. */
+		up_generate_updates(out_rules, peer, p, p);
 	}
 }
 
@@ -3747,6 +3786,7 @@ static void
 rde_peer_recv_eor(struct rde_peer *peer, u_int8_t aid)
 {
 	peer->prefix_rcvd_eor++;
+	peer->recv_eor |= 1 << aid;
 
 	/*
 	 * First notify SE to avert a possible race with the restart timeout.
@@ -3771,6 +3811,7 @@ rde_peer_send_eor(struct rde_peer *peer, u_int8_t aid)
 	u_int8_t	safi;
 
 	peer->prefix_sent_eor++;
+	peer->sent_eor |= 1 << aid;
 
 	if (aid == AID_INET) {
 		u_char null[4];
@@ -3805,6 +3846,33 @@ rde_peer_send_eor(struct rde_peer *peer, u_int8_t aid)
 
 	log_peer_info(&peer->conf, "sending %s EOR marker",
 	    aid2str(aid));
+}
+
+void
+rde_peer_send_rrefresh(struct rde_peer *peer, u_int8_t aid, u_int8_t subtype)
+{
+	struct route_refresh rr;
+
+	/* not strickly needed, the SE checks as well */
+        if (peer->capa.enhanced_rr == 0)
+		return;
+
+	switch (subtype) {
+	case ROUTE_REFRESH_END_RR:
+	case ROUTE_REFRESH_BEGIN_RR:
+		break;
+	default:
+		fatalx("%s unexpected subtype %d", __func__, subtype);
+	}
+
+	rr.aid = aid;
+	rr.subtype = subtype;
+
+	if (imsg_compose(ibuf_se, IMSG_REFRESH, peer->conf.id, 0, -1,
+	    &rr, sizeof(rr)) == -1)
+
+	log_peer_info(&peer->conf, "sending %s %s marker",
+	    aid2str(aid), subtype == ROUTE_REFRESH_END_RR ? "EoRR" : "BoRR");
 }
 
 /*
