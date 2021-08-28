@@ -1,3 +1,9 @@
+openbgpd (6.9p0-2) UNRELEASED; urgency=medium
+
+  * Trim trailing whitespace.
+
+ -- Debian Janitor <janitor@jelmer.uk>  Sat, 28 Aug 2021 09:14:08 -0000
+
 openbgpd (6.9p0-1) unstable; urgency=low
 
   * Import OpenBGPD 6.9
@@ -12,7 +18,7 @@ openbgpd (6.8p1-3) unstable; urgency=medium
 
 openbgpd (6.8p1-2) unstable; urgency=low
 
-  * Mark conflict with quagga-bgpd (Closes: #986788) 
+  * Mark conflict with quagga-bgpd (Closes: #986788)
 
  -- Job Snijders <job@openbsd.org>  Mon, 12 Apr 2021 23:38:45 +0200
 
@@ -21,4 +27,3 @@ openbgpd (6.8p1-1) unstable; urgency=low
   * Initial release (Closes: #984811)
 
  -- Job Snijders <job@openbsd.org>  Tue, 09 Mar 2021 15:37:33 +0100
-
