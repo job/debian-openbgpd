@@ -1,4 +1,4 @@
-/*	$OpenBSD: bgpctl.c,v 1.269 2021/06/16 16:24:11 job Exp $ */
+/*	$OpenBSD: bgpctl.c,v 1.273 2021/08/09 08:24:36 claudio Exp $ */
 
 /*
  * Copyright (c) 2003 Henning Brauer <henning@openbsd.org>
@@ -70,7 +70,7 @@ usage(void)
 {
 	extern char	*__progname;
 
-	fprintf(stderr, "usage: %s [-jn] [-s socket] command [argument ...]\n",
+	fprintf(stderr, "usage: %s [-jnV] [-s socket] command [argument ...]\n",
 	    __progname);
 	exit(1);
 }
@@ -249,6 +249,7 @@ main(int argc, char *argv[])
 		ribreq.neighbor = neighbor;
 		strlcpy(ribreq.rib, res->rib, sizeof(ribreq.rib));
 		ribreq.aid = res->aid;
+		ribreq.path_id = res->pathid;
 		ribreq.flags = res->flags;
 		imsg_compose(ibuf, type, 0, 0, -1, &ribreq, sizeof(ribreq));
 		break;
@@ -470,7 +471,7 @@ show(struct imsg *imsg, struct parse_result *res)
 			warnx("bad IMSG_CTL_SHOW_RIB_ATTR received");
 			break;
 		}
-		output->attr(imsg->data, ilen, res->flags);
+		output->attr(imsg->data, ilen, res->flags, 0);
 		break;
 	case IMSG_CTL_SHOW_RIB_MEM:
 		if (imsg->hdr.len < IMSG_HEADER_SIZE + sizeof(stats))
@@ -1150,6 +1151,10 @@ show_mrt_dump(struct mrt_rib *mr, struct mrt_peer *mp, void *arg)
 		ctl.local_pref = mre->local_pref;
 		ctl.med = mre->med;
 		/* weight is not part of the mrt dump so it can't be set */
+		if (mr->add_path) {
+			ctl.flags |= F_PREF_PATH_ID;
+			ctl.path_id = mre->path_id;
+		}
 
 		if (mre->peer_idx < mp->npeers) {
 			ctl.remote_addr = mp->peers[mre->peer_idx].addr;
@@ -1195,7 +1200,7 @@ show_mrt_dump(struct mrt_rib *mr, struct mrt_peer *mp, void *arg)
 		if (req->flags & F_CTL_DETAIL) {
 			for (j = 0; j < mre->nattrs; j++)
 				output->attr(mre->attrs[j].attr,
-				    mre->attrs[j].attr_len, req->flags);
+				    mre->attrs[j].attr_len, req->flags, 0);
 		}
 	}
 }
@@ -1210,6 +1215,10 @@ network_mrt_dump(struct mrt_rib *mr, struct mrt_peer *mp, void *arg)
 	struct ibuf			*msg;
 	time_t				 now;
 	u_int16_t			 i, j;
+
+	/* can't announce more than one path so ignore add-path */
+	if (mr->add_path)
+		return;
 
 	now = time(NULL);
 	for (i = 0; i < mr->nentries; i++) {
@@ -1586,10 +1595,11 @@ show_mrt_notification(u_char *p, u_int16_t len)
 
 /* XXX this function does not handle JSON output */
 static void
-show_mrt_update(u_char *p, u_int16_t len, int reqflags)
+show_mrt_update(u_char *p, u_int16_t len, int reqflags, int addpath)
 {
 	struct bgpd_addr prefix;
 	int pos;
+	u_int32_t pathid;
 	u_int16_t wlen, alen;
 	u_int8_t prefixlen;
 
@@ -1609,12 +1619,25 @@ show_mrt_update(u_char *p, u_int16_t len, int reqflags)
 	if (wlen > 0) {
 		printf("\n     Withdrawn prefixes:");
 		while (wlen > 0) {
+			if (addpath) {
+				if (wlen <= sizeof(pathid)) {
+					printf("bad withdraw prefix");
+					return;
+				}
+				memcpy(&pathid, p, sizeof(pathid));
+				pathid = ntohl(pathid);
+				p += sizeof(pathid);
+				len -= sizeof(pathid);
+				wlen -= sizeof(pathid);
+			}
 			if ((pos = nlri_get_prefix(p, wlen, &prefix,
 			    &prefixlen)) == -1) {
 				printf("bad withdraw prefix");
 				return;
 			}
 			printf(" %s/%u", log_addr(&prefix), prefixlen);
+			if (addpath)
+				printf(" path-id %u", pathid);
 			p += pos;
 			len -= pos;
 			wlen -= pos;
@@ -1655,7 +1678,7 @@ show_mrt_update(u_char *p, u_int16_t len, int reqflags)
 			attrlen += 1 + 2;
 		}
 
-		output->attr(p, attrlen, reqflags);
+		output->attr(p, attrlen, reqflags, addpath);
 		p += attrlen;
 		alen -= attrlen;
 		len -= attrlen;
@@ -1664,12 +1687,24 @@ show_mrt_update(u_char *p, u_int16_t len, int reqflags)
 	if (len > 0) {
 		printf("    NLRI prefixes:");
 		while (len > 0) {
+			if (addpath) {
+				if (len <= sizeof(pathid)) {
+					printf(" bad nlri prefix: pathid, len %d", len);
+					return;
+				}
+				memcpy(&pathid, p, sizeof(pathid));
+				pathid = ntohl(pathid);
+				p += sizeof(pathid);
+				len -= sizeof(pathid);
+			}
 			if ((pos = nlri_get_prefix(p, len, &prefix,
 			    &prefixlen)) == -1) {
-				printf("bad withdraw prefix");
+				printf(" bad nlri prefix");
 				return;
 			}
 			printf(" %s/%u", log_addr(&prefix), prefixlen);
+			if (addpath)
+				printf(" path-id %u", pathid);
 			p += pos;
 			len -= pos;
 		}
@@ -1689,7 +1724,8 @@ show_mrt_msg(struct mrt_bgp_msg *mm, void *arg)
 
 	printf("%s %s[%u] -> ", fmt_time(&mm->time),
 	    log_addr(&mm->src), mm->src_as);
-	printf("%s[%u]: size %u ", log_addr(&mm->dst), mm->dst_as, mm->msg_len);
+	printf("%s[%u]: size %u%s ", log_addr(&mm->dst), mm->dst_as,
+	    mm->msg_len, mm->add_path ? " addpath" : "");
 	p = mm->msg;
 	len = mm->msg_len;
 
@@ -1739,7 +1775,8 @@ show_mrt_msg(struct mrt_bgp_msg *mm, void *arg)
 			printf("illegal length: %u byte\n", len);
 			return;
 		}
-		show_mrt_update(p, len - MSGSIZE_HEADER, req->flags);
+		show_mrt_update(p, len - MSGSIZE_HEADER, req->flags,
+		    mm->add_path);
 		break;
 	case KEEPALIVE:
 		printf("%s ", msgtypenames[type]);
