@@ -1,4 +1,4 @@
-/*	$OpenBSD: session.h,v 1.151 2021/05/27 08:27:48 claudio Exp $ */
+/*	$OpenBSD: session.h,v 1.153 2021/09/03 07:48:24 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -103,7 +103,8 @@ enum suberr_fsm {
 enum opt_params {
 	OPT_PARAM_NONE,
 	OPT_PARAM_AUTH,
-	OPT_PARAM_CAPABILITIES
+	OPT_PARAM_CAPABILITIES,
+	OPT_PARAM_EXT_LEN=255,
 };
 
 enum capa_codes {
@@ -288,7 +289,7 @@ void		 log_conn_attempt(const struct peer *, struct sockaddr *,
 
 /* mrt.c */
 void		 mrt_dump_bgp_msg(struct mrt *, void *, u_int16_t,
-		     struct peer *);
+		     struct peer *, enum msg_type);
 void		 mrt_dump_state(struct mrt *, u_int16_t, u_int16_t,
 		     struct peer *);
 void		 mrt_done(struct mrt *);

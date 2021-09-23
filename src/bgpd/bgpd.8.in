@@ -1,4 +1,4 @@
-.\" $OpenBSD: bgpd.8,v 1.69 2021/06/17 16:05:25 claudio Exp $
+.\" $OpenBSD: bgpd.8,v 1.71 2021/09/03 07:58:07 claudio Exp $
 .\"
 .\" Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: June 17 2021 $
+.Dd $Mdocdate: September 3 2021 $
 .Dt BGPD 8
 .Os
 .Sh NAME
@@ -401,6 +401,14 @@ has been started.
 .Re
 .Pp
 .Rs
+.%A C. Petrie
+.%A T. King
+.%D May 2017
+.%R RFC 8050
+.%T Multi-Threaded Routing Toolkit (MRT) Routing Information Export Format with BGP Additional Path Extensions
+.Re
+.Pp
+.Rs
 .%A J. Heitz
 .%A J. Snijders
 .%A K. Patel
@@ -457,6 +465,14 @@ has been started.
 .%D March 2018
 .%R RFC 8326
 .%T Graceful BGP Session Shutdown
+.Re
+.Pp
+.Rs
+.%A E. Chen
+.%A J. Scudder
+.%D July 2021
+.%R RFC 9072
+.%T Extended Optional Parameters Length for BGP OPEN Message
 .Re
 .Sh HISTORY
 The
