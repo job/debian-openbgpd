@@ -1,4 +1,4 @@
-/*	$OpenBSD: bgpd.c,v 1.239 2021/07/20 12:07:46 claudio Exp $ */
+/*	$OpenBSD: bgpd.c,v 1.242 2022/02/06 09:51:19 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -68,7 +68,7 @@ char			*rcname;
 
 struct connect_elm {
 	TAILQ_ENTRY(connect_elm)	entry;
-	u_int32_t			id;
+	uint32_t			id;
 	int				fd;
 };
 
@@ -345,11 +345,13 @@ BROKEN	if (pledge("stdio rpath wpath cpath fattr unix route recvfd sendfd",
 
 		if (timeout < 0 || timeout > MAX_TIMEOUT)
 			timeout = MAX_TIMEOUT;
-		if (poll(pfd, npfd, timeout * 1000) == -1)
+		if (poll(pfd, npfd, timeout * 1000) == -1) {
 			if (errno != EINTR) {
 				log_warn("poll error");
 				quit = 1;
 			}
+			goto next_loop;
+		}
 
 		if (handle_pollfd(&pfd[PFD_PIPE_SESSION], ibuf_se) == -1) {
 			log_warnx("main: Lost connection to SE");
@@ -401,6 +403,7 @@ BROKEN	if (pledge("stdio rpath wpath cpath fattr unix route recvfd sendfd",
 			if (pfd[i].revents != 0)
 				bgpd_rtr_connect_done(pfd[i].fd, conf);
 
+ next_loop:
 		if (reconfig) {
 			u_int	error;
 
@@ -699,7 +702,7 @@ send_config(struct bgpd_config *conf)
 	/* as-sets for filters in the RDE */
 	while ((aset = SIMPLEQ_FIRST(&conf->as_sets)) != NULL) {
 		struct ibuf *wbuf;
-		u_int32_t *as;
+		uint32_t *as;
 		size_t i, l, n;
 
 		SIMPLEQ_REMOVE_HEAD(&conf->as_sets, entry);
@@ -1087,7 +1090,7 @@ send_nexthop_update(struct kroute_nexthop *msg)
 }
 
 void
-send_imsg_session(int type, pid_t pid, void *data, u_int16_t datalen)
+send_imsg_session(int type, pid_t pid, void *data, uint16_t datalen)
 {
 	imsg_compose(ibuf_se, type, 0, pid, -1, data, datalen);
 }

@@ -1,4 +1,4 @@
-/*	$OpenBSD: output_json.c,v 1.12 2021/07/27 07:42:37 claudio Exp $ */
+/*	$OpenBSD: output_json.c,v 1.14 2022/03/21 10:16:23 claudio Exp $ */
 
 /*
  * Copyright (c) 2020 Claudio Jeker <claudio@openbsd.org>
@@ -543,7 +543,7 @@ static void
 json_do_large_community(u_char *data, uint16_t len)
 {
 	uint32_t a, l1, l2;
-	u_int16_t i;
+	uint16_t i;
 
 	if (len % 12) {
 		json_do_printf("error", "bad length");
@@ -875,7 +875,7 @@ json_rib(struct ctl_show_rib *r, u_char *asdata, size_t aslen,
 
 	/* flags */
 	json_do_bool("valid", r->flags & F_PREF_ELIGIBLE);
-	if (r->flags & F_PREF_ACTIVE)
+	if (r->flags & F_PREF_BEST)
 		json_do_bool("best", 1);
 	if (r->flags & F_PREF_INTERNAL)
 		json_do_printf("source", "%s", "internal");

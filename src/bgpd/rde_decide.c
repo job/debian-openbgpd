@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_decide.c,v 1.86 2021/08/09 08:15:34 claudio Exp $ */
+/*	$OpenBSD: rde_decide.c,v 1.91 2022/03/22 10:53:08 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Claudio Jeker <claudio@openbsd.org>
@@ -114,7 +114,7 @@ prefix_cmp(struct prefix *p1, struct prefix *p2, int *testall)
 	struct rde_aspath	*asp1, *asp2;
 	struct rde_peer		*peer1, *peer2;
 	struct attr		*a;
-	u_int32_t		 p1id, p2id;
+	uint32_t		 p1id, p2id;
 	int			 p1cnt, p2cnt, i;
 
 	/*
@@ -253,9 +253,9 @@ prefix_cmp(struct prefix *p1, struct prefix *p2, int *testall)
 	/* 11. compare CLUSTER_LIST length, shorter is better */
 	p1cnt = p2cnt = 0;
 	if ((a = attr_optget(asp1, ATTR_CLUSTER_LIST)) != NULL)
-		p1cnt = a->len / sizeof(u_int32_t);
+		p1cnt = a->len / sizeof(uint32_t);
 	if ((a = attr_optget(asp2, ATTR_CLUSTER_LIST)) != NULL)
-		p2cnt = a->len / sizeof(u_int32_t);
+		p2cnt = a->len / sizeof(uint32_t);
 	if ((p2cnt - p1cnt) != 0)
 		return (p2cnt - p1cnt);
 
@@ -281,7 +281,7 @@ prefix_cmp(struct prefix *p1, struct prefix *p2, int *testall)
 	if (i > 0)
 		return -1;
 
-	/* XXX RFC7911 does not specify this but it is needed. */
+	/* RFC7911 does not specify this but something like this is needed. */
 	/* 13. lowest path identifier wins */
 	if (p1->path_id < p2->path_id)
 		return 1;
@@ -301,16 +301,16 @@ prefix_cmp(struct prefix *p1, struct prefix *p2, int *testall)
 void
 prefix_insert(struct prefix *new, struct prefix *ep, struct rib_entry *re)
 {
-	struct prefix_list redo = LIST_HEAD_INITIALIZER(redo);
-	struct prefix *xp, *np, *tailp = NULL, *insertp = ep;
+	struct prefix_queue redo = TAILQ_HEAD_INITIALIZER(redo);
+	struct prefix *xp, *np, *insertp = ep;
 	int testall, selected = 0;
 
-	/* start scan at the entry point (ep) or if the head if ep == NULL */
+	/* start scan at the entry point (ep) or the head if ep == NULL */
 	if (ep == NULL)
-		ep = LIST_FIRST(&re->prefix_h);
+		ep = TAILQ_FIRST(&re->prefix_h);
 
 	for (xp = ep; xp != NULL; xp = np) {
-		np = LIST_NEXT(xp, entry.list.rib);
+		np = TAILQ_NEXT(xp, entry.list.rib);
 
 		if (prefix_cmp(new, xp, &testall) > 0) {
 			/* new is preferred over xp */
@@ -321,14 +321,8 @@ prefix_insert(struct prefix *new, struct prefix *ep, struct rib_entry *re)
 				 * MED inversion, take out prefix and
 				 * put it onto redo queue.
 				 */
-				LIST_REMOVE(xp, entry.list.rib);
-				if (tailp == NULL)
-					LIST_INSERT_HEAD(&redo, xp,
-					    entry.list.rib);
-				else
-					LIST_INSERT_AFTER(tailp, xp,
-					    entry.list.rib);
-				tailp = xp;
+				TAILQ_REMOVE(&re->prefix_h, xp, entry.list.rib);
+				TAILQ_INSERT_TAIL(&redo, xp, entry.list.rib);
 			} else {
 				/*
 				 * lock insertion point and
@@ -339,10 +333,13 @@ prefix_insert(struct prefix *new, struct prefix *ep, struct rib_entry *re)
 			}
 		} else {
 			/*
-			 * p is less preferred, remember insertion point
-			 * If p got selected during a testall traverse 
-			 * do not alter the insertion point unless this
-			 * happened on an actual MED check.
+			 * xp is preferred over new.
+			 * Remember insertion point for later unless the
+			 * traverse is just looking for a possible MED
+			 * inversion (selected == 1).
+			 * If the last comparison's tie-breaker was the MED
+			 * check reset selected and with it insertp since
+			 * this was an actual MED priority inversion.
 			 */
 			if (testall == 2)
 				selected = 0;
@@ -352,14 +349,14 @@ prefix_insert(struct prefix *new, struct prefix *ep, struct rib_entry *re)
 	}
 
 	if (insertp == NULL)
-		LIST_INSERT_HEAD(&re->prefix_h, new, entry.list.rib);
+		TAILQ_INSERT_HEAD(&re->prefix_h, new, entry.list.rib);
 	else
-		LIST_INSERT_AFTER(insertp, new, entry.list.rib);
+		TAILQ_INSERT_AFTER(&re->prefix_h, insertp, new, entry.list.rib);
 
 	/* Fixup MED order again. All elements are < new */
-	while (!LIST_EMPTY(&redo)) {
-		xp = LIST_FIRST(&redo);
-		LIST_REMOVE(xp, entry.list.rib);
+	while (!TAILQ_EMPTY(&redo)) {
+		xp = TAILQ_FIRST(&redo);
+		TAILQ_REMOVE(&redo, xp, entry.list.rib);
 
 		prefix_insert(xp, new, re);
 	}
@@ -377,18 +374,18 @@ prefix_insert(struct prefix *new, struct prefix *ep, struct rib_entry *re)
 void
 prefix_remove(struct prefix *old, struct rib_entry *re)
 {
-	struct prefix_list redo = LIST_HEAD_INITIALIZER(redo);
-	struct prefix *xp, *np, *tailp = NULL;
+	struct prefix_queue redo = TAILQ_HEAD_INITIALIZER(redo);
+	struct prefix *xp, *np;
 	int testall;
 
-	xp = LIST_NEXT(old, entry.list.rib);
-	LIST_REMOVE(old, entry.list.rib);
+	xp = TAILQ_NEXT(old, entry.list.rib);
+	TAILQ_REMOVE(&re->prefix_h, old, entry.list.rib);
 	/* check if a MED inversion could be possible */
 	prefix_cmp(old, xp, &testall);
 	if (testall > 0) {
 		/* maybe MED route, scan tail for other possible routes */
 		for (; xp != NULL; xp = np) {
-			np = LIST_NEXT(xp, entry.list.rib);
+			np = TAILQ_NEXT(xp, entry.list.rib);
 
 			/* only interested in the testall result */
 			prefix_cmp(old, xp, &testall);
@@ -399,22 +396,16 @@ prefix_remove(struct prefix *old, struct rib_entry *re)
 				 * possible MED inversion, take out prefix and
 				 * put it onto redo queue.
 				 */
-				LIST_REMOVE(xp, entry.list.rib);
-				if (tailp == NULL)
-					LIST_INSERT_HEAD(&redo, xp,
-					    entry.list.rib);
-				else
-					LIST_INSERT_AFTER(tailp, xp,
-					    entry.list.rib);
-				tailp = xp;
+				TAILQ_REMOVE(&re->prefix_h, xp, entry.list.rib);
+				TAILQ_INSERT_TAIL(&redo, xp, entry.list.rib);
 			}
 		}
 	}
 
 	/* Fixup MED order again, reinsert prefixes from the start */
-	while (!LIST_EMPTY(&redo)) {
-		xp = LIST_FIRST(&redo);
-		LIST_REMOVE(xp, entry.list.rib);
+	while (!TAILQ_EMPTY(&redo)) {
+		xp = TAILQ_FIRST(&redo);
+		TAILQ_REMOVE(&redo, xp, entry.list.rib);
 
 		prefix_insert(xp, NULL, re);
 	}
@@ -440,6 +431,23 @@ prefix_eligible(struct prefix *p)
 	return 1;
 }
 
+struct prefix *
+prefix_best(struct rib_entry *re)
+{
+	struct prefix	*xp;
+	struct rib	*rib;
+
+	rib = re_rib(re);
+	if (rib->flags & F_RIB_NOEVALUATE)
+		/* decision process is turned off */
+		return NULL;
+
+	xp = TAILQ_FIRST(&re->prefix_h);
+	if (xp != NULL && !prefix_eligible(xp))
+		xp = NULL;
+	return xp;
+}
+
 /*
  * Find the correct place to insert the prefix in the prefix list.
  * If the active prefix has changed we need to send an update also special
@@ -450,26 +458,20 @@ prefix_eligible(struct prefix *p)
 void
 prefix_evaluate(struct rib_entry *re, struct prefix *new, struct prefix *old)
 {
-	struct prefix	*xp;
+	struct prefix	*xp, *active;
+	struct rib	*rib;
 
-	if (re_rib(re)->flags & F_RIB_NOEVALUATE) {
+	rib = re_rib(re);
+	if (rib->flags & F_RIB_NOEVALUATE) {
 		/* decision process is turned off */
 		if (old != NULL)
-			LIST_REMOVE(old, entry.list.rib);
+			TAILQ_REMOVE(&re->prefix_h, old, entry.list.rib);
 		if (new != NULL)
-			LIST_INSERT_HEAD(&re->prefix_h, new, entry.list.rib);
-		if (re->active) {
-			/*
-			 * During reloads it is possible that the decision
-			 * process is turned off but prefixes are still
-			 * active. Clean up now to ensure that the RIB
-			 * is consistant.
-			 */
-			rde_generate_updates(re_rib(re), NULL, re->active, 0);
-			re->active = NULL;
-		}
+			TAILQ_INSERT_HEAD(&re->prefix_h, new, entry.list.rib);
 		return;
 	}
+
+	active = prefix_best(re);
 
 	if (old != NULL)
 		prefix_remove(old, re);
@@ -477,7 +479,7 @@ prefix_evaluate(struct rib_entry *re, struct prefix *new, struct prefix *old)
 	if (new != NULL)
 		prefix_insert(new, NULL, re);
 
-	xp = LIST_FIRST(&re->prefix_h);
+	xp = TAILQ_FIRST(&re->prefix_h);
 	if (xp != NULL && !prefix_eligible(xp))
 		xp = NULL;
 
@@ -485,14 +487,15 @@ prefix_evaluate(struct rib_entry *re, struct prefix *new, struct prefix *old)
 	 * If the active prefix changed or the active prefix was removed
 	 * and added again then generate an update.
 	 */
-	if (re->active != xp || (old != NULL && xp == old)) {
+	if (active != xp || (old != NULL && xp == old)) {
 		/*
 		 * Send update withdrawing re->active and adding xp
 		 * but remember that xp may be NULL aka ineligible.
 		 * Additional decision may be made by the called functions.
 		 */
-		rde_generate_updates(re_rib(re), xp, re->active, 0);
-		re->active = xp;
+		rde_generate_updates(rib, xp, active, 0);
+		if ((rib->flags & F_RIB_NOFIB) == 0)
+			rde_send_kroute(rib, xp, active);
 		return;
 	}
 
@@ -503,5 +506,5 @@ prefix_evaluate(struct rib_entry *re, struct prefix *new, struct prefix *old)
 	 */
 	if (rde_evaluate_all())
 		if ((new != NULL && prefix_eligible(new)) || old != NULL)
-			rde_generate_updates(re_rib(re), re->active, NULL, 1);
+			rde_generate_updates(rib, prefix_best(re), NULL, 1);
 }

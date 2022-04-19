@@ -1,4 +1,4 @@
-/*	$OpenBSD: printconf.c,v 1.148 2021/09/01 12:39:52 claudio Exp $	*/
+/*	$OpenBSD: printconf.c,v 1.150 2022/02/23 11:20:35 claudio Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -31,12 +31,12 @@
 void		 print_prefix(struct filter_prefix *p);
 const char	*community_type(struct community *c);
 void		 print_community(struct community *c);
-void		 print_origin(u_int8_t);
+void		 print_origin(uint8_t);
 void		 print_set(struct filter_set_head *);
 void		 print_mainconf(struct bgpd_config *);
 void		 print_l3vpn_targets(struct filter_set_head *, const char *);
 void		 print_l3vpn(struct l3vpn *);
-const char	*print_af(u_int8_t);
+const char	*print_af(uint8_t);
 void		 print_network(struct network_config *, const char *);
 void		 print_as_sets(struct as_set_head *);
 void		 print_prefixsets(struct prefixset_head *);
@@ -45,13 +45,13 @@ void		 print_roa(struct roa_tree *);
 void		 print_rtrs(struct rtr_config_head *);
 void		 print_peer(struct peer_config *, struct bgpd_config *,
 		    const char *);
-const char	*print_auth_alg(u_int8_t);
-const char	*print_enc_alg(u_int8_t);
+const char	*print_auth_alg(uint8_t);
+const char	*print_enc_alg(uint8_t);
 void		 print_announce(struct peer_config *, const char *);
 void		 print_as(struct filter_rule *);
 void		 print_rule(struct bgpd_config *, struct filter_rule *);
 const char	*mrt_type(enum mrt_type);
-void		 print_mrt(struct bgpd_config *, u_int32_t, u_int32_t,
+void		 print_mrt(struct bgpd_config *, uint32_t, uint32_t,
 		    const char *, const char *);
 void		 print_groups(struct bgpd_config *);
 int		 peer_compare(const void *, const void *);
@@ -59,7 +59,7 @@ int		 peer_compare(const void *, const void *);
 void
 print_prefix(struct filter_prefix *p)
 {
-	u_int8_t max_len = 0;
+	uint8_t max_len = 0;
 
 	switch (p->addr.aid) {
 	case AID_INET:
@@ -107,7 +107,7 @@ print_prefix(struct filter_prefix *p)
 const char *
 community_type(struct community *c)
 {
-	switch ((u_int8_t)c->flags) {
+	switch ((uint8_t)c->flags) {
 	case COMMUNITY_TYPE_BASIC:
 		return "community";
 	case COMMUNITY_TYPE_LARGE:
@@ -124,9 +124,9 @@ print_community(struct community *c)
 {
 	struct in_addr addr;
 	short type;
-	u_int8_t subtype;
+	uint8_t subtype;
 
-	switch ((u_int8_t)c->flags) {
+	switch ((uint8_t)c->flags) {
 	case COMMUNITY_TYPE_BASIC:
 		switch ((c->flags >> 8) & 0xff) {
 		case COMMUNITY_ANY:
@@ -271,7 +271,7 @@ print_community(struct community *c)
 }
 
 void
-print_origin(u_int8_t o)
+print_origin(uint8_t o)
 {
 	if (o == ORIGIN_IGP)
 		printf("igp ");
@@ -401,9 +401,17 @@ print_mainconf(struct bgpd_config *conf)
 	if (conf->log & BGPD_LOG_UPDATES)
 		printf("log updates\n");
 
-	TAILQ_FOREACH(la, conf->listen_addrs, entry)
-		printf("listen on %s\n",
+	TAILQ_FOREACH(la, conf->listen_addrs, entry) {
+		struct bgpd_addr addr;
+		uint16_t port;
+
+		sa2addr((struct sockaddr *)&la->sa, &addr, &port);
+		printf("listen on %s",
 		    log_sockaddr((struct sockaddr *)&la->sa, la->sa_len));
+		if (port != BGP_PORT)
+			printf(" port %hu", port);
+		printf("\n");
+	}
 
 	if (conf->flags & BGPD_FLAG_NEXTHOP_BGP)
 		printf("nexthop qualify via bgp\n");
@@ -448,7 +456,7 @@ print_l3vpn(struct l3vpn *vpn)
 }
 
 const char *
-print_af(u_int8_t aid)
+print_af(uint8_t aid)
 {
 	/*
 	 * Hack around the fact that aid2str() will return "IPv4 unicast"
@@ -498,7 +506,7 @@ void
 print_as_sets(struct as_set_head *as_sets)
 {
 	struct as_set *aset;
-	u_int32_t *as;
+	uint32_t *as;
 	size_t i, n;
 	int len;
 
@@ -633,6 +641,8 @@ print_peer(struct peer_config *p, struct bgpd_config *conf, const char *c)
 	if (p->local_addr_v6.aid)
 		printf("%s\tlocal-address %s\n", c,
 		   log_addr(&p->local_addr_v6));
+	if (p->remote_port != BGP_PORT)
+		printf("%s\tport %hu\n", c, p->remote_port);
 	if (p->max_prefix) {
 		printf("%s\tmax-prefix %u", c, p->max_prefix);
 		if (p->max_prefix_restart)
@@ -741,7 +751,7 @@ print_peer(struct peer_config *p, struct bgpd_config *conf, const char *c)
 }
 
 const char *
-print_auth_alg(u_int8_t alg)
+print_auth_alg(uint8_t alg)
 {
 	switch (alg) {
 	case SADB_AALG_SHA1HMAC:
@@ -754,7 +764,7 @@ print_auth_alg(u_int8_t alg)
 }
 
 const char *
-print_enc_alg(u_int8_t alg)
+print_enc_alg(uint8_t alg)
 {
 	switch (alg) {
 	case SADB_EALG_3DESCBC:
@@ -769,7 +779,7 @@ print_enc_alg(u_int8_t alg)
 void
 print_announce(struct peer_config *p, const char *c)
 {
-	u_int8_t	aid;
+	uint8_t	aid;
 
 	for (aid = 0; aid < AID_MAX; aid++)
 		if (p->capabilities.mp[aid])
@@ -945,7 +955,7 @@ mrt_type(enum mrt_type t)
 }
 
 void
-print_mrt(struct bgpd_config *conf, u_int32_t pid, u_int32_t gid,
+print_mrt(struct bgpd_config *conf, uint32_t pid, uint32_t gid,
     const char *prep, const char *prep2)
 {
 	struct mrt	*m;
@@ -976,7 +986,7 @@ print_groups(struct bgpd_config *conf)
 	struct peer_config	**peerlist;
 	struct peer		 *p;
 	u_int			  peer_cnt, i;
-	u_int32_t		  prev_groupid;
+	uint32_t		  prev_groupid;
 	const char		 *tab	= "\t";
 	const char		 *nada	= "";
 	const char		 *c;
