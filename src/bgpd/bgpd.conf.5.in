@@ -1,4 +1,4 @@
-.\" $OpenBSD: bgpd.conf.5,v 1.205 2020/05/16 16:58:11 jmc Exp $
+.\" $OpenBSD: bgpd.conf.5,v 1.219 2022/03/31 17:27:29 naddy Exp $
 .\"
 .\" Copyright (c) 2004 Claudio Jeker <claudio@openbsd.org>
 .\" Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -16,7 +16,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: May 16 2020 $
+.Dd $Mdocdate: March 31 2022 $
 .Dt BGPD.CONF 5
 .Os
 .Sh NAME
@@ -148,7 +148,7 @@ The default is 120 seconds.
 .It Xo
 .Ic dump
 .Op Ic rib Ar name
-.Pq Ic table Ns | Ns Ic table-mp Ns | Ns Ic table-v2
+.Pq Ic table-v2 Ns | Ns Ic table-mp Ns | Ns Ic table
 .Ar file Op Ar interval
 .Xc
 .It Xo
@@ -237,8 +237,8 @@ The default is 90 seconds.
 The minimum acceptable holdtime in seconds.
 This value must be at least 3.
 .Pp
-.It Ic listen on Ar address
-Specify the local IP address for
+.It Ic listen on Ar address Op Ic port Ar port
+Specify the local IP address and optional port for
 .Xr bgpd 8
 to listen on.
 The default is to listen on all local addresses on the current default
@@ -268,9 +268,18 @@ daemons, such as
 .Xr ospfd 8 .
 .Pp
 .It Xo
-.Ic rde
-.Ic med
-.Ic compare
+.Ic rde Ic evaluate
+.Pq Ic default Ns | Ns Ic all
+.Xc
+If set to
+.Ar all ,
+keep evaluating alternative paths in case the selected path is filtered
+out.
+By default if a path is filtered by the output filters then no alternative
+path is sent to this peer.
+.Pp
+.It Xo
+.Ic rde Ic med Ic compare
 .Pq Ic always Ns | Ns Ic strict
 .Xc
 If set to
@@ -330,6 +339,20 @@ This renders the decision process nondeterministic.
 The default is
 .Ic ignore .
 .Pp
+.It Xo
+.Ic reject Ic as-set
+.Pq Ic yes Ns | Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+.Em AS paths
+attributes containing
+.Em AS_SET
+path segments will be rejected and
+all prefixes will be treated as withdraws.
+The default is
+.Ic no .
+.Pp
 .It Ic router-id Ar dotted-quad
 Set the BGP router ID, which must be non-zero and should be unique
 within the AS.
@@ -357,7 +380,7 @@ Create a control socket at
 .Ar path .
 If
 .Ic restricted
-is specified a restricted control socket will be created.
+is specified, a restricted control socket will be created.
 By default
 .Pa @RUNSTATEDIR@/bgpd.sock.<rdomain>
 is used where
@@ -401,6 +424,11 @@ One single
 may be defined, against which
 .Xr bgpd 8
 will validate the origin of each prefix.
+The
+.Ic roa-set
+is merged with the tables received via
+.Ic rtr
+sessions.
 .Pp
 A set definition can span multiple lines, and an optional comma is allowed
 between elements.
@@ -466,20 +494,71 @@ prefix-set as64496set { 192.0.2.0/24 prefixlen >= 26,
 .Pp
 .It Xo
 .Ic roa-set
-.Ic { Ar address Ns Li / Ns Ar len Ic maxlen Ar mlen Ic source-as Ar asn ... Ic }
+.Ic { Ar address Ns Li / Ns Ar len
+.Op Ic maxlen Ar mlen
+.Ic source-as Ar asn
+.Oo Ic expires Ar seconds Oc ... Ic }
 .Xc
 The
 .Ic roa-set
-holds a collection of Validated
-.Em Route Origin Authorization
-Payloads (VRP).
+holds a collection of
+.Em Validated ROA Payloads Pq VRPs .
 Each received prefix is checked against the
 .Ic roa-set ,
 and the Origin Validation State (OVS) is set.
+.Ic expires
+can be set to the seconds since Epoch until when this VRP is valid.
 .Bd -literal -offset indent
-roa-set { 192.0.2.0/24 maxlen 24 source-as 64511
+roa-set { 192.0.2.0/23 maxlen 24 source-as 64511
           203.0.113.0/24 source-as 64496 }
 .Ed
+.Pp
+.It Xo
+.Ic rtr Ar address
+.Ic { Ar ... Ic }
+.Xc
+The
+.Ic rtr
+block specifies a
+.Em RPKI to Router Pq RTR
+session.
+.Em RTR
+sessions provide another means to load
+.Em VRP
+sets into
+.Xr bgpd 8 .
+Changes propagated via the RTR protocol do not need a config reload and are
+immediately applied.
+The union of all
+.Em VRP
+sets received via
+.Ic rtr
+sessions and the entries in the
+.Ic roa-set
+is used to validate the orgin of routes.
+The rtr session properties are as follows:
+.Pp
+.Bl -tag -width Ds -compact
+.It Ic descr Ar description
+Add a description.
+The description is used in logging and status reports, but has no further
+meaning for
+.Xr bgpd 8 .
+.Pp
+.It Ic local-address Ar address
+Bind to the specific IP address before opening the TCP connection to the
+.Em rtr
+server.
+.Pp
+.It Ic port Ar number
+Specify the TCP destination port for the
+.Em rtr
+session.
+If not specified, the default
+.Ic port
+is
+.Em 323 .
+.El
 .El
 .Sh NETWORK ANNOUNCEMENTS
 .Ic network
@@ -753,6 +832,17 @@ The default is
 for the same address family of the session.
 .Pp
 .It Xo
+.Ic announce add-path recv
+.Pq Ic yes Ns | Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+the receive add-path capability is announced which allows reception of multiple
+paths per prefix.
+The default is
+.Ic no .
+.Pp
+.It Xo
 .Ic announce as-4byte
 .Pq Ic yes Ns | Ns Ic no
 .Xc
@@ -773,6 +863,16 @@ capability negotiation is disabled during the establishment of the session.
 This can be helpful to connect to old or broken BGP implementations.
 The default is
 .Ic yes .
+.Pp
+.It Xo
+.Ic announce enhanced refresh
+.Pq Ic yes Ns | Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+the enhanced route refresh capability is announced.
+The default is
+.Ic no .
 .Pp
 .It Xo
 .Ic announce refresh
@@ -933,9 +1033,6 @@ messages will be sent to the neighbor.
 If set to
 .Ic default-route ,
 only the default route will be announced to the neighbor.
-When
-.Ic export
-is modified the neighbor session needs to be reset to become active.
 .Pp
 .It Ic holdtime Ar seconds
 Set the holdtime in seconds.
@@ -980,7 +1077,10 @@ aes-128-cbc <key>
 .Ed
 .Pp
 Keys must be given in hexadecimal format.
-After changing settings a session needs to be reset to use the new keys.
+After changing settings, a session needs to be reset to use the new keys.
+The
+.Ic ipsec
+flows only work with session using the default port 179.
 .Pp
 .It Xo
 .Ic ipsec
@@ -1015,7 +1115,10 @@ After starting the
 and
 .Xr bgpd 8
 daemons on both sides, the session should be established.
-After changing settings a session needs to be reset to use the new keys.
+After changing settings, a session needs to be reset to use the new keys.
+The
+.Ic ipsec
+flows only work with session using the default port 179.
 .Pp
 .It Ic local-address Ar address
 .It Ic no local-address
@@ -1087,8 +1190,42 @@ statement defines the maximum hops the neighbor may be away.
 .It Ic passive
 Do not attempt to actively open a TCP connection to the neighbor system.
 .Pp
+.It Ic port Ar port
+Connect to the peer using
+.Ar port
+instead of the default BGP port 179.
+.Pp
+.It Xo
+.Ic reject Ic as-set
+.Pq Ic yes Ns | Ns Ic no
+.Xc
+If set to
+.Ic yes ,
+.Em AS paths
+attributes containing
+.Em AS_SET
+path segments will be rejected and
+all prefixes will be treated as withdraws.
+The default is inherited from the global
+.Ic reject Ic as-set
+setting.
+.Pp
 .It Ic remote-as Ar as-number
 Set the AS number of the remote system.
+.Pp
+.It Xo
+.Ic rde Ic evaluate
+.Pq Ic default Ns | Ns Ic all
+.Xc
+If set to
+.Ar all ,
+keep evaluating alternative paths in case the selected path is filtered
+out.
+By default if a path is filtered by the output filters then no alternative
+path is sent to this peer.
+The default is inherited from the global
+.Ic rde Ic evaluate
+setting.
 .Pp
 .It Ic rib Ar name
 Bind the neighbor to the specified RIB.
@@ -1130,7 +1267,7 @@ The shared secret can either be given as a password or hexadecimal key.
 tcp md5sig password mekmitasdigoat
 tcp md5sig key deadbeef
 .Ed
-After changing keys a session needs to be reset to use the new keys.
+After changing keys, a session needs to be reset to use the new keys.
 .Pp
 .It Xo
 .Ic transparent-as
@@ -1250,7 +1387,7 @@ which is expanded to the current neighbor remote AS number, or
 which is expanded to the locally assigned AS number.
 .Pp
 When specifying an
-.Ic as-set Ar name
+.Ic as-set Ar name ,
 the AS path will instead be matched against all the AS numbers in the set.
 .Pp
 The

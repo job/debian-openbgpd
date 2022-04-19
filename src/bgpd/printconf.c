@@ -1,4 +1,4 @@
-/*	$OpenBSD: printconf.c,v 1.142 2020/04/23 16:13:11 claudio Exp $	*/
+/*	$OpenBSD: printconf.c,v 1.150 2022/02/23 11:20:35 claudio Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -31,26 +31,27 @@
 void		 print_prefix(struct filter_prefix *p);
 const char	*community_type(struct community *c);
 void		 print_community(struct community *c);
-void		 print_origin(u_int8_t);
+void		 print_origin(uint8_t);
 void		 print_set(struct filter_set_head *);
 void		 print_mainconf(struct bgpd_config *);
 void		 print_l3vpn_targets(struct filter_set_head *, const char *);
 void		 print_l3vpn(struct l3vpn *);
-const char	*print_af(u_int8_t);
+const char	*print_af(uint8_t);
 void		 print_network(struct network_config *, const char *);
 void		 print_as_sets(struct as_set_head *);
 void		 print_prefixsets(struct prefixset_head *);
 void		 print_originsets(struct prefixset_head *);
-void		 print_roa(struct prefixset_tree *p);
+void		 print_roa(struct roa_tree *);
+void		 print_rtrs(struct rtr_config_head *);
 void		 print_peer(struct peer_config *, struct bgpd_config *,
 		    const char *);
-const char	*print_auth_alg(u_int8_t);
-const char	*print_enc_alg(u_int8_t);
+const char	*print_auth_alg(uint8_t);
+const char	*print_enc_alg(uint8_t);
 void		 print_announce(struct peer_config *, const char *);
 void		 print_as(struct filter_rule *);
 void		 print_rule(struct bgpd_config *, struct filter_rule *);
 const char	*mrt_type(enum mrt_type);
-void		 print_mrt(struct bgpd_config *, u_int32_t, u_int32_t,
+void		 print_mrt(struct bgpd_config *, uint32_t, uint32_t,
 		    const char *, const char *);
 void		 print_groups(struct bgpd_config *);
 int		 peer_compare(const void *, const void *);
@@ -58,7 +59,7 @@ int		 peer_compare(const void *, const void *);
 void
 print_prefix(struct filter_prefix *p)
 {
-	u_int8_t max_len = 0;
+	uint8_t max_len = 0;
 
 	switch (p->addr.aid) {
 	case AID_INET:
@@ -106,7 +107,7 @@ print_prefix(struct filter_prefix *p)
 const char *
 community_type(struct community *c)
 {
-	switch ((u_int8_t)c->flags) {
+	switch ((uint8_t)c->flags) {
 	case COMMUNITY_TYPE_BASIC:
 		return "community";
 	case COMMUNITY_TYPE_LARGE:
@@ -123,9 +124,9 @@ print_community(struct community *c)
 {
 	struct in_addr addr;
 	short type;
-	u_int8_t subtype;
+	uint8_t subtype;
 
-	switch ((u_int8_t)c->flags) {
+	switch ((uint8_t)c->flags) {
 	case COMMUNITY_TYPE_BASIC:
 		switch ((c->flags >> 8) & 0xff) {
 		case COMMUNITY_ANY:
@@ -270,7 +271,7 @@ print_community(struct community *c)
 }
 
 void
-print_origin(u_int8_t o)
+print_origin(uint8_t o)
 {
 	if (o == ORIGIN_IGP)
 		printf("igp ");
@@ -356,6 +357,7 @@ print_set(struct filter_set_head *set)
 			break;
 		case ACTION_RTLABEL_ID:
 		case ACTION_PFTABLE_ID:
+		case ACTION_SET_NEXTHOP_REF:
 			/* not possible */
 			printf("king bula saiz: config broken");
 			break;
@@ -388,16 +390,28 @@ print_mainconf(struct bgpd_config *conf)
 
 	if (conf->flags & BGPD_FLAG_DECISION_ROUTEAGE)
 		printf("rde route-age evaluate\n");
-
 	if (conf->flags & BGPD_FLAG_DECISION_MED_ALWAYS)
 		printf("rde med compare always\n");
+	if (conf->flags & BGPD_FLAG_DECISION_ALL_PATHS)
+		printf("rde evaluate all\n");
+
+	if (conf->flags & BGPD_FLAG_NO_AS_SET)
+		printf("reject as-set yes\n");
 
 	if (conf->log & BGPD_LOG_UPDATES)
 		printf("log updates\n");
 
-	TAILQ_FOREACH(la, conf->listen_addrs, entry)
-		printf("listen on %s\n",
+	TAILQ_FOREACH(la, conf->listen_addrs, entry) {
+		struct bgpd_addr addr;
+		uint16_t port;
+
+		sa2addr((struct sockaddr *)&la->sa, &addr, &port);
+		printf("listen on %s",
 		    log_sockaddr((struct sockaddr *)&la->sa, la->sa_len));
+		if (port != BGP_PORT)
+			printf(" port %hu", port);
+		printf("\n");
+	}
 
 	if (conf->flags & BGPD_FLAG_NEXTHOP_BGP)
 		printf("nexthop qualify via bgp\n");
@@ -442,7 +456,7 @@ print_l3vpn(struct l3vpn *vpn)
 }
 
 const char *
-print_af(u_int8_t aid)
+print_af(uint8_t aid)
 {
 	/*
 	 * Hack around the fact that aid2str() will return "IPv4 unicast"
@@ -492,7 +506,7 @@ void
 print_as_sets(struct as_set_head *as_sets)
 {
 	struct as_set *aset;
-	u_int32_t *as;
+	uint32_t *as;
 	size_t i, n;
 	int len;
 
@@ -534,48 +548,61 @@ void
 print_originsets(struct prefixset_head *psh)
 {
 	struct prefixset	*ps;
-	struct prefixset_item	*psi;
-	struct roa_set		*rs;
-	size_t			 i, n;
+	struct roa		*roa;
+	struct bgpd_addr	 addr;
 
 	SIMPLEQ_FOREACH(ps, psh, entry) {
 		printf("origin-set \"%s\" {", ps->name);
-		RB_FOREACH(psi, prefixset_tree, &ps->psitems) {
-			rs = set_get(psi->set, &n);
-			for (i = 0; i < n; i++) {
-				printf("\n\t");
-				print_prefix(&psi->p);
-				if (psi->p.len != rs[i].maxlen)
-					printf(" maxlen %u", rs[i].maxlen);
-				printf(" source-as %u", rs[i].as);
-			}
+		RB_FOREACH(roa, roa_tree, &ps->roaitems) {
+			printf("\n\t");
+			addr.aid = roa->aid;
+			addr.v6 = roa->prefix.inet6;
+			printf("%s/%u", log_addr(&addr), roa->prefixlen);
+			if (roa->prefixlen != roa->maxlen)
+				printf(" maxlen %u", roa->maxlen);
+			printf(" source-as %u", roa->asnum);
 		}
 		printf("\n}\n\n");
 	}
 }
 
 void
-print_roa(struct prefixset_tree *p)
+print_roa(struct roa_tree *r)
 {
-	struct prefixset_item	*psi;
-	struct roa_set		*rs;
-	size_t			 i, n;
+	struct roa	*roa;
+	struct bgpd_addr addr;
 
-	if (RB_EMPTY(p))
+	if (RB_EMPTY(r))
 		return;
 
 	printf("roa-set {");
-	RB_FOREACH(psi, prefixset_tree, p) {
-		rs = set_get(psi->set, &n);
-		for (i = 0; i < n; i++) {
-			printf("\n\t");
-			print_prefix(&psi->p);
-			if (psi->p.len != rs[i].maxlen)
-				printf(" maxlen %u", rs[i].maxlen);
-			printf(" source-as %u", rs[i].as);
-		}
+	RB_FOREACH(roa, roa_tree, r) {
+		printf("\n\t");
+		addr.aid = roa->aid;
+		addr.v6 = roa->prefix.inet6;
+		printf("%s/%u", log_addr(&addr), roa->prefixlen);
+		if (roa->prefixlen != roa->maxlen)
+			printf(" maxlen %u", roa->maxlen);
+		printf(" source-as %u", roa->asnum);
+		if (roa->expires != 0)
+			printf(" expires %lld", (long long)roa->expires);
 	}
 	printf("\n}\n\n");
+}
+
+void
+print_rtrs(struct rtr_config_head *rh)
+{
+	struct rtr_config *r;
+
+	SIMPLEQ_FOREACH(r, rh, entry) {
+		printf("rtr %s {\n", log_addr(&r->remote_addr));
+		printf("\tdescr \"%s\"\n", r->descr);
+		printf("\tport %u\n", r->remote_port);
+		if (r->local_addr.aid != AID_UNSPEC)
+			printf("local-addr %s\n", log_addr(&r->local_addr));
+		printf("}\n\n");
+	}
 }
 
 void
@@ -614,6 +641,8 @@ print_peer(struct peer_config *p, struct bgpd_config *conf, const char *c)
 	if (p->local_addr_v6.aid)
 		printf("%s\tlocal-address %s\n", c,
 		   log_addr(&p->local_addr_v6));
+	if (p->remote_port != BGP_PORT)
+		printf("%s\tport %hu\n", c, p->remote_port);
 	if (p->max_prefix) {
 		printf("%s\tmax-prefix %u", c, p->max_prefix);
 		if (p->max_prefix_restart)
@@ -666,6 +695,22 @@ print_peer(struct peer_config *p, struct bgpd_config *conf, const char *c)
 	if (p->flags & PEERFLAG_TRANS_AS)
 		printf("%s\ttransparent-as yes\n", c);
 
+	if (conf->flags & BGPD_FLAG_DECISION_ALL_PATHS) {
+		if (!(p->flags & PEERFLAG_EVALUATE_ALL))
+			printf("%s\trde evaluate default\n", c);
+	} else {
+		if (p->flags & PEERFLAG_EVALUATE_ALL)
+			printf("%s\trde evaluate all\n", c);
+	}
+
+	if (conf->flags & BGPD_FLAG_NO_AS_SET) {
+		if (!(p->flags & PEERFLAG_NO_AS_SET))
+			printf("%s\treject as-set no\n", c);
+	} else {
+		if (p->flags & PEERFLAG_NO_AS_SET)
+			printf("%s\treject as-set yes\n", c);
+	}
+
 	if (p->flags & PEERFLAG_LOG_UPDATES)
 		printf("%s\tlog updates\n", c);
 
@@ -706,7 +751,7 @@ print_peer(struct peer_config *p, struct bgpd_config *conf, const char *c)
 }
 
 const char *
-print_auth_alg(u_int8_t alg)
+print_auth_alg(uint8_t alg)
 {
 	switch (alg) {
 	case SADB_AALG_SHA1HMAC:
@@ -719,7 +764,7 @@ print_auth_alg(u_int8_t alg)
 }
 
 const char *
-print_enc_alg(u_int8_t alg)
+print_enc_alg(uint8_t alg)
 {
 	switch (alg) {
 	case SADB_EALG_3DESCBC:
@@ -734,7 +779,7 @@ print_enc_alg(u_int8_t alg)
 void
 print_announce(struct peer_config *p, const char *c)
 {
-	u_int8_t	aid;
+	uint8_t	aid;
 
 	for (aid = 0; aid < AID_MAX; aid++)
 		if (p->capabilities.mp[aid])
@@ -910,7 +955,7 @@ mrt_type(enum mrt_type t)
 }
 
 void
-print_mrt(struct bgpd_config *conf, u_int32_t pid, u_int32_t gid,
+print_mrt(struct bgpd_config *conf, uint32_t pid, uint32_t gid,
     const char *prep, const char *prep2)
 {
 	struct mrt	*m;
@@ -941,7 +986,7 @@ print_groups(struct bgpd_config *conf)
 	struct peer_config	**peerlist;
 	struct peer		 *p;
 	u_int			  peer_cnt, i;
-	u_int32_t		  prev_groupid;
+	uint32_t		  prev_groupid;
 	const char		 *tab	= "\t";
 	const char		 *nada	= "";
 	const char		 *c;
@@ -1002,6 +1047,7 @@ print_config(struct bgpd_config *conf, struct rib_names *rib_l)
 	struct l3vpn		*vpn;
 
 	print_mainconf(conf);
+	print_rtrs(&conf->rtrs);
 	print_roa(&conf->roa);
 	print_as_sets(&conf->as_sets);
 	print_prefixsets(&conf->prefixsets);

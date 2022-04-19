@@ -1,4 +1,4 @@
-/*	$OpenBSD: mrtparser.c,v 1.13 2019/07/03 06:22:01 claudio Exp $ */
+/*	$OpenBSD: mrtparser.c,v 1.17 2022/02/06 09:52:32 claudio Exp $ */
 /*
  * Copyright (c) 2011 Claudio Jeker <claudio@openbsd.org>
  *
@@ -38,18 +38,17 @@ int	mrt_parse_dump(struct mrt_hdr *, void *, struct mrt_peer **,
 	    struct mrt_rib **);
 int	mrt_parse_dump_mp(struct mrt_hdr *, void *, struct mrt_peer **,
 	    struct mrt_rib **, int);
-int	mrt_extract_attr(struct mrt_rib_entry *, u_char *, int, u_int8_t,
-	    int);
+int	mrt_extract_attr(struct mrt_rib_entry *, u_char *, int, uint8_t, int);
 
 void	mrt_free_peers(struct mrt_peer *);
 void	mrt_free_rib(struct mrt_rib *);
 void	mrt_free_bgp_state(struct mrt_bgp_state *);
 void	mrt_free_bgp_msg(struct mrt_bgp_msg *);
 
-u_char *mrt_aspath_inflate(void *, u_int16_t, u_int16_t *);
-int	mrt_extract_addr(void *, u_int, struct bgpd_addr *, u_int8_t);
-int	mrt_extract_prefix(void *, u_int, u_int8_t, struct bgpd_addr *,
-	    u_int8_t *, int);
+u_char *mrt_aspath_inflate(void *, uint16_t, uint16_t *);
+int	mrt_extract_addr(void *, u_int, struct bgpd_addr *, uint8_t);
+int	mrt_extract_prefix(void *, u_int, uint8_t, struct bgpd_addr *,
+	    uint8_t *, int);
 
 struct mrt_bgp_state	*mrt_parse_state(struct mrt_hdr *, void *, int);
 struct mrt_bgp_msg	*mrt_parse_msg(struct mrt_hdr *, void *, int);
@@ -163,6 +162,11 @@ mrt_parse(int fd, struct mrt_parser *p, int verbose)
 			case MRT_DUMP_V2_RIB_IPV6_UNICAST:
 			case MRT_DUMP_V2_RIB_IPV6_MULTICAST:
 			case MRT_DUMP_V2_RIB_GENERIC:
+			case MRT_DUMP_V2_RIB_IPV4_UNICAST_ADDPATH:
+			case MRT_DUMP_V2_RIB_IPV4_MULTICAST_ADDPATH:
+			case MRT_DUMP_V2_RIB_IPV6_UNICAST_ADDPATH:
+			case MRT_DUMP_V2_RIB_IPV6_MULTICAST_ADDPATH:
+			case MRT_DUMP_V2_RIB_GENERIC_ADDPATH:
 				if (p->dump == NULL)
 					break;
 				r = mrt_parse_v2_rib(&h, msg, verbose);
@@ -194,6 +198,10 @@ mrt_parse(int fd, struct mrt_parser *p, int verbose)
 			case BGP4MP_MESSAGE_AS4:
 			case BGP4MP_MESSAGE_LOCAL:
 			case BGP4MP_MESSAGE_AS4_LOCAL:
+			case BGP4MP_MESSAGE_ADDPATH:
+			case BGP4MP_MESSAGE_AS4_ADDPATH:
+			case BGP4MP_MESSAGE_LOCAL_ADDPATH:
+			case BGP4MP_MESSAGE_AS4_LOCAL_ADDPATH:
 				if ((m = mrt_parse_msg(&h, msg, verbose))) {
 					if (p->message)
 						p->message(m, p->arg);
@@ -258,9 +266,9 @@ mrt_parse_v2_peer(struct mrt_hdr *hdr, void *msg)
 {
 	struct mrt_peer_entry	*peers = NULL;
 	struct mrt_peer	*p;
-	u_int8_t	*b = msg;
-	u_int32_t	bid, as4;
-	u_int16_t	cnt, i, as2;
+	uint8_t		*b = msg;
+	uint32_t	bid, as4;
+	uint16_t	cnt, i, as2;
 	u_int		len = ntohl(hdr->length);
 
 	if (len < 8)	/* min msg size */
@@ -308,9 +316,9 @@ mrt_parse_v2_peer(struct mrt_hdr *hdr, void *msg)
 	if ((peers = calloc(cnt, sizeof(struct mrt_peer_entry))) == NULL)
 		err(1, "calloc");
 	for (i = 0; i < cnt; i++) {
-		u_int8_t type;
+		uint8_t type;
 
-		if (len < sizeof(u_int8_t) + sizeof(u_int32_t))
+		if (len < sizeof(uint8_t) + sizeof(uint32_t))
 			goto fail;
 		type = *b++;
 		len -= 1;
@@ -360,11 +368,11 @@ mrt_parse_v2_rib(struct mrt_hdr *hdr, void *msg, int verbose)
 {
 	struct mrt_rib_entry *entries = NULL;
 	struct mrt_rib	*r;
-	u_int8_t	*b = msg;
+	uint8_t		*b = msg;
 	u_int		len = ntohl(hdr->length);
-	u_int32_t	snum;
-	u_int16_t	cnt, i, afi;
-	u_int8_t	safi, aid;
+	uint32_t	snum, path_id = 0;
+	uint16_t	cnt, i, afi;
+	uint8_t		safi, aid;
 	int		ret;
 
 	if (len < sizeof(snum) + 1)
@@ -381,6 +389,10 @@ mrt_parse_v2_rib(struct mrt_hdr *hdr, void *msg, int verbose)
 	r->seqnum = ntohl(snum);
 
 	switch (ntohs(hdr->subtype)) {
+	case MRT_DUMP_V2_RIB_IPV4_UNICAST_ADDPATH:
+	case MRT_DUMP_V2_RIB_IPV4_MULTICAST_ADDPATH:
+		r->add_path = 1;
+		/* FALLTHROUGH */
 	case MRT_DUMP_V2_RIB_IPV4_UNICAST:
 	case MRT_DUMP_V2_RIB_IPV4_MULTICAST:
 		/* prefix */
@@ -389,6 +401,10 @@ mrt_parse_v2_rib(struct mrt_hdr *hdr, void *msg, int verbose)
 		if (ret == 1)
 			goto fail;
 		break;
+	case MRT_DUMP_V2_RIB_IPV6_UNICAST_ADDPATH:
+	case MRT_DUMP_V2_RIB_IPV6_MULTICAST_ADDPATH:
+		r->add_path = 1;
+		/* FALLTHROUGH */
 	case MRT_DUMP_V2_RIB_IPV6_UNICAST:
 	case MRT_DUMP_V2_RIB_IPV6_MULTICAST:
 		/* prefix */
@@ -397,8 +413,18 @@ mrt_parse_v2_rib(struct mrt_hdr *hdr, void *msg, int verbose)
 		if (ret == 1)
 			goto fail;
 		break;
+	case MRT_DUMP_V2_RIB_GENERIC_ADDPATH:
+		/*
+		 * RFC8050 handling for add-path has special handling for
+		 * RIB_GENERIC_ADDPATH but nobody implements it that way.
+		 * So just use the same way as for the other _ADDPATH types.
+		 */
+		r->add_path = 1;
+		/* FALLTHROUGH */
 	case MRT_DUMP_V2_RIB_GENERIC:
 		/* fetch AFI/SAFI pair */
+		if (len < 3)
+			goto fail;
 		memcpy(&afi, b, sizeof(afi));
 		b += sizeof(afi);
 		len -= sizeof(afi);
@@ -437,9 +463,9 @@ mrt_parse_v2_rib(struct mrt_hdr *hdr, void *msg, int verbose)
 	if ((entries = calloc(cnt, sizeof(struct mrt_rib_entry))) == NULL)
 		err(1, "calloc");
 	for (i = 0; i < cnt; i++) {
-		u_int32_t	otm;
-		u_int16_t	pix, alen;
-		if (len < 2 * sizeof(u_int16_t) + sizeof(u_int32_t))
+		uint32_t	otm;
+		uint16_t	pix, alen;
+		if (len < 2 * sizeof(uint16_t) + sizeof(uint32_t))
 			goto fail;
 		/* peer index */
 		memcpy(&pix, b, sizeof(pix));
@@ -452,6 +478,16 @@ mrt_parse_v2_rib(struct mrt_hdr *hdr, void *msg, int verbose)
 		b += sizeof(otm);
 		len -= sizeof(otm);
 		entries[i].originated = ntohl(otm);
+
+		if (r->add_path) {
+			if (len < sizeof(path_id) + sizeof(alen))
+				goto fail;
+			memcpy(&path_id, b, sizeof(path_id));
+			b += sizeof(path_id);
+			len -= sizeof(path_id);
+			path_id = ntohl(path_id);
+		}
+		entries[i].path_id = path_id;
 
 		/* attr_len */
 		memcpy(&alen, b, sizeof(alen));
@@ -483,9 +519,9 @@ mrt_parse_dump(struct mrt_hdr *hdr, void *msg, struct mrt_peer **pp,
 	struct mrt_peer		*p;
 	struct mrt_rib		*r;
 	struct mrt_rib_entry	*re;
-	u_int8_t		*b = msg;
+	uint8_t			*b = msg;
 	u_int			 len = ntohl(hdr->length);
-	u_int16_t		 asnum, alen;
+	uint16_t		 asnum, alen;
 
 	if (*pp == NULL) {
 		*pp = calloc(1, sizeof(struct mrt_peer));
@@ -507,15 +543,15 @@ mrt_parse_dump(struct mrt_hdr *hdr, void *msg, struct mrt_peer **pp,
 	r->nentries = 1;
 	r->entries = re;
 
-	if (len < 2 * sizeof(u_int16_t))
+	if (len < 2 * sizeof(uint16_t))
 		goto fail;
 	/* view */
-	b += sizeof(u_int16_t);
-	len -= sizeof(u_int16_t);
+	b += sizeof(uint16_t);
+	len -= sizeof(uint16_t);
 	/* seqnum */
-	memcpy(&r->seqnum, b, sizeof(u_int16_t));
-	b += sizeof(u_int16_t);
-	len -= sizeof(u_int16_t);
+	memcpy(&r->seqnum, b, sizeof(uint16_t));
+	b += sizeof(uint16_t);
+	len -= sizeof(uint16_t);
 	r->seqnum = ntohs(r->seqnum);
 
 	switch (ntohs(hdr->subtype)) {
@@ -532,7 +568,7 @@ mrt_parse_dump(struct mrt_hdr *hdr, void *msg, struct mrt_peer **pp,
 		len -= sizeof(struct in6_addr);
 		break;
 	}
-	if (len < 2 * sizeof(u_int32_t) + 2 * sizeof(u_int16_t) + 2)
+	if (len < 2 * sizeof(uint32_t) + 2 * sizeof(uint16_t) + 2)
 		goto fail;
 	r->prefixlen = *b++;
 	len -= 1;
@@ -540,9 +576,9 @@ mrt_parse_dump(struct mrt_hdr *hdr, void *msg, struct mrt_peer **pp,
 	b += 1;
 	len -= 1;
 	/* originated */
-	memcpy(&re->originated, b, sizeof(u_int32_t));
-	b += sizeof(u_int32_t);
-	len -= sizeof(u_int32_t);
+	memcpy(&re->originated, b, sizeof(uint32_t));
+	b += sizeof(uint32_t);
+	len -= sizeof(uint32_t);
 	re->originated = ntohl(re->originated);
 	/* peer ip */
 	switch (ntohs(hdr->subtype)) {
@@ -590,16 +626,16 @@ mrt_parse_dump_mp(struct mrt_hdr *hdr, void *msg, struct mrt_peer **pp,
 	struct mrt_peer		*p;
 	struct mrt_rib		*r;
 	struct mrt_rib_entry	*re;
-	u_int8_t		*b = msg;
+	uint8_t			*b = msg;
 	u_int			 len = ntohl(hdr->length);
-	u_int16_t		 asnum, alen, afi;
-	u_int8_t		 safi, nhlen, aid;
+	uint16_t		 asnum, alen, afi;
+	uint8_t			 safi, nhlen, aid;
 	int			 ret;
 
 	/* just ignore the microsec field for _ET header for now */
 	if (ntohs(hdr->type) == MSG_PROTOCOL_BGP4MP_ET) {
-		b = (char *)b + sizeof(u_int32_t);
-		len -= sizeof(u_int32_t);
+		b = (char *)b + sizeof(uint32_t);
+		len -= sizeof(uint32_t);
 	}
 
 	if (*pp == NULL) {
@@ -622,19 +658,19 @@ mrt_parse_dump_mp(struct mrt_hdr *hdr, void *msg, struct mrt_peer **pp,
 	r->nentries = 1;
 	r->entries = re;
 
-	if (len < 4 * sizeof(u_int16_t))
+	if (len < 4 * sizeof(uint16_t))
 		goto fail;
 	/* source AS */
-	b += sizeof(u_int16_t);
-	len -= sizeof(u_int16_t);
+	b += sizeof(uint16_t);
+	len -= sizeof(uint16_t);
 	/* dest AS */
 	memcpy(&asnum, b, sizeof(asnum));
 	b += sizeof(asnum);
 	len -= sizeof(asnum);
 	p->peers->asnum = ntohs(asnum);
 	/* iface index */
-	b += sizeof(u_int16_t);
-	len -= sizeof(u_int16_t);
+	b += sizeof(uint16_t);
+	len -= sizeof(uint16_t);
 	/* afi */
 	memcpy(&afi, b, sizeof(afi));
 	b += sizeof(afi);
@@ -669,15 +705,15 @@ mrt_parse_dump_mp(struct mrt_hdr *hdr, void *msg, struct mrt_peer **pp,
 		break;
 	}
 
-	if (len < 2 * sizeof(u_int16_t) + 2 * sizeof(u_int32_t))
+	if (len < 2 * sizeof(uint16_t) + 2 * sizeof(uint32_t))
 		goto fail;
 	/* view + status */
-	b += 2 * sizeof(u_int16_t);
-	len -= 2 * sizeof(u_int16_t);
+	b += 2 * sizeof(uint16_t);
+	len -= 2 * sizeof(uint16_t);
 	/* originated */
-	memcpy(&re->originated, b, sizeof(u_int32_t));
-	b += sizeof(u_int32_t);
-	len -= sizeof(u_int32_t);
+	memcpy(&re->originated, b, sizeof(uint32_t));
+	b += sizeof(uint32_t);
+	len -= sizeof(uint32_t);
 	re->originated = ntohl(re->originated);
 
 	/* afi */
@@ -733,13 +769,13 @@ fail:
 }
 
 int
-mrt_extract_attr(struct mrt_rib_entry *re, u_char *a, int alen, u_int8_t aid,
+mrt_extract_attr(struct mrt_rib_entry *re, u_char *a, int alen, uint8_t aid,
     int as4)
 {
 	struct mrt_attr	*ap;
-	u_int32_t	tmp;
-	u_int16_t	attr_len;
-	u_int8_t	type, flags, *attr;
+	uint32_t	tmp;
+	uint16_t	attr_len;
+	uint8_t		type, flags, *attr;
 
 	do {
 		if (alen < 3)
@@ -827,21 +863,21 @@ mrt_extract_attr(struct mrt_rib_entry *re, u_char *a, int alen, u_int8_t aid,
 				    sizeof(struct in6_addr));
 				break;
 			case AID_VPN_IPv4:
-				if (attr_len < sizeof(u_int64_t) +
+				if (attr_len < sizeof(uint64_t) +
 				    sizeof(struct in_addr))
 					return (-1);
 				re->nexthop.aid = aid;
-				memcpy(&tmp, a + 1 + sizeof(u_int64_t),
+				memcpy(&tmp, a + 1 + sizeof(uint64_t),
 				    sizeof(tmp));
-				re->nexthop.vpn4.addr.s_addr = tmp;
+				re->nexthop.v4.s_addr = tmp;
 				break;
 			case AID_VPN_IPv6:
-				if (attr_len < sizeof(u_int64_t) +
+				if (attr_len < sizeof(uint64_t) +
 				    sizeof(struct in6_addr))
 					return (-1);
 				re->nexthop.aid = aid;
-				memcpy(&re->nexthop.vpn6.addr,
-				    a + 1 + sizeof(u_int64_t),
+				memcpy(&re->nexthop.v6,
+				    a + 1 + sizeof(uint64_t),
 				    sizeof(struct in6_addr));
 				break;
 			}
@@ -890,7 +926,7 @@ mrt_free_peers(struct mrt_peer *p)
 void
 mrt_free_rib(struct mrt_rib *r)
 {
-	u_int16_t	i, j;
+	uint16_t	i, j;
 
 	for (i = 0; i < r->nentries && r->entries; i++) {
 		for (j = 0; j < r->entries[i].nattrs; j++)
@@ -917,19 +953,19 @@ mrt_free_bgp_msg(struct mrt_bgp_msg *m)
 }
 
 u_char *
-mrt_aspath_inflate(void *data, u_int16_t len, u_int16_t *newlen)
+mrt_aspath_inflate(void *data, uint16_t len, uint16_t *newlen)
 {
-	u_int8_t	*seg, *nseg, *ndata;
-	u_int16_t	 seg_size, olen, nlen;
-	u_int8_t	 seg_len;
+	uint8_t		*seg, *nseg, *ndata;
+	uint16_t	 seg_size, olen, nlen;
+	uint8_t		 seg_len;
 
 	/* first calculate the length of the aspath */
 	seg = data;
 	nlen = 0;
 	for (olen = len; olen > 0; olen -= seg_size, seg += seg_size) {
 		seg_len = seg[1];
-		seg_size = 2 + sizeof(u_int16_t) * seg_len;
-		nlen += 2 + sizeof(u_int32_t) * seg_len;
+		seg_size = 2 + sizeof(uint16_t) * seg_len;
+		nlen += 2 + sizeof(uint32_t) * seg_len;
 
 		if (seg_size > olen)
 			return NULL;
@@ -956,9 +992,9 @@ mrt_aspath_inflate(void *data, u_int16_t len, u_int16_t *newlen)
 }
 
 int
-mrt_extract_addr(void *msg, u_int len, struct bgpd_addr *addr, u_int8_t aid)
+mrt_extract_addr(void *msg, u_int len, struct bgpd_addr *addr, uint8_t aid)
 {
-	u_int8_t	*b = msg;
+	uint8_t	*b = msg;
 
 	memset(addr, 0, sizeof(*addr));
 	switch (aid) {
@@ -975,29 +1011,29 @@ mrt_extract_addr(void *msg, u_int len, struct bgpd_addr *addr, u_int8_t aid)
 		memcpy(&addr->v6, b, sizeof(struct in6_addr));
 		return sizeof(struct in6_addr);
 	case AID_VPN_IPv4:
-		if (len < sizeof(u_int64_t) + sizeof(struct in_addr))
+		if (len < sizeof(uint64_t) + sizeof(struct in_addr))
 			return (-1);
 		addr->aid = aid;
 		/* XXX labelstack and rd missing */
-		memcpy(&addr->vpn4.addr, b + sizeof(u_int64_t),
+		memcpy(&addr->v4, b + sizeof(uint64_t),
 		    sizeof(struct in_addr));
-		return (sizeof(u_int64_t) + sizeof(struct in_addr));
+		return (sizeof(uint64_t) + sizeof(struct in_addr));
 	case AID_VPN_IPv6:
-		if (len < sizeof(u_int64_t) + sizeof(struct in6_addr))
+		if (len < sizeof(uint64_t) + sizeof(struct in6_addr))
 			return (-1);
 		addr->aid = aid;
 		/* XXX labelstack and rd missing */
-		memcpy(&addr->vpn6.addr, b + sizeof(u_int64_t),
+		memcpy(&addr->v6, b + sizeof(uint64_t),
 		    sizeof(struct in6_addr));
-		return (sizeof(u_int64_t) + sizeof(struct in6_addr));
+		return (sizeof(uint64_t) + sizeof(struct in6_addr));
 	default:
 		return (-1);
 	}
 }
 
 int
-mrt_extract_prefix(void *msg, u_int len, u_int8_t aid,
-    struct bgpd_addr *prefix, u_int8_t *prefixlen, int verbose)
+mrt_extract_prefix(void *msg, u_int len, uint8_t aid,
+    struct bgpd_addr *prefix, uint8_t *prefixlen, int verbose)
 {
 	int r;
 
@@ -1029,12 +1065,12 @@ mrt_parse_state(struct mrt_hdr *hdr, void *msg, int verbose)
 {
 	struct timespec		 t;
 	struct mrt_bgp_state	*s;
-	u_int8_t		*b = msg;
+	uint8_t			*b = msg;
 	u_int			 len = ntohl(hdr->length);
-	u_int32_t		 sas, das, usec;
-	u_int16_t		 tmp16, afi;
+	uint32_t		 sas, das, usec;
+	uint16_t		 tmp16, afi;
 	int			 r;
-	u_int8_t		 aid;
+	uint8_t			 aid;
 
 	t.tv_sec = ntohl(hdr->timestamp);
 	t.tv_nsec = 0;
@@ -1137,12 +1173,12 @@ mrt_parse_msg(struct mrt_hdr *hdr, void *msg, int verbose)
 {
 	struct timespec		 t;
 	struct mrt_bgp_msg	*m;
-	u_int8_t		*b = msg;
+	uint8_t			*b = msg;
 	u_int			 len = ntohl(hdr->length);
-	u_int32_t		 sas, das, usec;
-	u_int16_t		 tmp16, afi;
-	int			 r;
-	u_int8_t		 aid;
+	uint32_t		 sas, das, usec;
+	uint16_t		 tmp16, afi;
+	int			 r, addpath = 0;
+	uint8_t			 aid;
 
 	t.tv_sec = ntohl(hdr->timestamp);
 	t.tv_nsec = 0;
@@ -1156,7 +1192,12 @@ mrt_parse_msg(struct mrt_hdr *hdr, void *msg, int verbose)
 	}
 
 	switch (ntohs(hdr->subtype)) {
+	case BGP4MP_MESSAGE_ADDPATH:
+	case BGP4MP_MESSAGE_LOCAL_ADDPATH:
+		addpath = 1;
+		/* FALLTHROUGH */
 	case BGP4MP_MESSAGE:
+	case BGP4MP_MESSAGE_LOCAL:
 		if (len < 8)
 			return (0);
 		/* source as */
@@ -1178,7 +1219,12 @@ mrt_parse_msg(struct mrt_hdr *hdr, void *msg, int verbose)
 		len -= sizeof(tmp16);
 		afi = ntohs(tmp16);
 		break;
+	case BGP4MP_MESSAGE_AS4_ADDPATH:
+	case BGP4MP_MESSAGE_AS4_LOCAL_ADDPATH:
+		addpath = 1;
+		/* FALLTHROUGH */
 	case BGP4MP_MESSAGE_AS4:
+	case BGP4MP_MESSAGE_AS4_LOCAL:
 		if (len < 12)
 			return (0);
 		/* source as */
@@ -1213,6 +1259,7 @@ mrt_parse_msg(struct mrt_hdr *hdr, void *msg, int verbose)
 	m->time = t;
 	m->src_as = sas;
 	m->dst_as = das;
+	m->add_path = addpath;
 
 	if ((r = mrt_extract_addr(b, len, &m->src, aid)) == -1)
 		goto fail;

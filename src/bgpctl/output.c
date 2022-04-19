@@ -1,4 +1,4 @@
-/*	$OpenBSD: output.c,v 1.9 2020/05/10 13:38:46 deraadt Exp $ */
+/*	$OpenBSD: output.c,v 1.20 2022/02/06 09:52:32 claudio Exp $ */
 
 /*
  * Copyright (c) 2003 Henning Brauer <henning@openbsd.org>
@@ -77,6 +77,10 @@ show_head(struct parse_result *res)
 		    "flags", "ovs", "destination", "gateway", "lpref", "med",
 		    "aspath origin");
 		break;
+	case SHOW_SET:
+		printf("%-6s %-34s %7s %7s %6s %11s\n", "Type", "Name",
+		    "#IPv4", "#IPv6", "#ASnum", "Last Change");
+		break;
 	case NETWORK_SHOW:
 		printf("flags: S = Static\n");
 		printf("flags prio destination          gateway\n");
@@ -128,14 +132,14 @@ show_summary(struct peer *p)
 }
 
 static void
-show_neighbor_capa_mp(struct peer *p)
+show_neighbor_capa_mp(struct capabilities *capa)
 {
-	int		comma;
-	u_int8_t	i;
+	int	comma;
+	uint8_t	i;
 
 	printf("    Multiprotocol extensions: ");
 	for (i = 0, comma = 0; i < AID_MAX; i++)
-		if (p->capa.peer.mp[i]) {
+		if (capa->mp[i]) {
 			printf("%s%s", comma ? ", " : "", aid2str(i));
 			comma = 1;
 		}
@@ -143,23 +147,51 @@ show_neighbor_capa_mp(struct peer *p)
 }
 
 static void
-show_neighbor_capa_restart(struct peer *p)
+show_neighbor_capa_add_path(struct capabilities *capa)
 {
+	const char	*mode;
 	int		comma;
-	u_int8_t	i;
+	uint8_t		i;
+
+	printf("    Add-path: ");
+	for (i = 0, comma = 0; i < AID_MAX; i++) {
+		switch (capa->add_path[i]) {
+		case 0:
+		default:
+			continue;
+		case CAPA_AP_RECV:
+			mode = "recv";
+			break;
+		case CAPA_AP_SEND:
+			mode = "send";
+			break;
+		case CAPA_AP_BIDIR:
+			mode = "bidir";
+		}
+		printf("%s%s %s", comma ? ", " : "", aid2str(i), mode);
+		comma = 1;
+	}
+	printf("\n");
+}
+
+static void
+show_neighbor_capa_restart(struct capabilities *capa)
+{
+	int	comma;
+	uint8_t	i;
 
 	printf("    Graceful Restart");
-	if (p->capa.peer.grestart.timeout)
-		printf(": Timeout: %d, ", p->capa.peer.grestart.timeout);
+	if (capa->grestart.timeout)
+		printf(": Timeout: %d, ", capa->grestart.timeout);
 	for (i = 0, comma = 0; i < AID_MAX; i++)
-		if (p->capa.peer.grestart.flags[i] & CAPA_GR_PRESENT) {
+		if (capa->grestart.flags[i] & CAPA_GR_PRESENT) {
 			if (!comma &&
-			    p->capa.peer.grestart.flags[i] & CAPA_GR_RESTART)
+			    capa->grestart.flags[i] & CAPA_GR_RESTART)
 				printf("restarted, ");
 			if (comma)
 				printf(", ");
 			printf("%s", aid2str(i));
-			if (p->capa.peer.grestart.flags[i] & CAPA_GR_FORWARD)
+			if (capa->grestart.flags[i] & CAPA_GR_FORWARD)
 				printf(" (preserved)");
 			comma = 1;
 		}
@@ -198,16 +230,23 @@ show_neighbor_msgstats(struct peer *p)
 	    p->stats.prefix_sent_withdraw, p->stats.prefix_rcvd_withdraw);
 	printf("  %-15s %10llu %10llu\n", "End-of-Rib",
 	    p->stats.prefix_sent_eor, p->stats.prefix_rcvd_eor);
+	printf("  Route Refresh statistics:\n");
+	printf("  %-15s %10llu %10llu\n", "Request",
+	    p->stats.refresh_sent_req, p->stats.refresh_rcvd_req);
+	printf("  %-15s %10llu %10llu\n", "Begin-of-RR",
+	    p->stats.refresh_sent_borr, p->stats.refresh_rcvd_borr);
+	printf("  %-15s %10llu %10llu\n", "End-of-RR",
+	    p->stats.refresh_sent_eorr, p->stats.refresh_rcvd_eorr);
 }
 
 static void
 show_neighbor_full(struct peer *p, struct parse_result *res)
 {
-	const char		*errstr;
-	struct in_addr		 ina;
-	char			*s;
-	int			 hascapamp = 0;
-	u_int8_t		 i;
+	const char	*errstr;
+	struct in_addr	 ina;
+	char		*s;
+	int		 hascapamp, hascapaap;
+	uint8_t		 i;
 
 	if ((p->conf.remote_addr.aid == AID_INET &&
 	    p->conf.remote_masklen != 32) ||
@@ -262,7 +301,7 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 	if (p->conf.down) {
 		printf(", marked down");
 	}
-	if (*(p->conf.reason)) {
+	if (p->conf.reason[0]) {
 		printf(" with shutdown reason \"%s\"",
 		    log_reason(p->conf.reason));
 	}
@@ -275,20 +314,57 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 	    fmt_monotime(p->stats.last_read),
 	    p->holdtime, p->holdtime/3);
 	printf("  Last write %s\n", fmt_monotime(p->stats.last_write));
-	for (i = 0; i < AID_MAX; i++)
+
+	hascapamp = 0;
+	hascapaap = 0;
+	for (i = AID_MIN; i < AID_MAX; i++) {
 		if (p->capa.peer.mp[i])
 			hascapamp = 1;
-	if (hascapamp || p->capa.peer.refresh ||
-	    p->capa.peer.grestart.restart || p->capa.peer.as4byte) {
+		if (p->capa.peer.add_path[i])
+			hascapaap = 1;
+	}
+	if (hascapamp || hascapaap || p->capa.peer.grestart.restart ||
+	    p->capa.peer.refresh || p->capa.peer.enhanced_rr ||
+	    p->capa.peer.as4byte) {
 		printf("  Neighbor capabilities:\n");
 		if (hascapamp)
-			show_neighbor_capa_mp(p);
-		if (p->capa.peer.refresh)
-			printf("    Route Refresh\n");
-		if (p->capa.peer.grestart.restart)
-			show_neighbor_capa_restart(p);
+			show_neighbor_capa_mp(&p->capa.peer);
 		if (p->capa.peer.as4byte)
 			printf("    4-byte AS numbers\n");
+		if (p->capa.peer.refresh)
+			printf("    Route Refresh\n");
+		if (p->capa.peer.enhanced_rr)
+			printf("    Enhanced Route Refresh\n");
+		if (p->capa.peer.grestart.restart)
+			show_neighbor_capa_restart(&p->capa.peer);
+		if (hascapaap)
+			show_neighbor_capa_add_path(&p->capa.peer);
+	}
+
+	hascapamp = 0;
+	hascapaap = 0;
+	for (i = AID_MIN; i < AID_MAX; i++) {
+		if (p->capa.neg.mp[i])
+			hascapamp = 1;
+		if (p->capa.neg.add_path[i])
+			hascapaap = 1;
+	}
+	if (hascapamp || hascapaap || p->capa.neg.grestart.restart ||
+	    p->capa.neg.refresh || p->capa.neg.enhanced_rr ||
+	    p->capa.neg.as4byte) {
+		printf("  Negotiated capabilities:\n");
+		if (hascapamp)
+			show_neighbor_capa_mp(&p->capa.neg);
+		if (p->capa.neg.as4byte)
+			printf("    4-byte AS numbers\n");
+		if (p->capa.neg.refresh)
+			printf("    Route Refresh\n");
+		if (p->capa.neg.enhanced_rr)
+			printf("    Enhanced Route Refresh\n");
+		if (p->capa.neg.grestart.restart)
+			show_neighbor_capa_restart(&p->capa.neg);
+		if (hascapaap)
+			show_neighbor_capa_add_path(&p->capa.neg);
 	}
 	printf("\n");
 
@@ -297,7 +373,7 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 
 	show_neighbor_msgstats(p);
 	printf("\n");
-	if (*(p->stats.last_reason)) {
+	if (p->stats.last_reason[0]) {
 		printf("  Last received shutdown reason: \"%s\"\n",
 		    log_reason(p->stats.last_reason));
 	}
@@ -379,7 +455,7 @@ show_timer(struct ctl_timer *t)
 static void
 show_fib(struct kroute_full *kf)
 {
-	char			*p;
+	char	*p;
 
 	if (asprintf(&p, "%s/%u", log_addr(&kf->prefix), kf->prefixlen) == -1)
 		err(1, NULL);
@@ -404,9 +480,9 @@ show_fib_table(struct ktable *kt)
 static void
 show_nexthop(struct ctl_show_nexthop *nh)
 {
-	struct kroute		*k;
-	struct kroute6		*k6;
-	char			*s;
+	struct kroute	*k;
+	struct kroute6	*k6;
+	char		*s;
 
 	printf("%s %-15s ", nh->valid ? "*" : " ", log_addr(&nh->addr));
 	if (!nh->krvalid) {
@@ -472,8 +548,8 @@ show_communities(u_char *data, size_t len, struct parse_result *res)
 {
 	struct community c;
 	size_t	i;
-	u_int64_t ext;
-	u_int8_t type = 0;
+	uint64_t ext;
+	uint8_t type = 0;
 
 	if (len % sizeof(c))
 		return;
@@ -498,19 +574,19 @@ show_communities(u_char *data, size_t len, struct parse_result *res)
 			    fmt_large_community(c.data1, c.data2, c.data3));
 			break;
 		case COMMUNITY_TYPE_EXT:
-			ext = (u_int64_t)c.data3 << 48;
+			ext = (uint64_t)c.data3 << 48;
 			switch (c.data3 >> 8) {
 			case EXT_COMMUNITY_TRANS_TWO_AS:
 			case EXT_COMMUNITY_TRANS_OPAQUE:
 			case EXT_COMMUNITY_TRANS_EVPN:
 			case EXT_COMMUNITY_NON_TRANS_OPAQUE:
-				ext |= ((u_int64_t)c.data1 & 0xffff) << 32;
-				ext |= (u_int64_t)c.data2;
+				ext |= ((uint64_t)c.data1 & 0xffff) << 32;
+				ext |= (uint64_t)c.data2;
 				break;
 			case EXT_COMMUNITY_TRANS_FOUR_AS:
 			case EXT_COMMUNITY_TRANS_IPV4:
-				ext |= (u_int64_t)c.data1 << 16;
-				ext |= (u_int64_t)c.data2 & 0xffff;
+				ext |= (uint64_t)c.data1 << 16;
+				ext |= (uint64_t)c.data2 & 0xffff;
 				break;
 			}
 			ext = htobe64(ext);
@@ -524,10 +600,10 @@ show_communities(u_char *data, size_t len, struct parse_result *res)
 }
 
 static void
-show_community(u_char *data, u_int16_t len)
+show_community(u_char *data, uint16_t len)
 {
-	u_int16_t	a, v;
-	u_int16_t	i;
+	uint16_t	a, v;
+	uint16_t	i;
 
 	if (len & 0x3) {
 		printf("bad length");
@@ -547,10 +623,10 @@ show_community(u_char *data, u_int16_t len)
 }
 
 static void
-show_large_community(u_char *data, u_int16_t len)
+show_large_community(u_char *data, uint16_t len)
 {
-	u_int32_t	a, l1, l2;
-	u_int16_t	i;
+	uint32_t	a, l1, l2;
+	uint16_t	i;
 
 	if (len % 12) {
 		printf("bad length");
@@ -572,9 +648,9 @@ show_large_community(u_char *data, u_int16_t len)
 }
 
 static void
-show_ext_community(u_char *data, u_int16_t len)
+show_ext_community(u_char *data, uint16_t len)
 {
-	u_int16_t	i;
+	uint16_t	i;
 
 	if (len & 0x7) {
 		printf("bad length");
@@ -590,15 +666,15 @@ show_ext_community(u_char *data, u_int16_t len)
 }
 
 static void
-show_attr(u_char *data, size_t len, struct parse_result *res)
+show_attr(u_char *data, size_t len, int reqflags, int addpath)
 {
 	u_char		*path;
 	struct in_addr	 id;
 	struct bgpd_addr prefix;
 	char		*aspath;
-	u_int32_t	 as;
-	u_int16_t	 alen, ioff, short_as, afi;
-	u_int8_t	 flags, type, safi, aid, prefixlen;
+	uint32_t	 as, pathid;
+	uint16_t	 alen, ioff, short_as, afi;
+	uint8_t		 flags, type, safi, aid, prefixlen;
 	int		 i, pos, e2, e4;
 
 	if (len < 3) {
@@ -615,7 +691,7 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 			warnx("Too short BGP attrbute");
 			return;
 		}
-		memcpy(&alen, data+2, sizeof(u_int16_t));
+		memcpy(&alen, data+2, sizeof(uint16_t));
 		alen = ntohs(alen);
 		data += 4;
 		len -= 4;
@@ -643,8 +719,8 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 	case ATTR_ASPATH:
 	case ATTR_AS4_PATH:
 		/* prefer 4-byte AS here */
-		e4 = aspath_verify(data, alen, 1);
-		e2 = aspath_verify(data, alen, 0);
+		e4 = aspath_verify(data, alen, 1, 0);
+		e2 = aspath_verify(data, alen, 0, 0);
 		if (e4 == 0 || e4 == AS_ERR_SOFT) {
 			path = data;
 		} else if (e2 == 0 || e2 == AS_ERR_SOFT) {
@@ -672,7 +748,7 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 	case ATTR_MED:
 	case ATTR_LOCALPREF:
 		if (alen == 4) {
-			u_int32_t val;
+			uint32_t val;
 			memcpy(&val, data, sizeof(val));
 			val = ntohl(val);
 			printf("%u", val);
@@ -734,7 +810,7 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 
 		if (type == ATTR_MP_REACH_NLRI) {
 			struct bgpd_addr nexthop;
-			u_int8_t nhlen;
+			uint8_t nhlen;
 			if (len == 0)
 				goto bad_len;
 			nhlen = *data++;
@@ -753,14 +829,14 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 				if (nhlen != 12)
 					goto bad_len;
 				nexthop.aid = AID_INET;
-				memcpy(&nexthop.v4, data + sizeof(u_int64_t),
+				memcpy(&nexthop.v4, data + sizeof(uint64_t),
 				    sizeof(nexthop.v4));
 				break;
 			case AID_VPN_IPv6:
 				if (nhlen != 24)
 					goto bad_len;
 				nexthop.aid = AID_INET6;
-				memcpy(&nexthop.v6, data + sizeof(u_int64_t),
+				memcpy(&nexthop.v6, data + sizeof(uint64_t),
 				    sizeof(nexthop.v6));
 				break;
 			default:
@@ -775,6 +851,16 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 		}
 
 		while (alen > 0) {
+			if (addpath) {
+				if (alen <= sizeof(pathid)) {
+					printf("bad nlri prefix");
+					return;
+				}
+				memcpy(&pathid, data, sizeof(pathid));
+				pathid = ntohl(pathid);
+				data += sizeof(pathid);
+				alen -= sizeof(pathid);
+			}
 			switch (aid) {
 			case AID_INET6:
 				pos = nlri_get_prefix6(data, alen, &prefix,
@@ -797,6 +883,8 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 				break;
 			}
 			printf(" %s/%u", log_addr(&prefix), prefixlen);
+			if (addpath)
+				printf(" path-id %u", pathid);
 			data += pos;
 			alen -= pos;
 		}
@@ -818,7 +906,7 @@ show_attr(u_char *data, size_t len, struct parse_result *res)
 		break;
 	}
  done:
-	printf("%c", EOL0(res->flags));
+	printf("%c", EOL0(reqflags));
 }
 
 static void
@@ -860,11 +948,14 @@ show_rib_detail(struct ctl_show_rib *r, u_char *asdata, size_t aslen,
 	free(aspath);
 
 	s = fmt_peer(r->descr, &r->remote_addr, -1);
-	printf("    Nexthop %s ", log_addr(&r->exit_nexthop));
-	printf("(via %s) Neighbor %s (", log_addr(&r->true_nexthop), s);
-	free(s);
 	id.s_addr = htonl(r->remote_id);
-	printf("%s)%c", inet_ntoa(id), EOL0(flag0));
+	printf("    Nexthop %s ", log_addr(&r->exit_nexthop));
+	printf("(via %s) Neighbor %s (%s)", log_addr(&r->true_nexthop), s,
+	    inet_ntoa(id));
+	if (r->flags & F_PREF_PATH_ID)
+		printf(" Path-Id: %u", r->path_id);
+	printf("%c", EOL0(flag0));
+	free(s);
 
 	printf("    Origin %s, metric %u, localpref %u, weight %u, ovs %s, ",
 	    fmt_origin(r->origin, 0), r->med, r->local_pref, r->weight,
@@ -958,11 +1049,66 @@ show_rib_hash(struct rde_hashstats *hash)
 }
 
 static void
+show_rib_set(struct ctl_show_set *set)
+{
+	char buf[64];
+
+	if (set->type == ASNUM_SET)
+		snprintf(buf, sizeof(buf), "%7s %7s %6zu",
+		    "-", "-", set->as_cnt);
+	else
+		snprintf(buf, sizeof(buf), "%7zu %7zu %6s",
+		    set->v4_cnt, set->v6_cnt, "-");
+
+	printf("%-6s %-34s %s %11s\n", fmt_set_type(set), set->name,
+	    buf, fmt_monotime(set->lastchange));
+}
+
+static void
+show_rtr(struct ctl_show_rtr *rtr)
+{
+	static int not_first;
+
+	if (not_first)
+		printf("\n");
+	not_first = 1;
+
+	printf("RTR neighbor is %s, port %u\n",
+	    log_addr(&rtr->remote_addr), rtr->remote_port);
+	if (rtr->descr[0])
+		printf(" Description: %s\n", rtr->descr);
+	if (rtr->local_addr.aid != AID_UNSPEC)
+		printf(" Local Address: %s\n", log_addr(&rtr->local_addr));
+	if (rtr->session_id != -1)
+		printf (" Session ID: %d Serial #: %u\n",
+		    rtr->session_id, rtr->serial);
+	printf(" Refresh: %u, Retry: %u, Expire: %u\n",
+	    rtr->refresh, rtr->retry, rtr->expire);
+
+	if (rtr->last_sent_error != NO_ERROR) {
+		printf(" Last sent error: %s\n",
+		  log_rtr_error(rtr->last_sent_error));
+		if (rtr->last_sent_msg[0])
+			printf(" with reason \"%s\"",
+			    log_reason(rtr->last_sent_msg));
+	}
+	if (rtr->last_recv_error != NO_ERROR) {
+		printf("Last received error: %s\n",
+		  log_rtr_error(rtr->last_recv_error));
+		if (rtr->last_recv_msg[0])
+			printf(" with reason \"%s\"",
+			    log_reason(rtr->last_recv_msg));
+	}
+
+	printf("\n");
+}
+
+static void
 show_result(u_int rescode)
 {
 	if (rescode == 0)
 		printf("request processed\n");
-	else if (rescode >
+	else if (rescode >=
 	    sizeof(ctl_res_strerror)/sizeof(ctl_res_strerror[0]))
 		printf("unknown result error code %u\n", rescode);
 	else
@@ -988,6 +1134,8 @@ const struct output show_output = {
 	.rib = show_rib,
 	.rib_mem = show_rib_mem,
 	.rib_hash = show_rib_hash,
+	.set = show_rib_set,
+	.rtr = show_rtr,
 	.result = show_result,
 	.tail = show_tail
 };

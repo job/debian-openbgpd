@@ -1,4 +1,4 @@
-.\" $OpenBSD: bgpd.8,v 1.62 2019/11/10 20:51:53 landry Exp $
+.\" $OpenBSD: bgpd.8,v 1.72 2022/03/31 17:27:29 naddy Exp $
 .\"
 .\" Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: November 10 2019 $
+.Dd $Mdocdate: March 31 2022 $
 .Dt BGPD 8
 .Os
 .Sh NAME
@@ -23,7 +23,7 @@
 .Sh SYNOPSIS
 .Nm bgpd
 .Bk -words
-.Op Fl cdnv
+.Op Fl cdnvV
 .Op Fl D Ar macro Ns = Ns Ar value
 .Op Fl f Ar file
 .Ek
@@ -90,7 +90,7 @@ Comparison of the BGP session type.
 Paths learned over an external (EBGP) session are preferred over those
 learned via an internal (IBGP) session.
 .It
-The path with the lowest local
+The path with the highest local
 .Em weight
 is selected.
 .It
@@ -103,7 +103,7 @@ The path coming from the neighbor with the lowest
 wins.
 If the
 .Em ORIGINATOR_ID
-attribute is present that value will be used in the comparison instead.
+attribute is present, that value will be used in the comparison instead.
 .It
 The path with the shortest
 .Em CLUSTER_LIST
@@ -203,17 +203,23 @@ Configtest mode.
 Only check the configuration file for validity.
 .It Fl v
 Produce more verbose output.
+.It Fl V
+Show the version and exit.
 .El
 .Sh FILES
-.Bl -tag -width "@RUNSTATEDIR@/bgpd.sockXXX" -compact
+.Bl -tag -width "@RUNSTATEDIR@/bgpd.sock.<rdomain>" -compact
 .It Pa @SYSCONFDIR@/bgpd.conf
-default
+Default
 .Nm
-configuration file
-.It Pa @RUNSTATEDIR@/bgpd.sock
-default
+configuration file.
+.It Pa @RUNSTATEDIR@/bgpd.sock.<rdomain>
+Default
 .Nm
-control socket
+control socket, where
+.Ar <rdomain>
+is the routing domain in which
+.Nm
+has been started.
 .El
 .Sh SEE ALSO
 .Xr bgpd.conf 5 ,
@@ -313,14 +319,6 @@ control socket
 .Re
 .Pp
 .Rs
-.%A Q. Vohra
-.%A E. Chen
-.%D May 2007
-.%R RFC 4893
-.%T BGP Support for Four-octet AS Number Space
-.Re
-.Pp
-.Rs
 .%A V. Gill
 .%A J. Heasley
 .%A D. Meyer
@@ -337,6 +335,22 @@ control socket
 .%D February 2009
 .%R RFC 5492
 .%T Capabilities Advertisement with BGP-4
+.Re
+.Pp
+.Rs
+.%A E. Chen
+.%A J. Yuan
+.%D June 2011
+.%R RFC 6286
+.%T Autonomous-System-Wide Unique BGP Identifier for BGP-4
+.Re
+.Pp
+.Rs
+.%A Q. Vohra
+.%A E. Chen
+.%D Dec 2012
+.%R RFC 6793
+.%T BGP Support for Four-Octet Autonomous System (AS) Number Space
 .Re
 .Pp
 .Rs
@@ -368,6 +382,15 @@ control socket
 .Re
 .Pp
 .Rs
+.%A K. Patel
+.%A E. Chen
+.%A B. Venkatachalapathy
+.%D July 2014
+.%R RFC 7313
+.%T Enhanced Route Refresh Capability for BGP-4
+.Re
+.Pp
+.Rs
 .%A W. Kumari
 .%A R. Bush
 .%A H. Schiller
@@ -375,6 +398,14 @@ control socket
 .%D August 2015
 .%R RFC 7607
 .%T Codification of AS 0 Processing
+.Re
+.Pp
+.Rs
+.%A C. Petrie
+.%A T. King
+.%D May 2017
+.%R RFC 8050
+.%T Multi-Threaded Routing Toolkit (MRT) Routing Information Export Format with BGP Additional Path Extensions
 .Re
 .Pp
 .Rs
@@ -409,6 +440,14 @@ control socket
 .Re
 .Pp
 .Rs
+.%A R. Bush
+.%A R. Austein
+.%D September 2017
+.%R RFC 8210
+.%T The Resource Public Key Infrastructure (RPKI) to Router Protocol, Version 1
+.Re
+.Pp
+.Rs
 .%A J. Mauch
 .%A J. Snijders
 .%A G. Hankins
@@ -426,6 +465,14 @@ control socket
 .%D March 2018
 .%R RFC 8326
 .%T Graceful BGP Session Shutdown
+.Re
+.Pp
+.Rs
+.%A E. Chen
+.%A J. Scudder
+.%D July 2021
+.%R RFC 9072
+.%T Extended Optional Parameters Length for BGP OPEN Message
 .Re
 .Sh HISTORY
 The

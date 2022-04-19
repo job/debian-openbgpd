@@ -1,4 +1,4 @@
-/*	$OpenBSD: session.h,v 1.146 2020/05/10 13:38:46 deraadt Exp $ */
+/*	$OpenBSD: session.h,v 1.154 2022/02/06 09:51:19 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -34,7 +34,8 @@
 #define	MSGSIZE_OPEN_MIN		29
 #define	MSGSIZE_UPDATE_MIN		23
 #define	MSGSIZE_KEEPALIVE		MSGSIZE_HEADER
-#define	MSGSIZE_RREFRESH		MSGSIZE_HEADER + 4
+#define	MSGSIZE_RREFRESH		(MSGSIZE_HEADER + 4)
+#define	MSGSIZE_RREFRESH_MIN		MSGSIZE_RREFRESH
 #define	MSG_PROCESS_LIMIT		25
 #define	SESSION_CLEAR_DELAY		5
 
@@ -59,6 +60,7 @@ enum session_events {
 	EVNT_TIMER_CONNRETRY,
 	EVNT_TIMER_HOLDTIME,
 	EVNT_TIMER_KEEPALIVE,
+	EVNT_TIMER_SENDHOLD,
 	EVNT_RCVD_OPEN,
 	EVNT_RCVD_KEEPALIVE,
 	EVNT_RCVD_UPDATE,
@@ -101,41 +103,44 @@ enum suberr_fsm {
 enum opt_params {
 	OPT_PARAM_NONE,
 	OPT_PARAM_AUTH,
-	OPT_PARAM_CAPABILITIES
+	OPT_PARAM_CAPABILITIES,
+	OPT_PARAM_EXT_LEN=255,
 };
 
 enum capa_codes {
-	CAPA_NONE,
-	CAPA_MP,
-	CAPA_REFRESH,
+	CAPA_NONE = 0,
+	CAPA_MP = 1,
+	CAPA_REFRESH = 2,
 	CAPA_RESTART = 64,
-	CAPA_AS4BYTE = 65
+	CAPA_AS4BYTE = 65,
+	CAPA_ADD_PATH = 69,
+	CAPA_ENHANCED_RR = 70,
 };
 
 struct bgp_msg {
 	struct ibuf	*buf;
 	enum msg_type	 type;
-	u_int16_t	 len;
+	uint16_t	 len;
 };
 
 struct msg_header {
-	u_char			 marker[MSGSIZE_HEADER_MARKER];
-	u_int16_t		 len;
-	u_int8_t		 type;
+	u_char		 marker[MSGSIZE_HEADER_MARKER];
+	uint16_t	 len;
+	uint8_t		 type;
 };
 
 struct msg_open {
 	struct msg_header	 header;
-	u_int32_t		 bgpid;
-	u_int16_t		 myas;
-	u_int16_t		 holdtime;
-	u_int8_t		 version;
-	u_int8_t		 optparamlen;
+	uint32_t		 bgpid;
+	uint16_t		 myas;
+	uint16_t		 holdtime;
+	uint8_t			 version;
+	uint8_t			 optparamlen;
 };
 
 struct bgpd_sysdep {
-	u_int8_t		no_pfkey;
-	u_int8_t		no_md5sig;
+	uint8_t			no_pfkey;
+	uint8_t			no_md5sig;
 };
 
 struct ctl_conn {
@@ -145,8 +150,6 @@ struct ctl_conn {
 	int			throttled;
 	int			terminate;
 };
-
-TAILQ_HEAD(ctl_conns, ctl_conn)	ctl_conns;
 
 struct peer_stats {
 	unsigned long long	 msg_rcvd_open;
@@ -159,6 +162,12 @@ struct peer_stats {
 	unsigned long long	 msg_sent_notification;
 	unsigned long long	 msg_sent_keepalive;
 	unsigned long long	 msg_sent_rrefresh;
+	unsigned long long	 refresh_rcvd_req;
+	unsigned long long	 refresh_rcvd_borr;
+	unsigned long long	 refresh_rcvd_eorr;
+	unsigned long long	 refresh_sent_req;
+	unsigned long long	 refresh_sent_borr;
+	unsigned long long	 refresh_sent_eorr;
 	unsigned long long	 prefix_rcvd_update;
 	unsigned long long	 prefix_rcvd_withdraw;
 	unsigned long long	 prefix_rcvd_eor;
@@ -168,12 +177,12 @@ struct peer_stats {
 	time_t			 last_updown;
 	time_t			 last_read;
 	time_t			 last_write;
-	u_int32_t		 prefix_cnt;
-	u_int32_t		 prefix_out_cnt;
-	u_int8_t		 last_sent_errcode;
-	u_int8_t		 last_sent_suberr;
-	u_int8_t		 last_rcvd_errcode;
-	u_int8_t		 last_rcvd_suberr;
+	uint32_t		 prefix_cnt;
+	uint32_t		 prefix_out_cnt;
+	uint8_t			 last_sent_errcode;
+	uint8_t			 last_sent_suberr;
+	uint8_t			 last_rcvd_errcode;
+	uint8_t			 last_rcvd_suberr;
 	char			 last_reason[REASON_LEN];
 };
 
@@ -182,20 +191,24 @@ enum Timer {
 	Timer_ConnectRetry,
 	Timer_Keepalive,
 	Timer_Hold,
+	Timer_SendHold,
 	Timer_IdleHold,
 	Timer_IdleHoldReset,
 	Timer_CarpUndemote,
 	Timer_RestartTimeout,
+	Timer_Rtr_Refresh,
+	Timer_Rtr_Retry,
+	Timer_Rtr_Expire,
 	Timer_Max
 };
 
-struct peer_timer {
-	TAILQ_ENTRY(peer_timer)	entry;
+struct timer {
+	TAILQ_ENTRY(timer)	entry;
 	enum Timer		type;
 	time_t			val;
 };
 
-TAILQ_HEAD(peer_timer_head, peer_timer);
+TAILQ_HEAD(timer_head, timer);
 
 struct peer {
 	struct peer_config	 conf;
@@ -208,15 +221,15 @@ struct peer {
 	}			 capa;
 	struct {
 		struct bgpd_addr	local_addr;
-		u_int32_t		spi_in;
-		u_int32_t		spi_out;
+		uint32_t		spi_in;
+		uint32_t		spi_out;
 		enum auth_method	method;
-		u_int8_t		established;
+		uint8_t			established;
 	}			 auth;
 	struct bgpd_addr	 local;
 	struct bgpd_addr	 local_alt;
 	struct bgpd_addr	 remote;
-	struct peer_timer_head	 timers;
+	struct timer_head	 timers;
 	struct msgbuf		 wbuf;
 	struct ibuf_read	*rbuf;
 	struct peer		*template;
@@ -224,19 +237,19 @@ struct peer {
 	int			 lasterr;
 	u_int			 errcnt;
 	u_int			 IdleHoldTime;
-	u_int32_t		 remote_bgpid;
+	uint32_t		 remote_bgpid;
 	enum session_state	 state;
 	enum session_state	 prev_state;
 	enum reconf_action	 reconf_action;
-	u_int16_t		 short_as;
-	u_int16_t		 holdtime;
-	u_int16_t		 local_port;
-	u_int16_t		 remote_port;
-	u_int8_t		 depend_ok;
-	u_int8_t		 demoted;
-	u_int8_t		 passive;
-	u_int8_t		 throttled;
-	u_int8_t		 rpending;
+	uint16_t		 short_as;
+	uint16_t		 holdtime;
+	uint16_t		 local_port;
+	uint16_t		 remote_port;
+	uint8_t			 depend_ok;
+	uint8_t			 demoted;
+	uint8_t			 passive;
+	uint8_t			 throttled;
+	uint8_t			 rpending;
 };
 
 extern time_t		 pauseaccept;
@@ -260,28 +273,26 @@ int	 prepare_listeners(struct bgpd_config *);
 int	control_check(char *);
 int	control_init(int, char *);
 int	control_listen(int);
+size_t	control_fill_pfds(struct pollfd *, size_t);
 void	control_shutdown(int);
-int	control_dispatch_msg(struct pollfd *, u_int *, struct peer_head *);
+int	control_dispatch_msg(struct pollfd *, struct peer_head *);
 unsigned int	control_accept(int, int);
 
 /* log.c */
-char		*log_fmt_peer(const struct peer_config *);
-void		 log_statechange(struct peer *, enum session_state,
-		    enum session_events);
-void		 log_notification(const struct peer *, u_int8_t, u_int8_t,
-		    u_char *, u_int16_t, const char *);
-void		 log_conn_attempt(const struct peer *, struct sockaddr *,
-		    socklen_t);
+char	*log_fmt_peer(const struct peer_config *);
+void	 log_statechange(struct peer *, enum session_state,
+	    enum session_events);
+void	 log_notification(const struct peer *, uint8_t, uint8_t,
+	    u_char *, uint16_t, const char *);
+void	 log_conn_attempt(const struct peer *, struct sockaddr *,
+	    socklen_t);
 
 /* mrt.c */
-void		 mrt_dump_bgp_msg(struct mrt *, void *, u_int16_t,
-		     struct peer *);
-void		 mrt_dump_state(struct mrt *, u_int16_t, u_int16_t,
-		     struct peer *);
-void		 mrt_done(struct mrt *);
-
-/* parse.y */
-struct bgpd_config *parse_config(char *, struct peer_head *);
+void	 mrt_dump_bgp_msg(struct mrt *, void *, uint16_t,
+	     struct peer *, enum msg_type);
+void	 mrt_dump_state(struct mrt *, uint16_t, uint16_t,
+	     struct peer *);
+void	 mrt_done(struct mrt *);
 
 /* pfkey.c */
 int	pfkey_read(int, struct sadb_msg *);
@@ -298,7 +309,30 @@ void	tcp_md5_del_listener(struct bgpd_config *, struct peer *);
 void	print_config(struct bgpd_config *, struct rib_names *);
 
 /* rde.c */
-void	 rde_main(int, int);
+void	rde_main(int, int);
+
+/* rtr_proto.c */
+struct rtr_session;
+size_t			 rtr_count(void);
+void			 rtr_check_events(struct pollfd *, size_t);
+size_t			 rtr_poll_events(struct pollfd *, size_t, time_t *);
+struct rtr_session	*rtr_new(uint32_t, char *);
+struct rtr_session	*rtr_get(uint32_t);
+void			 rtr_free(struct rtr_session *);
+void			 rtr_open(struct rtr_session *, int);
+struct roa_tree		*rtr_get_roa(struct rtr_session *);
+void			 rtr_config_prep(void);
+void			 rtr_config_merge(void);
+void			 rtr_config_keep(struct rtr_session *);
+void			 rtr_roa_merge(struct roa_tree *);
+void			 rtr_shutdown(void);
+void			 rtr_show(struct rtr_session *, pid_t);
+
+/* rtr.c */
+void	roa_insert(struct roa_tree *, struct roa *);
+void	rtr_main(int, int);
+void	rtr_imsg_compose(int, uint32_t, pid_t, void *, size_t);
+void	rtr_recalc(void);
 
 /* session.c */
 RB_PROTOTYPE(peer_head, peer, entry, peer_compare);
@@ -308,18 +342,18 @@ void		 bgp_fsm(struct peer *, enum session_events);
 int		 session_neighbor_rrefresh(struct peer *p);
 struct peer	*getpeerbydesc(struct bgpd_config *, const char *);
 struct peer	*getpeerbyip(struct bgpd_config *, struct sockaddr *);
-struct peer	*getpeerbyid(struct bgpd_config *, u_int32_t);
+struct peer	*getpeerbyid(struct bgpd_config *, uint32_t);
 int		 peer_matched(struct peer *, struct ctl_neighbor *);
-int		 imsg_ctl_parent(int, u_int32_t, pid_t, void *, u_int16_t);
-int		 imsg_ctl_rde(int, pid_t, void *, u_int16_t);
-void		 session_stop(struct peer *, u_int8_t);
+int		 imsg_ctl_parent(int, uint32_t, pid_t, void *, uint16_t);
+int		 imsg_ctl_rde(int, pid_t, void *, uint16_t);
+void		 session_stop(struct peer *, uint8_t);
 
 /* timer.c */
-struct peer_timer	*timer_get(struct peer *, enum Timer);
-struct peer_timer	*timer_nextisdue(struct peer *, time_t);
-time_t			 timer_nextduein(struct peer *, time_t);
-int			 timer_running(struct peer *, enum Timer, time_t *);
-void			 timer_set(struct peer *, enum Timer, u_int);
-void			 timer_stop(struct peer *, enum Timer);
-void			 timer_remove(struct peer *, enum Timer);
-void			 timer_remove_all(struct peer *);
+struct timer	*timer_get(struct timer_head *, enum Timer);
+struct timer	*timer_nextisdue(struct timer_head *, time_t);
+time_t		 timer_nextduein(struct timer_head *, time_t);
+int		 timer_running(struct timer_head *, enum Timer, time_t *);
+void		 timer_set(struct timer_head *, enum Timer, u_int);
+void		 timer_stop(struct timer_head *, enum Timer);
+void		 timer_remove(struct timer_head *, enum Timer);
+void		 timer_remove_all(struct timer_head *);

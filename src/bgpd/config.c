@@ -1,4 +1,4 @@
-/*	$OpenBSD: config.c,v 1.95 2020/02/14 13:54:31 claudio Exp $ */
+/*	$OpenBSD: config.c,v 1.101 2022/02/23 11:20:35 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004, 2005 Henning Brauer <henning@openbsd.org>
@@ -31,7 +31,7 @@
 #include "session.h"
 #include "log.h"
 
-int		host_ip(const char *, struct bgpd_addr *, u_int8_t *);
+int		host_ip(const char *, struct bgpd_addr *, uint8_t *);
 void		free_networks(struct network_head *);
 
 struct bgpd_config *
@@ -60,6 +60,7 @@ new_config(void)
 	SIMPLEQ_INIT(&conf->rde_originsets);
 	RB_INIT(&conf->roa);
 	SIMPLEQ_INIT(&conf->as_sets);
+	SIMPLEQ_INIT(&conf->rtrs);
 
 	TAILQ_INIT(conf->filters);
 	TAILQ_INIT(conf->listen_addrs);
@@ -117,6 +118,7 @@ free_prefixsets(struct prefixset_head *psh)
 
 	while (!SIMPLEQ_EMPTY(psh)) {
 		ps = SIMPLEQ_FIRST(psh);
+		free_roatree(&ps->roaitems);
 		free_prefixtree(&ps->psitems);
 		SIMPLEQ_REMOVE_HEAD(psh, entry);
 		free(ps);
@@ -146,8 +148,30 @@ free_prefixtree(struct prefixset_tree *p)
 
 	RB_FOREACH_SAFE(psi, prefixset_tree, p, npsi) {
 		RB_REMOVE(prefixset_tree, p, psi);
-		set_free(psi->set);
 		free(psi);
+	}
+}
+
+void
+free_roatree(struct roa_tree *r)
+{
+	struct roa	*roa, *nroa;
+
+	RB_FOREACH_SAFE(roa, roa_tree, r, nroa) {
+		RB_REMOVE(roa_tree, r, roa);
+		free(roa);
+	}
+}
+
+void
+free_rtrs(struct rtr_config_head *rh)
+{
+	struct rtr_config	*r;
+
+	while (!SIMPLEQ_EMPTY(rh)) {
+		r = SIMPLEQ_FIRST(rh);
+		SIMPLEQ_REMOVE_HEAD(rh, entry);
+		free(r);
 	}
 }
 
@@ -166,7 +190,8 @@ free_config(struct bgpd_config *conf)
 	free_rde_prefixsets(&conf->rde_prefixsets);
 	free_rde_prefixsets(&conf->rde_originsets);
 	as_sets_free(&conf->as_sets);
-	free_prefixtree(&conf->roa);
+	free_roatree(&conf->roa);
+	free_rtrs(&conf->rtrs);
 
 	while ((la = TAILQ_FIRST(conf->listen_addrs)) != NULL) {
 		TAILQ_REMOVE(conf->listen_addrs, la, entry);
@@ -230,10 +255,14 @@ merge_config(struct bgpd_config *xconf, struct bgpd_config *conf)
 	mrt_mergeconfig(xconf->mrt, conf->mrt);
 
 	/* switch the roa, first remove the old one */
-	free_prefixtree(&xconf->roa);
+	free_roatree(&xconf->roa);
 	/* then move the RB tree root */
 	RB_ROOT(&xconf->roa) = RB_ROOT(&conf->roa);
 	RB_ROOT(&conf->roa) = NULL;
+
+	/* switch the rtr_configs, first remove the old ones */
+	free_rtrs(&xconf->rtrs);
+	SIMPLEQ_CONCAT(&xconf->rtrs, &conf->rtrs);
 
 	/* switch the prefixsets, first remove the old ones */
 	free_prefixsets(&xconf->prefixsets);
@@ -327,11 +356,11 @@ merge_config(struct bgpd_config *xconf, struct bgpd_config *conf)
 	free_config(conf);
 }
 
-u_int32_t
+uint32_t
 get_bgpid(void)
 {
 	struct ifaddrs		*ifap, *ifa;
-	u_int32_t		 ip = 0, cur, localnet;
+	uint32_t		 ip = 0, cur, localnet;
 
 	localnet = htonl(INADDR_LOOPBACK & IN_CLASSA_NET);
 
@@ -339,7 +368,8 @@ get_bgpid(void)
 		fatal("getifaddrs");
 
 	for (ifa = ifap; ifa; ifa = ifa->ifa_next) {
-		if (ifa->ifa_addr->sa_family != AF_INET)
+		if (ifa->ifa_addr == NULL ||
+		    ifa->ifa_addr->sa_family != AF_INET)
 			continue;
 		cur = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr.s_addr;
 		if ((cur & localnet) == localnet)	/* skip 127/8 */
@@ -353,7 +383,7 @@ get_bgpid(void)
 }
 
 int
-host(const char *s, struct bgpd_addr *h, u_int8_t *len)
+host(const char *s, struct bgpd_addr *h, uint8_t *len)
 {
 	int			 mask = 128;
 	char			*p, *ps;
@@ -387,7 +417,7 @@ host(const char *s, struct bgpd_addr *h, u_int8_t *len)
 }
 
 int
-host_ip(const char *s, struct bgpd_addr *h, u_int8_t *len)
+host_ip(const char *s, struct bgpd_addr *h, uint8_t *len)
 {
 	struct addrinfo		 hints, *res;
 	int			 bits;
@@ -416,30 +446,6 @@ prepare_listeners(struct bgpd_config *conf)
 	struct listen_addr	*la, *next;
 	int			 opt = 1;
 	int			 r = 0;
-
-	if (TAILQ_EMPTY(conf->listen_addrs)) {
-		if ((la = calloc(1, sizeof(struct listen_addr))) == NULL)
-			fatal("setup_listeners calloc");
-		la->fd = -1;
-		la->flags = DEFAULT_LISTENER;
-		la->reconf = RECONF_REINIT;
-		la->sa_len = sizeof(struct sockaddr_in);
-		((struct sockaddr_in *)&la->sa)->sin_family = AF_INET;
-		((struct sockaddr_in *)&la->sa)->sin_addr.s_addr =
-		    htonl(INADDR_ANY);
-		((struct sockaddr_in *)&la->sa)->sin_port = htons(BGP_PORT);
-		TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
-
-		if ((la = calloc(1, sizeof(struct listen_addr))) == NULL)
-			fatal("setup_listeners calloc");
-		la->fd = -1;
-		la->flags = DEFAULT_LISTENER;
-		la->reconf = RECONF_REINIT;
-		la->sa_len = sizeof(struct sockaddr_in6);
-		((struct sockaddr_in6 *)&la->sa)->sin6_family = AF_INET6;
-		((struct sockaddr_in6 *)&la->sa)->sin6_port = htons(BGP_PORT);
-		TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
-	}
 
 	for (la = TAILQ_FIRST(conf->listen_addrs); la != NULL; la = next) {
 		next = TAILQ_NEXT(la, entry);
@@ -536,7 +542,7 @@ expand_networks(struct bgpd_config *c)
 	}
 }
 
-int
+static inline int
 prefixset_cmp(struct prefixset_item *a, struct prefixset_item *b)
 {
 	int i;
@@ -548,22 +554,20 @@ prefixset_cmp(struct prefixset_item *a, struct prefixset_item *b)
 
 	switch (a->p.addr.aid) {
 	case AID_INET:
-		if (ntohl(a->p.addr.v4.s_addr) < ntohl(b->p.addr.v4.s_addr))
-			return (-1);
-		if (ntohl(a->p.addr.v4.s_addr) > ntohl(b->p.addr.v4.s_addr))
-			return (1);
+		i = memcmp(&a->p.addr.v4, &b->p.addr.v4,
+		    sizeof(struct in_addr));
 		break;
 	case AID_INET6:
 		i = memcmp(&a->p.addr.v6, &b->p.addr.v6,
 		    sizeof(struct in6_addr));
-		if (i > 0)
-			return (1);
-		if (i < 0)
-			return (-1);
 		break;
 	default:
 		fatalx("%s: unknown af", __func__);
 	}
+	if (i > 0)
+		return (1);
+	if (i < 0)
+		return (-1);
 	if (a->p.len < b->p.len)
 		return (-1);
 	if (a->p.len > b->p.len)
@@ -580,3 +584,49 @@ prefixset_cmp(struct prefixset_item *a, struct prefixset_item *b)
 }
 
 RB_GENERATE(prefixset_tree, prefixset_item, entry, prefixset_cmp);
+
+int
+roa_cmp(struct roa *a, struct roa *b)
+{
+	int i;
+
+	if (a->aid < b->aid)
+		return (-1);
+	if (a->aid > b->aid)
+		return (1);
+
+	switch (a->aid) {
+	case AID_INET:
+		i = memcmp(&a->prefix.inet, &b->prefix.inet,
+		    sizeof(struct in_addr));
+		break;
+	case AID_INET6:
+		i = memcmp(&a->prefix.inet6, &b->prefix.inet6,
+		    sizeof(struct in6_addr));
+		break;
+	default:
+		fatalx("%s: unknown af", __func__);
+	}
+	if (i > 0)
+		return (1);
+	if (i < 0)
+		return (-1);
+	if (a->prefixlen < b->prefixlen)
+		return (-1);
+	if (a->prefixlen > b->prefixlen)
+		return (1);
+
+	if (a->asnum < b->asnum)
+		return (-1);
+	if (a->asnum > b->asnum)
+		return (1);
+
+	if (a->maxlen < b->maxlen)
+		return (-1);
+	if (a->maxlen > b->maxlen)
+		return (1);
+
+	return (0);
+}
+
+RB_GENERATE(roa_tree, roa, entry, roa_cmp);

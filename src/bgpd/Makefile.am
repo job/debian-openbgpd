@@ -48,7 +48,11 @@ bgpd_SOURCES += mrt.c
 if HAVE_KROUTE
 bgpd_SOURCES += kroute.c
 else
+if HAVE_MNL
+bgpd_SOURCES += kroute-linux.c
+else
 bgpd_SOURCES += kroute-disabled.c
+endif
 endif
 bgpd_SOURCES += control.c
 if HAVE_PFKEY
@@ -81,6 +85,8 @@ bgpd_SOURCES += carp-disabled.c
 endif
 bgpd_SOURCES += timer.c
 bgpd_SOURCES += rde_peer.c
+bgpd_SOURCES += rtr.c
+bgpd_SOURCES += rtr_proto.c
 
 bgpd_DEPENDENCIES = $(man_MANS)
 
@@ -89,6 +95,7 @@ noinst_HEADERS += log.h
 noinst_HEADERS += mrt.h
 noinst_HEADERS += rde.h
 noinst_HEADERS += session.h
+noinst_HEADERS += version.h
 
 bgpd.conf.5: bgpd.conf.5.in
 	$(SED) \

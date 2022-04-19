@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_sets.c,v 1.9 2019/08/05 08:46:55 claudio Exp $ */
+/*	$OpenBSD: rde_sets.c,v 1.11 2022/02/06 09:51:19 claudio Exp $ */
 
 /*
  * Copyright (c) 2018 Claudio Jeker <claudio@openbsd.org>
@@ -93,13 +93,16 @@ as_sets_mark_dirty(struct as_set_head *old, struct as_set_head *new)
 
 	SIMPLEQ_FOREACH(n, new, entry) {
 		if (old == NULL || (o = as_sets_lookup(old, n->name)) == NULL ||
-		    !set_equal(n->set, o->set))
+		    !set_equal(n->set, o->set)) {
 			n->dirty = 1;
+			n->lastchange = getmonotime();
+		} else
+			n->lastchange = o->lastchange;
 	}
 }
 
 int
-as_set_match(const struct as_set *aset, u_int32_t asnum)
+as_set_match(const struct as_set *aset, uint32_t asnum)
 {
 	return set_match(aset->set, asnum) != NULL;
 }
@@ -147,7 +150,7 @@ int
 set_add(struct set_table *set, void *elms, size_t nelms)
 {
 	if (set->max < nelms || set->max - nelms < set->nmemb) {
-		u_int32_t *s;
+		uint32_t *s;
 		size_t new_size;
 
 		if (set->nmemb >= SIZE_MAX - 4096 - nelms) {
@@ -165,7 +168,7 @@ set_add(struct set_table *set, void *elms, size_t nelms)
 		set->max = new_size;
 	}
 
-	memcpy((u_int8_t *)set->set + set->nmemb * set->size, elms,
+	memcpy((uint8_t *)set->set + set->nmemb * set->size, elms,
 	    nelms * set->size);
 	set->nmemb += nelms;
 	rdemem.aset_nmemb += nelms;
@@ -183,8 +186,8 @@ set_get(struct set_table *set, size_t *nelms)
 static int
 set_cmp(const void *ap, const void *bp)
 {
-	const u_int32_t *a = ap;
-	const u_int32_t *b = bp;
+	const uint32_t *a = ap;
+	const uint32_t *b = bp;
 
 	if (*a > *b)
 		return 1;
@@ -202,7 +205,7 @@ set_prep(struct set_table *set)
 }
 
 void *
-set_match(const struct set_table *a, u_int32_t asnum)
+set_match(const struct set_table *a, uint32_t asnum)
 {
 	if (a == NULL)
 		return NULL;
@@ -223,4 +226,10 @@ set_equal(const struct set_table *a, const struct set_table *b)
 	if (memcmp(a->set, b->set, a->nmemb * a->size) != 0)
 		return 0;
 	return 1;
+}
+
+size_t
+set_nmemb(const struct set_table *set)
+{
+	return set->nmemb;
 }

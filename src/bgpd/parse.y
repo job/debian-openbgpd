@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.408.4.1 2020/10/27 20:38:00 bluhm Exp $ */
+/*	$OpenBSD: parse.y,v 1.423 2022/03/15 11:13:48 claudio Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -48,6 +48,8 @@
 #include "rde.h"
 #include "log.h"
 
+#define MACRO_NAME_LEN		128
+
 TAILQ_HEAD(files, file)		 files = TAILQ_HEAD_INITIALIZER(files);
 static struct file {
 	TAILQ_ENTRY(file)	 entry;
@@ -74,6 +76,7 @@ int		 igetc(void);
 int		 lgetc(int);
 void		 lungetc(int);
 int		 findeol(void);
+int		 expand_macro(void);
 
 TAILQ_HEAD(symhead, sym)	 symhead = TAILQ_HEAD_INITIALIZER(symhead);
 struct sym {
@@ -89,17 +92,20 @@ char		*symget(const char *);
 static struct bgpd_config	*conf;
 static struct network_head	*netconf;
 static struct peer_head		*new_peers, *cur_peers;
+static struct rtr_config_head	*cur_rtrs;
 static struct peer		*curpeer;
 static struct peer		*curgroup;
 static struct rde_rib		*currib;
 static struct l3vpn		*curvpn;
 static struct prefixset		*curpset, *curoset;
-static struct prefixset_tree	*curpsitree;
+static struct roa_tree		*curroatree;
+static struct rtr_config	*currtr;
 static struct filter_head	*filter_l;
 static struct filter_head	*peerfilter_l;
 static struct filter_head	*groupfilter_l;
 static struct filter_rule	*curpeer_filter[2];
 static struct filter_rule	*curgroup_filter[2];
+static int			 noexpires;
 
 struct filter_rib_l {
 	struct filter_rib_l	*next;
@@ -158,17 +164,20 @@ int		 parsecommunity(struct community *, int, char *);
 int		 parseextcommunity(struct community *, char *,
 		    char *);
 static int	 new_as_set(char *);
-static void	 add_as_set(u_int32_t);
+static void	 add_as_set(uint32_t);
 static void	 done_as_set(void);
 static struct prefixset	*new_prefix_set(char *, int);
-static void	 add_roa_set(struct prefixset_item *, u_int32_t, u_int8_t);
+static void	 add_roa_set(struct prefixset_item *, uint32_t, uint8_t,
+		    time_t);
+static struct rtr_config	*get_rtr(struct bgpd_addr *);
+static int	 insert_rtr(struct rtr_config *);
 
 typedef struct {
 	union {
 		long long		 number;
 		char			*string;
 		struct bgpd_addr	 addr;
-		u_int8_t		 u8;
+		uint8_t			 u8;
 		struct filter_rib_l	*filter_rib;
 		struct filter_peers_l	*filter_peers;
 		struct filter_match_l	 filter_match;
@@ -179,14 +188,14 @@ typedef struct {
 		struct filter_set_head	*filter_set_head;
 		struct {
 			struct bgpd_addr	prefix;
-			u_int8_t		len;
+			uint8_t			len;
 		}			prefix;
 		struct filter_prefixlen	prefixlen;
 		struct prefixset_item	*prefixset_item;
 		struct {
-			u_int8_t		enc_alg;
+			uint8_t			enc_alg;
+			uint8_t			enc_key_len;
 			char			enc_key[IPSEC_ENC_KEY_LEN];
-			u_int8_t		enc_key_len;
 		}			encspec;
 	} v;
 	int lineno;
@@ -196,11 +205,12 @@ typedef struct {
 
 %token	AS ROUTERID HOLDTIME YMIN LISTEN ON FIBUPDATE FIBPRIORITY RTABLE
 %token	NONE UNICAST VPN RD EXPORT EXPORTTRGT IMPORTTRGT DEFAULTROUTE
-%token	RDE RIB EVALUATE IGNORE COMPARE
+%token	RDE RIB EVALUATE IGNORE COMPARE RTR PORT
 %token	GROUP NEIGHBOR NETWORK
 %token	EBGP IBGP
 %token	LOCALAS REMOTEAS DESCR LOCALADDR MULTIHOP PASSIVE MAXPREFIX RESTART
-%token	ANNOUNCE CAPABILITIES REFRESH AS4BYTE CONNECTRETRY
+%token	ANNOUNCE CAPABILITIES REFRESH AS4BYTE CONNECTRETRY ENHANCED ADDPATH
+%token	SEND RECV
 %token	DEMOTE ENFORCE NEIGHBORAS ASOVERRIDE REFLECTOR DEPEND DOWN
 %token	DUMP IN OUT SOCKET RESTRICTED
 %token	LOG TRANSPARENT
@@ -211,7 +221,7 @@ typedef struct {
 %token	CONNECTED STATIC
 %token	COMMUNITY EXTCOMMUNITY LARGECOMMUNITY DELETE
 %token	PREFIX PREFIXLEN PREFIXSET
-%token	ROASET ORIGINSET OVS
+%token	ROASET ORIGINSET OVS EXPIRES
 %token	ASSET SOURCEAS TRANSITAS PEERAS MAXASLEN MAXASSEQ
 %token	SET LOCALPREF MED METRIC NEXTHOP REJECT BLACKHOLE NOMODIFY SELF
 %token	PREPEND_SELF PREPEND_PEER PFTABLE WEIGHT RTLABEL ORIGIN PRIORITY
@@ -224,7 +234,7 @@ typedef struct {
 %token	<v.number>		NUMBER
 %type	<v.number>		asnumber as4number as4number_any optnumber
 %type	<v.number>		espah family safi restart origincode nettype
-%type	<v.number>		yesno inout restricted validity
+%type	<v.number>		yesno inout restricted validity expires
 %type	<v.string>		string
 %type	<v.addr>		address
 %type	<v.prefix>		prefix addrspec
@@ -252,6 +262,7 @@ grammar		: /* empty */
 		| grammar prefixset '\n'
 		| grammar roa_set '\n'
 		| grammar origin_set '\n'
+		| grammar rtr '\n'
 		| grammar rib '\n'
 		| grammar conf_main '\n'
 		| grammar l3vpn '\n'
@@ -275,7 +286,7 @@ asnumber	: NUMBER			{
 as4number	: STRING			{
 			const char	*errstr;
 			char		*dot;
-			u_int32_t	 uvalh = 0, uval;
+			uint32_t	 uvalh = 0, uval;
 
 			if ((dot = strchr($1,'.')) != NULL) {
 				*dot++ = '\0';
@@ -307,7 +318,7 @@ as4number	: STRING			{
 		| asnumber {
 			if ($1 == AS_TRANS || $1 == 0) {
 				yyerror("AS %u is reserved and may not be used",
-				    (u_int32_t)$1);
+				    (uint32_t)$1);
 				YYERROR;
 			}
 			$$ = $1;
@@ -317,7 +328,7 @@ as4number	: STRING			{
 as4number_any	: STRING			{
 			const char	*errstr;
 			char		*dot;
-			u_int32_t	 uvalh = 0, uval;
+			uint32_t	 uvalh = 0, uval;
 
 			if ((dot = strchr($1,'.')) != NULL) {
 				*dot++ = '\0';
@@ -372,17 +383,25 @@ yesno		:  STRING			{
 
 varset		: STRING '=' string		{
 			char *s = $1;
+			if (strlen($1) >= MACRO_NAME_LEN) {
+				yyerror("macro name to long, max %d characters",
+				    MACRO_NAME_LEN - 1);
+				free($1);
+				free($3);
+				YYERROR;
+			}
+			do {
+				if (isalnum((unsigned char)*s) || *s == '_')
+					continue;
+				yyerror("macro name can only contain "
+					    "alphanumerics and '_'");
+				free($1);
+				free($3);
+				YYERROR;
+			} while (*++s);
+
 			if (cmd_opts & BGPD_OPT_VERBOSE)
 				printf("%s = \"%s\"\n", $1, $3);
-			while (*s++) {
-				if (isspace((unsigned char)*s)) {
-					yyerror("macro name cannot contain "
-					    "whitespace");
-					free($1);
-					free($3);
-					YYERROR;
-				}
-			}
 			if (symset($1, $3, 0) == -1)
 				fatal("cannot store variable");
 			free($1);
@@ -498,9 +517,11 @@ prefixset_item	: prefix prefixlenop			{
 		;
 
 roa_set		: ROASET '{' optnl		{
-			curpsitree = &conf->roa;
+			curroatree = &conf->roa;
+			noexpires = 0;
 		} roa_set_l optnl '}'			{
-			curpsitree = NULL;
+			curroatree = NULL;
+			noexpires = 1;
 		}
 		| ROASET '{' optnl '}'		/* nothing */
 		;
@@ -510,12 +531,13 @@ origin_set	: ORIGINSET STRING '{' optnl		{
 				free($2);
 				YYERROR;
 			}
-			curpsitree = &curoset->psitems;
+			curroatree = &curoset->roaitems;
+			noexpires = 1;
 			free($2);
 		} roa_set_l optnl '}'			{
 			SIMPLEQ_INSERT_TAIL(&conf->originsets, curoset, entry);
 			curoset = NULL;
-			curpsitree = NULL;
+			curroatree = NULL;
 		}
 		| ORIGINSET STRING '{' optnl '}'		{
 			if ((curoset = new_prefix_set($2, 1)) == NULL) {
@@ -525,27 +547,93 @@ origin_set	: ORIGINSET STRING '{' optnl		{
 			free($2);
 			SIMPLEQ_INSERT_TAIL(&conf->originsets, curoset, entry);
 			curoset = NULL;
-			curpsitree = NULL;
+			curroatree = NULL;
 		}
 		;
 
-roa_set_l	: prefixset_item SOURCEAS as4number_any			{
+expires		: /* empty */	{
+			$$ = 0;
+		}
+		| EXPIRES NUMBER	{
+			if (noexpires) {
+				yyerror("syntax error, expires not allowed");
+				YYERROR;
+			}
+			$$ = $2;
+		}
+
+roa_set_l	: prefixset_item SOURCEAS as4number_any	expires		{
 			if ($1->p.len_min != $1->p.len) {
 				yyerror("unsupported prefixlen operation in "
 				    "roa-set");
 				free($1);
 				YYERROR;
 			}
-			add_roa_set($1, $3, $1->p.len_max);
+			add_roa_set($1, $3, $1->p.len_max, $4);
+			free($1);
 		}
-		| roa_set_l comma prefixset_item SOURCEAS as4number_any	{
+		| roa_set_l comma prefixset_item SOURCEAS as4number_any	expires {
 			if ($3->p.len_min != $3->p.len) {
 				yyerror("unsupported prefixlen operation in "
 				    "roa-set");
 				free($3);
 				YYERROR;
 			}
-			add_roa_set($3, $5, $3->p.len_max);
+			add_roa_set($3, $5, $3->p.len_max, $6);
+			free($3);
+		}
+		;
+
+rtr		: RTR address	{
+			currtr = get_rtr(&$2);
+			currtr->remote_port = RTR_PORT;
+			if (insert_rtr(currtr) == -1) {
+				free(currtr);
+				YYERROR;
+			}
+			currtr = NULL;
+		}
+		| RTR address	{
+			currtr = get_rtr(&$2);
+			currtr->remote_port = RTR_PORT;
+		} '{' optnl rtropt_l optnl '}' {
+			if (insert_rtr(currtr) == -1) {
+				free(currtr);
+				YYERROR;
+			}
+			currtr = NULL;
+		}
+		;
+
+rtropt_l	: rtropt
+		| rtropt_l optnl rtropt
+
+rtropt		: DESCR STRING		{
+			if (strlcpy(currtr->descr, $2,
+			    sizeof(currtr->descr)) >=
+			    sizeof(currtr->descr)) {
+				yyerror("descr \"%s\" too long: max %zu",
+				    $2, sizeof(currtr->descr) - 1);
+				free($2);
+				YYERROR;
+			}
+			free($2);
+		}
+		| LOCALADDR address	{
+			if ($2.aid != currtr->remote_addr.aid) {
+				yyerror("Bad address family %s for "
+				    "local-addr", aid2str($2.aid));
+				YYERROR;
+			}
+			currtr->local_addr = $2;
+		}
+		| PORT NUMBER {
+			if ($2 < 1 || $2 > USHRT_MAX) {
+				yyerror("port must be between %u and %u",
+				    1, USHRT_MAX);
+				YYERROR;
+			}
+			currtr->remote_port = $2;
 		}
 		;
 
@@ -597,6 +685,26 @@ conf_main	: AS as4number		{
 			memcpy(&la->sa, sa, la->sa_len);
 			TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
 		}
+		| LISTEN ON address PORT NUMBER	{
+			struct listen_addr	*la;
+			struct sockaddr		*sa;
+
+			if ($5 < 1 || $5 > USHRT_MAX) {
+				yyerror("port must be between %u and %u",
+				    1, USHRT_MAX);
+				YYERROR;
+			}
+
+			if ((la = calloc(1, sizeof(struct listen_addr))) ==
+			    NULL)
+				fatal("parse conf_main listen on calloc");
+
+			la->fd = -1;
+			la->reconf = RECONF_REINIT;
+			sa = addr2sa(&$3, $5, &la->sa_len);
+			memcpy(&la->sa, sa, la->sa_len);
+			TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
+		}
 		| FIBPRIORITY NUMBER		{
 			if ($2 <= RTP_NONE || $2 > RTP_MAX) {
 				yyerror("invalid fib-priority");
@@ -620,6 +728,12 @@ conf_main	: AS as4number		{
 				conf->flags |= BGPD_FLAG_DECISION_TRANS_AS;
 			else
 				conf->flags &= ~BGPD_FLAG_DECISION_TRANS_AS;
+		}
+		| REJECT ASSET yesno	{
+			if ($3 == 1)
+				conf->flags |= BGPD_FLAG_NO_AS_SET;
+			else
+				conf->flags &= ~BGPD_FLAG_NO_AS_SET;
 		}
 		| LOG STRING		{
 			if (!strcmp($2, "updates"))
@@ -724,6 +838,19 @@ conf_main	: AS as4number		{
 				YYERROR;
 			}
 			free($4);
+		}
+		| RDE EVALUATE STRING {
+			if (!strcmp($3, "all"))
+				conf->flags |= BGPD_FLAG_DECISION_ALL_PATHS;
+			else if (!strcmp($3, "default"))
+				conf->flags &= ~BGPD_FLAG_DECISION_ALL_PATHS;
+			else {
+				yyerror("rde evaluate: "
+				    "unknown setting \"%s\"", $3);
+				free($3);
+				YYERROR;
+			}
+			free($3);
 		}
 		| NEXTHOP QUALIFY VIA STRING	{
 			if (!strcmp($4, "bgp"))
@@ -967,7 +1094,7 @@ restricted	: RESTRICTED	{ $$ = 1; }
 		;
 
 address		: STRING		{
-			u_int8_t	len;
+			uint8_t	len;
 
 			if (!host($1, &$$, &len)) {
 				yyerror("could not parse address spec \"%s\"",
@@ -1178,8 +1305,10 @@ neighbor	: {	curpeer = new_peer(); }
 			curpeer_filter[0] = NULL;
 			curpeer_filter[1] = NULL;
 
-			if (neighbor_consistent(curpeer) == -1)
+			if (neighbor_consistent(curpeer) == -1) {
+				free(curpeer);
 				YYERROR;
+			}
 			if (RB_INSERT(peer_head, new_peers, curpeer) != NULL)
 				fatalx("%s: peer tree is corrupt", __func__);
 			curpeer = curgroup;
@@ -1194,11 +1323,13 @@ group		: GROUP string			{
 				yyerror("group name \"%s\" too long: max %zu",
 				    $2, sizeof(curgroup->conf.group) - 1);
 				free($2);
+				free(curgroup);
 				YYERROR;
 			}
 			free($2);
 			if (get_id(curgroup)) {
 				yyerror("get_id failed");
+				free(curgroup);
 				YYERROR;
 			}
 		} '{' groupopts_l '}'		{
@@ -1339,8 +1470,8 @@ peeropts	: REMOTEAS as4number	{
 			curpeer->conf.min_holdtime = $3;
 		}
 		| ANNOUNCE family safi {
-			u_int8_t	aid, safi;
-			u_int16_t	afi;
+			uint8_t		aid, safi;
+			uint16_t	afi;
 
 			if ($3 == SAFI_NONE) {
 				for (aid = 0; aid < AID_MAX; aid++) {
@@ -1363,11 +1494,24 @@ peeropts	: REMOTEAS as4number	{
 		| ANNOUNCE REFRESH yesno {
 			curpeer->conf.capabilities.refresh = $3;
 		}
+		| ANNOUNCE ENHANCED REFRESH yesno {
+			curpeer->conf.capabilities.enhanced_rr = $4;
+		}
 		| ANNOUNCE RESTART yesno {
 			curpeer->conf.capabilities.grestart.restart = $3;
 		}
 		| ANNOUNCE AS4BYTE yesno {
 			curpeer->conf.capabilities.as4byte = $3;
+		}
+		| ANNOUNCE ADDPATH RECV yesno {
+			int8_t *ap = curpeer->conf.capabilities.add_path;
+			uint8_t i;
+
+			for (i = 0; i < AID_MAX; i++)
+				if ($4)
+					*ap++ |= CAPA_AP_RECV;
+				else
+					*ap++ &= ~CAPA_AP_RECV;
 		}
 		| EXPORT NONE {
 			curpeer->conf.export_type = EXPORT_NONE;
@@ -1463,8 +1607,8 @@ peeropts	: REMOTEAS as4number	{
 				curpeer->conf.auth.method = AUTH_IPSEC_IKE_AH;
 		}
 		| IPSEC espah inout SPI NUMBER STRING STRING encspec {
-			u_int32_t	auth_alg;
-			u_int8_t	keylen;
+			uint32_t	auth_alg;
+			uint8_t		keylen;
 
 			if (curpeer->conf.auth.method &&
 			    (((curpeer->conf.auth.spi_in && $3 == 1) ||
@@ -1656,6 +1800,33 @@ peeropts	: REMOTEAS as4number	{
 				YYERROR;
 			}
 			free($2);
+		}
+		| REJECT ASSET yesno	{
+			if ($3 == 1)
+				curpeer->conf.flags |= PEERFLAG_NO_AS_SET;
+			else
+				curpeer->conf.flags &= ~PEERFLAG_NO_AS_SET;
+		}
+		| PORT NUMBER {
+			if ($2 < 1 || $2 > USHRT_MAX) {
+				yyerror("port must be between %u and %u",
+				    1, USHRT_MAX);
+				YYERROR;
+			}
+			curpeer->conf.remote_port = $2;
+		}
+		| RDE EVALUATE STRING {
+			if (!strcmp($3, "all"))
+				curpeer->conf.flags |= PEERFLAG_EVALUATE_ALL;
+			else if (!strcmp($3, "default"))
+				curpeer->conf.flags &= ~PEERFLAG_EVALUATE_ALL;
+			else {
+				yyerror("rde evaluate: "
+				    "unknown setting \"%s\"", $3);
+				free($3);
+				YYERROR;
+			}
+			free($3);
 		}
 		;
 
@@ -2617,7 +2788,7 @@ filter_set_opt	: LOCALPREF NUMBER		{
 			free($2);
 		}
 		| community delete STRING	{
-			u_int8_t f1, f2, f3;
+			uint8_t f1, f2, f3;
 
 			if (($$ = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
@@ -2779,6 +2950,7 @@ lookup(char *s)
 		{ "AS",			AS},
 		{ "IPv4",		IPV4},
 		{ "IPv6",		IPV6},
+		{ "add-path",		ADDPATH},
 		{ "ah",			AH},
 		{ "allow",		ALLOW},
 		{ "announce",		ANNOUNCE},
@@ -2802,8 +2974,10 @@ lookup(char *s)
 		{ "dump",		DUMP},
 		{ "ebgp",		EBGP},
 		{ "enforce",		ENFORCE},
+		{ "enhanced",		ENHANCED },
 		{ "esp",		ESP},
 		{ "evaluate",		EVALUATE},
+		{ "expires",		EXPIRES},
 		{ "export",		EXPORT},
 		{ "export-target",	EXPORTTRGT},
 		{ "ext-community",	EXTCOMMUNITY},
@@ -2854,6 +3028,7 @@ lookup(char *s)
 		{ "password",		PASSWORD},
 		{ "peer-as",		PEERAS},
 		{ "pftable",		PFTABLE},
+		{ "port",		PORT},
 		{ "prefix",		PREFIX},
 		{ "prefix-set",		PREFIXSET},
 		{ "prefixlen",		PREFIXLEN},
@@ -2864,6 +3039,7 @@ lookup(char *s)
 		{ "quick",		QUICK},
 		{ "rd",			RD},
 		{ "rde",		RDE},
+		{ "recv",		RECV},
 		{ "refresh",		REFRESH },
 		{ "reject",		REJECT},
 		{ "remote-as",		REMOTEAS},
@@ -2875,7 +3051,9 @@ lookup(char *s)
 		{ "router-id",		ROUTERID},
 		{ "rtable",		RTABLE},
 		{ "rtlabel",		RTLABEL},
+		{ "rtr",		RTR},
 		{ "self",		SELF},
+		{ "send",		SEND},
 		{ "set",		SET},
 		{ "socket",		SOCKET },
 		{ "source-as",		SOURCEAS},
@@ -3008,10 +3186,46 @@ findeol(void)
 }
 
 int
+expand_macro(void)
+{
+	char	 buf[MACRO_NAME_LEN];
+	char	*p, *val;
+	int	 c;
+
+	p = buf;
+	while (1) {
+		if ((c = lgetc('$')) == EOF)
+			return (ERROR);
+		if (p + 1 >= buf + sizeof(buf) - 1) {
+			yyerror("macro name too long");
+			return (ERROR);
+		}
+		if (isalnum(c) || c == '_') {
+			*p++ = c;
+			continue;
+		}
+		*p = '\0';
+		lungetc(c);
+		break;
+	}
+	val = symget(buf);
+	if (val == NULL)
+		yyerror("macro '%s' not defined", buf);
+	p = val + strlen(val) - 1;
+	lungetc(DONE_EXPAND);
+	while (p >= val) {
+		lungetc((unsigned char)*p);
+		p--;
+	}
+	lungetc(START_EXPAND);
+	return (0);
+}
+
+int
 yylex(void)
 {
-	u_char	 buf[8096];
-	u_char	*p, *val;
+	char	 buf[8096];
+	char	*p;
 	int	 quotec, next, c;
 	int	 token;
 
@@ -3025,34 +3239,9 @@ top:
 		while ((c = lgetc(0)) != '\n' && c != EOF)
 			; /* nothing */
 	if (c == '$' && !expanding) {
-		while (1) {
-			if ((c = lgetc(0)) == EOF)
-				return (0);
-
-			if (p + 1 >= buf + sizeof(buf) - 1) {
-				yyerror("string too long");
-				return (findeol());
-			}
-			if (isalnum(c) || c == '_') {
-				*p++ = c;
-				continue;
-			}
-			*p = '\0';
-			lungetc(c);
-			break;
-		}
-		val = symget(buf);
-		if (val == NULL) {
-			yyerror("macro '%s' not defined", buf);
-			return (findeol());
-		}
-		p = val + strlen(val) - 1;
-		lungetc(DONE_EXPAND);
-		while (p >= val) {
-			lungetc(*p);
-			p--;
-		}
-		lungetc(START_EXPAND);
+		c = expand_macro();
+		if (c != 0)
+			return (c);
 		goto top;
 	}
 
@@ -3145,8 +3334,8 @@ top:
 		} else {
 nodigits:
 			while (p > buf + 1)
-				lungetc(*--p);
-			c = *--p;
+				lungetc((unsigned char)*--p);
+			c = (unsigned char)*--p;
 			if (c == '-')
 				return (c);
 		}
@@ -3160,7 +3349,13 @@ nodigits:
 
 	if (isalnum(c) || c == ':' || c == '_' || c == '*') {
 		do {
-			*p++ = c;
+			if (c == '$' && !expanding) {
+				c = expand_macro();
+				if (c != 0)
+					return (c);
+			} else
+				*p++ = c;
+
 			if ((size_t)(p-buf) >= sizeof(buf)) {
 				yyerror("string too long");
 				return (findeol());
@@ -3273,7 +3468,7 @@ init_config(struct bgpd_config *c)
 }
 
 struct bgpd_config *
-parse_config(char *filename, struct peer_head *ph)
+parse_config(char *filename, struct peer_head *ph, struct rtr_config_head *rh)
 {
 	struct sym		*sym, *next;
 	struct rde_rib		*rr;
@@ -3297,6 +3492,7 @@ parse_config(char *filename, struct peer_head *ph)
 	curgroup = NULL;
 
 	cur_peers = ph;
+	cur_rtrs = rh;
 	new_peers = &conf->peers;
 	netconf = &conf->networks;
 
@@ -3363,28 +3559,55 @@ errors:
 
 		free_config(conf);
 		return (NULL);
-	} else {
-		/* update clusterid in case it was not set explicitly */
-		if ((conf->flags & BGPD_FLAG_REFLECTOR) && conf->clusterid == 0)
-			conf->clusterid = conf->bgpid;
-
-		/*
-		 * Concatenate filter list and static group and peer filtersets
-		 * together. Static group sets come first then peer sets
-		 * last normal filter rules.
-		 */
-		TAILQ_CONCAT(conf->filters, groupfilter_l, entry);
-		TAILQ_CONCAT(conf->filters, peerfilter_l, entry);
-		TAILQ_CONCAT(conf->filters, filter_l, entry);
-
-		optimize_filters(conf->filters);
-
-		free(filter_l);
-		free(peerfilter_l);
-		free(groupfilter_l);
-
-		return (conf);
 	}
+
+	/* Create default listeners if none where specified. */
+	if (TAILQ_EMPTY(conf->listen_addrs)) {
+		struct listen_addr *la;
+
+		if ((la = calloc(1, sizeof(struct listen_addr))) == NULL)
+			fatal("setup_listeners calloc");
+		la->fd = -1;
+		la->flags = DEFAULT_LISTENER;
+		la->reconf = RECONF_REINIT;
+		la->sa_len = sizeof(struct sockaddr_in);
+		((struct sockaddr_in *)&la->sa)->sin_family = AF_INET;
+		((struct sockaddr_in *)&la->sa)->sin_addr.s_addr =
+		    htonl(INADDR_ANY);
+		((struct sockaddr_in *)&la->sa)->sin_port = htons(BGP_PORT);
+		TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
+
+		if ((la = calloc(1, sizeof(struct listen_addr))) == NULL)
+			fatal("setup_listeners calloc");
+		la->fd = -1;
+		la->flags = DEFAULT_LISTENER;
+		la->reconf = RECONF_REINIT;
+		la->sa_len = sizeof(struct sockaddr_in6);
+		((struct sockaddr_in6 *)&la->sa)->sin6_family = AF_INET6;
+		((struct sockaddr_in6 *)&la->sa)->sin6_port = htons(BGP_PORT);
+		TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
+	}
+
+	/* update clusterid in case it was not set explicitly */
+	if ((conf->flags & BGPD_FLAG_REFLECTOR) && conf->clusterid == 0)
+		conf->clusterid = conf->bgpid;
+
+	/*
+	 * Concatenate filter list and static group and peer filtersets
+	 * together. Static group sets come first then peer sets
+	 * last normal filter rules.
+	 */
+	TAILQ_CONCAT(conf->filters, groupfilter_l, entry);
+	TAILQ_CONCAT(conf->filters, peerfilter_l, entry);
+	TAILQ_CONCAT(conf->filters, filter_l, entry);
+
+	optimize_filters(conf->filters);
+
+	free(filter_l);
+	free(peerfilter_l);
+	free(groupfilter_l);
+
+	return (conf);
 }
 
 int
@@ -3459,7 +3682,29 @@ symget(const char *nam)
 }
 
 static int
-getcommunity(char *s, int large, u_int32_t *val, u_int32_t *flag)
+cmpcommunity(struct community *a, struct community *b)
+{
+	if (a->flags > b->flags)
+		return 1;
+	if (a->flags < b->flags)
+		return -1;
+	if (a->data1 > b->data1)
+		return 1;
+	if (a->data1 < b->data1)
+		return -1;
+	if (a->data2 > b->data2)
+		return 1;
+	if (a->data2 < b->data2)
+		return -1;
+	if (a->data3 > b->data3)
+		return 1;
+	if (a->data3 < b->data3)
+		return -1;
+	return 0;
+}
+
+static int
+getcommunity(char *s, int large, uint32_t *val, uint32_t *flag)
 {
 	long long	 max = USHRT_MAX;
 	const char	*errstr;
@@ -3487,8 +3732,8 @@ getcommunity(char *s, int large, u_int32_t *val, u_int32_t *flag)
 }
 
 static void
-setcommunity(struct community *c, u_int32_t as, u_int32_t data,
-    u_int32_t asflag, u_int32_t dataflag)
+setcommunity(struct community *c, uint32_t as, uint32_t data,
+    uint32_t asflag, uint32_t dataflag)
 {
 	c->flags = COMMUNITY_TYPE_BASIC;
 	c->flags |= asflag << 8;
@@ -3502,7 +3747,7 @@ static int
 parselargecommunity(struct community *c, char *s)
 {
 	char *p, *q;
-	u_int32_t dflag1, dflag2, dflag3;
+	uint32_t dflag1, dflag2, dflag3;
 
 	if ((p = strchr(s, ':')) == NULL) {
 		yyerror("Bad community syntax");
@@ -3531,7 +3776,7 @@ int
 parsecommunity(struct community *c, int type, char *s)
 {
 	char *p;
-	u_int32_t as, data, asflag, dataflag;
+	uint32_t as, data, asflag, dataflag;
 
 	if (type == COMMUNITY_TYPE_LARGE)
 		return parselargecommunity(c, s);
@@ -3597,12 +3842,12 @@ parsesubtype(char *name, int *type, int *subtype)
 }
 
 static int
-parseextvalue(int type, char *s, u_int32_t *v, u_int32_t *flag)
+parseextvalue(int type, char *s, uint32_t *v, uint32_t *flag)
 {
 	const char	*errstr;
 	char		*p;
 	struct in_addr	 ip;
-	u_int32_t	 uvalh, uval;
+	uint32_t	 uvalh, uval;
 
 	if (type != -1) {
 		/* nothing */
@@ -3680,8 +3925,8 @@ parseextcommunity(struct community *c, char *t, char *s)
 {
 	const struct ext_comm_pairs *cp;
 	char		*p, *ep;
-	u_int64_t	 ullval;
-	u_int32_t	 uval, uval2, dflag1 = 0, dflag2 = 0;
+	uint64_t	 ullval;
+	uint32_t	 uval, uval2, dflag1 = 0, dflag2 = 0;
 	int		 type = 0, subtype = 0;
 
 	if (strcmp(t, "*") == 0 && strcmp(s, "*") == 0) {
@@ -3794,7 +4039,7 @@ struct peer *
 alloc_peer(void)
 {
 	struct peer	*p;
-	u_int8_t	 i;
+	uint8_t		 i;
 
 	if ((p = calloc(1, sizeof(struct peer))) == NULL)
 		fatal("new_peer");
@@ -3812,9 +4057,14 @@ alloc_peer(void)
 	p->conf.capabilities.as4byte = 1;
 	p->conf.local_as = conf->as;
 	p->conf.local_short_as = conf->short_as;
+	p->conf.remote_port = BGP_PORT;
 
 	if (conf->flags & BGPD_FLAG_DECISION_TRANS_AS)
 		p->conf.flags |= PEERFLAG_TRANS_AS;
+	if (conf->flags & BGPD_FLAG_DECISION_ALL_PATHS)
+		p->conf.flags |= PEERFLAG_EVALUATE_ALL;
+	if (conf->flags & BGPD_FLAG_NO_AS_SET)
+		p->conf.flags |= PEERFLAG_NO_AS_SET;
 
 	return (p);
 }
@@ -3828,15 +4078,7 @@ new_peer(void)
 
 	if (curgroup != NULL) {
 		memcpy(p, curgroup, sizeof(struct peer));
-		if (strlcpy(p->conf.group, curgroup->conf.group,
-		    sizeof(p->conf.group)) >= sizeof(p->conf.group))
-			fatalx("new_peer group strlcpy");
-		if (strlcpy(p->conf.descr, curgroup->conf.descr,
-		    sizeof(p->conf.descr)) >= sizeof(p->conf.descr))
-			fatalx("new_peer descr strlcpy");
 		p->conf.groupid = curgroup->conf.id;
-		p->conf.local_as = curgroup->conf.local_as;
-		p->conf.local_short_as = curgroup->conf.local_short_as;
 	}
 	return (p);
 }
@@ -3875,6 +4117,7 @@ add_mrtconfig(enum mrt_type type, char *name, int timeout, struct peer *p,
 		fatal("add_mrtconfig");
 
 	n->type = type;
+	n->state = MRT_STATE_OPEN;
 	if (strlcpy(MRT2MC(n)->name, name, sizeof(MRT2MC(n)->name)) >=
 	    sizeof(MRT2MC(n)->name)) {
 		yyerror("filename \"%s\" too long: max %zu",
@@ -3889,7 +4132,7 @@ add_mrtconfig(enum mrt_type type, char *name, int timeout, struct peer *p,
 			n->group_id = p->conf.id;
 		} else {
 			n->peer_id = p->conf.id;
-			n->group_id = 0;
+			n->group_id = p->conf.groupid;
 		}
 	}
 	if (rib) {
@@ -3985,7 +4228,7 @@ find_prefixset(char *name, struct prefixset_head *p)
 int
 get_id(struct peer *newpeer)
 {
-	static u_int32_t id = PEER_ID_STATIC_MIN;
+	static uint32_t id = PEER_ID_STATIC_MIN;
 	struct peer	*p = NULL;
 
 	/* check if the peer already existed before */
@@ -3993,7 +4236,9 @@ get_id(struct peer *newpeer)
 		/* neighbor */
 		if (cur_peers)
 			RB_FOREACH(p, peer_head, cur_peers)
-				if (memcmp(&p->conf.remote_addr,
+				if (p->conf.remote_masklen ==
+				    newpeer->conf.remote_masklen &&
+				    memcmp(&p->conf.remote_addr,
 				    &newpeer->conf.remote_addr,
 				    sizeof(p->conf.remote_addr)) == 0)
 					break;
@@ -4026,7 +4271,7 @@ get_id(struct peer *newpeer)
 int
 merge_prefixspec(struct filter_prefix *p, struct filter_prefixlen *pl)
 {
-	u_int8_t max_len = 0;
+	uint8_t max_len = 0;
 
 	switch (p->addr.aid) {
 	case AID_INET:
@@ -4202,6 +4447,7 @@ int
 neighbor_consistent(struct peer *p)
 {
 	struct bgpd_addr *local_addr;
+	struct peer *xp;
 
 	switch (p->conf.remote_addr.aid) {
 	case AID_INET:
@@ -4260,6 +4506,21 @@ neighbor_consistent(struct peer *p)
 		return (-1);
 	}
 
+	/* check for duplicate peer definitions */
+	RB_FOREACH(xp, peer_head, new_peers)
+		if (xp->conf.remote_masklen ==
+		    p->conf.remote_masklen &&
+		    memcmp(&xp->conf.remote_addr,
+		    &p->conf.remote_addr,
+		    sizeof(p->conf.remote_addr)) == 0)
+			break;
+	if (xp != NULL) {
+		char *descr = log_fmt_peer(&p->conf);
+		yyerror("duplicate %s", descr);
+		free(descr);
+		return (-1);
+	}
+
 	return (0);
 }
 
@@ -4277,16 +4538,17 @@ filterset_add(struct filter_set_head *sh, struct filter_set *s)
 			switch (s->type) {
 			case ACTION_SET_COMMUNITY:
 			case ACTION_DEL_COMMUNITY:
-				if (memcmp(&s->action.community,
-				    &t->action.community,
-				    sizeof(s->action.community)) < 0) {
+				switch (cmpcommunity(&s->action.community,
+				    &t->action.community)) {
+				case -1:
 					TAILQ_INSERT_BEFORE(t, s, entry);
 					return;
-				} else if (memcmp(&s->action.community,
-				    &t->action.community,
-				    sizeof(s->action.community)) == 0)
+				case 0:
 					break;
-				continue;
+				case 1:
+					continue;
+				}
+				break;
 			case ACTION_SET_NEXTHOP:
 				/* only last nexthop per AF matters */
 				if (s->action.nexthop.aid <
@@ -4454,7 +4716,7 @@ new_as_set(char *name)
 		return -1;
 	}
 
-	aset = as_sets_new(&conf->as_sets, name, 0, sizeof(u_int32_t));
+	aset = as_sets_new(&conf->as_sets, name, 0, sizeof(uint32_t));
 	if (aset == NULL)
 		fatal(NULL);
 
@@ -4463,7 +4725,7 @@ new_as_set(char *name)
 }
 
 static void
-add_as_set(u_int32_t as)
+add_as_set(uint32_t as)
 {
 	if (curset == NULL)
 		fatalx("%s: bad mojo jojo", __func__);
@@ -4486,7 +4748,7 @@ new_prefix_set(char *name, int is_roa)
 	struct prefixset *pset;
 
 	if (is_roa) {
-		type = "roa-set";
+		type = "origin-set";
 		sets = &conf->originsets;
 	}
 
@@ -4504,38 +4766,94 @@ new_prefix_set(char *name, int is_roa)
 		return NULL;
 	}
 	RB_INIT(&pset->psitems);
+	RB_INIT(&pset->roaitems);
 	return pset;
 }
 
 static void
-add_roa_set(struct prefixset_item *npsi, u_int32_t as, u_int8_t max)
+add_roa_set(struct prefixset_item *npsi, uint32_t as, uint8_t max,
+    time_t expires)
 {
-	struct prefixset_item	*psi;
-	struct roa_set rs, *rsp;
+	struct roa *roa, *r;
 
-	/* no prefixlen option in this tree */
-	npsi->p.op = OP_NONE;
-	npsi->p.len_max = npsi->p.len_min = npsi->p.len;
-	psi = RB_INSERT(prefixset_tree, curpsitree, npsi);
-	if (psi == NULL)
-		psi = npsi;
-	else
-		free(npsi);
+	if ((roa = calloc(1, sizeof(*roa))) == NULL)
+		fatal("add_roa_set");
 
-	if (psi->set == NULL)
-		if ((psi->set = set_new(1, sizeof(rs))) == NULL)
-			fatal("set_new");
-
-	/* merge sets with same key, longer maxlen wins */
-	if ((rsp = set_match(psi->set, as)) != NULL) {
-		if (rsp->maxlen < max)
-			rsp->maxlen = max;
-	} else  {
-		rs.as = as;
-		rs.maxlen = max;
-		if (set_add(psi->set, &rs, 1) != 0)
-			fatal("as_set_new");
-		/* prep data so that set_match works */
-		set_prep(psi->set);
+	roa->aid = npsi->p.addr.aid;
+	roa->prefixlen = npsi->p.len;
+	roa->maxlen = max;
+	roa->asnum = as;
+	roa->expires = expires;
+	switch (roa->aid) {
+	case AID_INET:
+		roa->prefix.inet = npsi->p.addr.v4;
+		break;
+	case AID_INET6:
+		roa->prefix.inet6 = npsi->p.addr.v6;
+		break;
+	default:
+		fatalx("Bad address family for roa_set address");
 	}
+
+	r = RB_INSERT(roa_tree, curroatree, roa);
+	if (r != NULL) {
+		/* just ignore duplicates */
+		if (r->expires != 0 && expires != 0 && expires > r->expires)
+			r->expires = expires;
+		free(roa);
+	}
+}
+
+static struct rtr_config *
+get_rtr(struct bgpd_addr *addr)
+{
+	struct rtr_config *n;
+
+	n = calloc(1, sizeof(*n));
+	if (n == NULL) {
+		yyerror("out of memory");
+		return NULL;
+	}
+
+	n->remote_addr = *addr;
+	strlcpy(n->descr, log_addr(addr), sizeof(currtr->descr));
+
+	return n;
+}
+
+static int
+insert_rtr(struct rtr_config *new)
+{
+	static uint32_t id;
+	struct rtr_config *r;
+
+	if (id == UINT32_MAX) {
+		yyerror("out of rtr session IDs");
+		return -1;
+	}
+
+	SIMPLEQ_FOREACH(r, &conf->rtrs, entry)
+		if (memcmp(&r->remote_addr, &new->remote_addr,
+		    sizeof(r->remote_addr)) == 0 &&
+		    r->remote_port == new->remote_port) {
+			yyerror("duplicate rtr session to %s:%u",
+			    log_addr(&new->remote_addr), new->remote_port);
+			return -1;
+		}
+
+	if (cur_rtrs)
+		SIMPLEQ_FOREACH(r, cur_rtrs, entry)
+			if (memcmp(&r->remote_addr, &new->remote_addr,
+			    sizeof(r->remote_addr)) == 0 &&
+			    r->remote_port == new->remote_port) {
+				new->id = r->id;
+				break;
+			}
+
+	if (new->id == 0)
+		new->id = ++id;
+
+	SIMPLEQ_INSERT_TAIL(&conf->rtrs, currtr, entry);
+
+	return 0;
 }

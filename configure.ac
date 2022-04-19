@@ -114,7 +114,7 @@ AC_CHECK_FUNCS([setregid setresgid setreuid setresuid])
 AC_CHECK_FUNCS([strlcat strlcpy strtonum sysconf])
 AC_CHECK_FUNCS([pledge unveil])
 AC_CHECK_FUNCS([SipHash])
-AC_CHECK_FUNCS([getrtable])
+AC_CHECK_FUNCS([getdtablecount getrtable])
 AC_CHECK_FUNCS([strnvis])
 
 dnl NetBSD added an strnvis and unfortunately made it incompatible with the
@@ -134,6 +134,7 @@ if test "x$ac_cv_func_strnvis" = "xyes"; then
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <vis.h>
 static void sighandler(int sig) { _exit(1); }
   ]], [[
@@ -165,6 +166,9 @@ AC_SEARCH_LIBS([SHA512Init], [md])
 AC_SEARCH_LIBS([inet_net_pton],[resolv])
 AC_SEARCH_LIBS([fmt_scaled], [util])
 
+# check for libmnl
+AC_SEARCH_LIBS([mnl_socket_recvfrom], [mnl])
+
 AC_CHECK_FUNCS([arc4random clock_gettime ibuf_open SHA512Init])
 AC_CHECK_FUNCS([inet_net_pton fmt_scaled])
 
@@ -195,11 +199,13 @@ AM_CONDITIONAL([HAVE_SYSCONF], [test "x$ac_cv_func_sysconf" = xyes])
 AM_CONDITIONAL([HAVE_PLEDGE], [test "x$ac_cv_func_pledge" = xyes])
 AM_CONDITIONAL([HAVE_UNVEIL], [test "x$ac_cv_func_unveil" = xyes])
 AM_CONDITIONAL([HAVE_SIPHASH], [test "x$ac_cv_func_SipHash" = xyes])
+AM_CONDITIONAL([HAVE_GETDTABLECOUNT], [test "x$ac_cv_func_getdtablecount" = xyes])
 AM_CONDITIONAL([HAVE_GETRTABLE], [test "x$ac_cv_func_getrtable" = xyes])
 AM_CONDITIONAL([HAVE_STRNVIS], [test "x$ac_cv_func_strnvis" = xyes])
 AM_CONDITIONAL([BROKEN_STRNVIS], [test "x$ac_cv_broken_strnvis" = xyes])
 AM_CONDITIONAL([HAVE_INET_NET_PTON], [test "x$ac_cv_func_inet_net_pton" = xyes])
 AM_CONDITIONAL([HAVE_FMT_SCALED], [test "x$ac_cv_func_fmt_scaled" = xyes])
+AM_CONDITIONAL([HAVE_MNL], [test "x$ac_cv_search_mnl_socket_recvfrom" = "x-lmnl"])
 
 # overrides for arc4random implementations with known issues
 AM_CONDITIONAL([HAVE_ARC4RANDOM],
