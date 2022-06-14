@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde.h,v 1.251 2022/03/22 10:53:08 claudio Exp $ */
+/*	$OpenBSD: rde.h,v 1.253 2022/05/31 09:45:33 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Claudio Jeker <claudio@openbsd.org> and
@@ -452,6 +452,7 @@ int		 aspath_lenmatch(struct aspath *, enum aslen_spec, u_int);
 /* rde_community.c */
 int	community_match(struct rde_community *, struct community *,
 	    struct rde_peer *);
+int	community_count(struct rde_community *, uint8_t type);
 int	community_set(struct rde_community *, struct community *,
 	    struct rde_peer *);
 void	community_delete(struct rde_community *, struct community *,
@@ -459,7 +460,7 @@ void	community_delete(struct rde_community *, struct community *,
 
 int	community_add(struct rde_community *, int, void *, size_t);
 int	community_large_add(struct rde_community *, int, void *, size_t);
-int	community_ext_add(struct rde_community *, int, void *, size_t);
+int	community_ext_add(struct rde_community *, int, int, void *, size_t);
 
 int	community_write(struct rde_community *, void *, uint16_t);
 int	community_large_write(struct rde_community *, void *, uint16_t);

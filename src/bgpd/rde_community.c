@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_community.c,v 1.4 2022/02/06 09:51:19 claudio Exp $ */
+/*	$OpenBSD: rde_community.c,v 1.6 2022/05/31 09:45:33 claudio Exp $ */
 
 /*
  * Copyright (c) 2019 Claudio Jeker <claudio@openbsd.org>
@@ -61,7 +61,7 @@ static int
 fc2c(struct community *fc, struct rde_peer *peer, struct community *c,
     struct community *m)
 {
-	short type;
+	int type;
 	uint8_t subtype;
 
 	memset(c, 0, sizeof(*c));
@@ -98,9 +98,7 @@ fc2c(struct community *fc, struct rde_peer *peer, struct community *c,
 		type = (int32_t)fc->data3 >> 8;
 		subtype = fc->data3 & 0xff;
 
-		c->data3 = type << 8 | subtype;
-		switch (type) {
-		case -1:
+		if (type == -1) {
 			/* special case for 'ext-community rt *' */
 			if ((fc->flags >> 8 & 0xff) != COMMUNITY_ANY ||
 			    m == NULL)
@@ -110,6 +108,10 @@ fc2c(struct community *fc, struct rde_peer *peer, struct community *c,
 			m->data2 = 0;
 			m->data3 = 0xff;
 			return 0;
+		}
+
+		c->data3 = type << 8 | subtype;
+		switch (type & EXT_COMMUNITY_VALUE) {
 		case EXT_COMMUNITY_TRANS_TWO_AS:
 			if ((fc->flags >> 8 & 0xff) == COMMUNITY_ANY)
 				break;
@@ -141,7 +143,6 @@ fc2c(struct community *fc, struct rde_peer *peer, struct community *c,
 			return 0;
 		case EXT_COMMUNITY_TRANS_OPAQUE:
 		case EXT_COMMUNITY_TRANS_EVPN:
-		case EXT_COMMUNITY_NON_TRANS_OPAQUE:
 			if ((fc->flags >> 8 & 0xff) == COMMUNITY_ANY)
 				break;
 
@@ -244,10 +245,9 @@ insert_community(struct rde_community *comm, struct community *c)
 }
 
 static int
-non_transitive_community(struct community *c)
+non_transitive_ext_community(struct community *c)
 {
-	if ((uint8_t)c->flags == COMMUNITY_TYPE_EXT &&
-	    !((ntohl(c->data1) >> 24) & EXT_COMMUNITY_NON_TRANSITIVE))
+	if ((c->data3 >> 8) & EXT_COMMUNITY_NON_TRANSITIVE)
 		return 1;
 	return 0;
 }
@@ -280,6 +280,45 @@ struct rde_peer *peer)
 		}
 		return 0;
 	}
+}
+
+/*
+ * Count the number of communities of type type.
+ */
+int
+community_count(struct rde_community *comm, uint8_t type)
+{
+	size_t l;
+	int count = 0;
+	
+	/* use the fact that the array is ordered by type */
+	switch (type) {
+	case COMMUNITY_TYPE_BASIC:
+		for (l = 0; l < comm->nentries; l++) {
+			if ((uint8_t)comm->communities[l].flags == type)
+				count++;
+			else
+				break;
+		}
+		break;
+	case COMMUNITY_TYPE_EXT:
+		for (l = 0; l < comm->nentries; l++) {
+			if ((uint8_t)comm->communities[l].flags == type)
+				count++;
+			else if ((uint8_t)comm->communities[l].flags > type)
+				break;
+		}
+		break;
+	case COMMUNITY_TYPE_LARGE:
+		for (l = comm->nentries; l > 0; l--) {
+			if ((uint8_t)comm->communities[l - 1].flags == type)
+				count++;
+			else
+				break;
+		}
+		break;
+	}
+	return count;
 }
 
 /*
@@ -404,7 +443,8 @@ community_large_add(struct rde_community *comm, int flags, void *buf,
 }
 
 int
-community_ext_add(struct rde_community *comm, int flags, void *buf, size_t len)
+community_ext_add(struct rde_community *comm, int flags, int ebgp,
+    void *buf, size_t len)
 {
 	struct community set = { .flags = COMMUNITY_TYPE_EXT };
 	uint8_t *b = buf, type;
@@ -422,11 +462,13 @@ community_ext_add(struct rde_community *comm, int flags, void *buf, size_t len)
 
 		c = be64toh(c);
 		type = c >> 56;
-		switch (type) {
+		/* filter out non-transitive ext communuties from ebgp peers */
+		if (ebgp && (type & EXT_COMMUNITY_NON_TRANSITIVE))
+			continue;
+		switch (type & EXT_COMMUNITY_VALUE) {
 		case EXT_COMMUNITY_TRANS_TWO_AS:
 		case EXT_COMMUNITY_TRANS_OPAQUE:
 		case EXT_COMMUNITY_TRANS_EVPN:
-		case EXT_COMMUNITY_NON_TRANS_OPAQUE:
 			set.data1 = c >> 32 & 0xffff;
 			set.data2 = c;
 			break;
@@ -564,7 +606,7 @@ community_ext_write(struct rde_community *comm, int ebgp, void *buf,
 	for (l = 0; l < comm->nentries; l++)
 		if ((uint8_t)comm->communities[l].flags ==
 		    COMMUNITY_TYPE_EXT && !(ebgp &&
-		    non_transitive_community(&comm->communities[l])))
+		    non_transitive_ext_community(&comm->communities[l])))
 			n++;
 
 	if (n == 0)
@@ -580,13 +622,12 @@ community_ext_write(struct rde_community *comm, int ebgp, void *buf,
 	for (l = 0; l < comm->nentries; l++) {
 		cp = comm->communities + l;
 		if ((uint8_t)cp->flags == COMMUNITY_TYPE_EXT && !(ebgp &&
-		    non_transitive_community(cp))) {
+		    non_transitive_ext_community(cp))) {
 			ext = (uint64_t)cp->data3 << 48;
-			switch (cp->data3 >> 8) {
+			switch ((cp->data3 >> 8) & EXT_COMMUNITY_VALUE) {
 			case EXT_COMMUNITY_TRANS_TWO_AS:
 			case EXT_COMMUNITY_TRANS_OPAQUE:
 			case EXT_COMMUNITY_TRANS_EVPN:
-			case EXT_COMMUNITY_NON_TRANS_OPAQUE:
 				ext |= ((uint64_t)cp->data1 & 0xffff) << 32;
 				ext |= (uint64_t)cp->data2;
 				break;
@@ -672,11 +713,10 @@ community_writebuf(struct ibuf *buf, struct rde_community *comm)
 				continue;
 
 			ext = (uint64_t)cp->data3 << 48;
-			switch (cp->data3 >> 8) {
+			switch ((cp->data3 >> 8) & EXT_COMMUNITY_VALUE) {
 			case EXT_COMMUNITY_TRANS_TWO_AS:
 			case EXT_COMMUNITY_TRANS_OPAQUE:
 			case EXT_COMMUNITY_TRANS_EVPN:
-			case EXT_COMMUNITY_NON_TRANS_OPAQUE:
 				ext |= ((uint64_t)cp->data1 & 0xffff) << 32;
 				ext |= (uint64_t)cp->data2;
 				break;
@@ -919,7 +959,7 @@ community_to_rd(struct community *fc, uint64_t *community)
 	if (fc2c(fc, NULL, &c, NULL) == -1)
 		return -1;
 
-	switch (c.data3 >> 8) {
+	switch ((c.data3 >> 8) & EXT_COMMUNITY_VALUE) {
 	case EXT_COMMUNITY_TRANS_TWO_AS:
 		rd = (0ULL << 48);
 		rd |= ((uint64_t)c.data1 & 0xffff) << 32;
