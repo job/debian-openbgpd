@@ -1,4 +1,4 @@
-/*	$OpenBSD: bgpd.h,v 1.422 2022/03/21 10:15:34 claudio Exp $ */
+/*	$OpenBSD: bgpd.h,v 1.428 2022/06/09 16:45:19 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -100,7 +100,6 @@
 #define	F_CTL_ADJ_IN		0x2000	/* only set on requests */
 #define	F_CTL_ADJ_OUT		0x4000	/* only set on requests */
 #define	F_CTL_BEST		0x8000
-#define	F_RTLABEL		0x10000
 #define	F_CTL_SSV		0x20000	/* only used by bgpctl */
 #define	F_CTL_INVALID		0x40000 /* only set on requests */
 #define	F_CTL_OVS_VALID		0x80000
@@ -999,7 +998,7 @@ struct filter_peers {
 #define EXT_COMMUNITY_FLAG_VALID	0x01
 
 struct ext_comm_pairs {
-	short		type;
+	uint8_t		type;
 	uint8_t		subtype;
 	const char	*subname;
 };
@@ -1063,6 +1062,9 @@ struct filter_match {
 	struct filter_prefixset		prefixset;
 	struct filter_originset		originset;
 	struct filter_ovs		ovs;
+	int				maxcomm;
+	int				maxextcomm;
+	int				maxlargecomm;
 };
 
 struct filter_rule {
@@ -1291,25 +1293,23 @@ int		roa_cmp(struct roa *, struct roa *);
 RB_PROTOTYPE(roa_tree, roa, entry, roa_cmp);
 
 /* kroute.c */
-int		 kr_init(int *);
-int		 ktable_update(u_int, char *, int, uint8_t);
+int		 kr_init(int *, uint8_t);
+int		 ktable_update(u_int, char *, int);
 void		 ktable_preload(void);
-void		 ktable_postload(uint8_t);
+void		 ktable_postload(void);
 int		 ktable_exists(u_int, u_int *);
-int		 kr_change(u_int, struct kroute_full *,  uint8_t);
-int		 kr_delete(u_int, struct kroute_full *, uint8_t);
+int		 kr_change(u_int, struct kroute_full *);
+int		 kr_delete(u_int, struct kroute_full *);
 int		 kr_flush(u_int);
-void		 kr_shutdown(uint8_t, u_int);
-void		 kr_fib_couple(u_int, uint8_t);
-void		 kr_fib_couple_all(uint8_t);
-void		 kr_fib_decouple(u_int, uint8_t);
-void		 kr_fib_decouple_all(uint8_t);
-void		 kr_fib_update_prio_all(uint8_t);
-int		 kr_dispatch_msg(u_int rdomain);
-int		 kr_nexthop_add(uint32_t, struct bgpd_addr *,
-		    struct bgpd_config *);
-void		 kr_nexthop_delete(uint32_t, struct bgpd_addr *,
-		    struct bgpd_config *);
+void		 kr_shutdown(void);
+void		 kr_fib_couple(u_int);
+void		 kr_fib_couple_all(void);
+void		 kr_fib_decouple(u_int);
+void		 kr_fib_decouple_all(void);
+void		 kr_fib_prio_set(uint8_t);
+int		 kr_dispatch_msg(void);
+int		 kr_nexthop_add(uint32_t, struct bgpd_addr *);
+void		 kr_nexthop_delete(uint32_t, struct bgpd_addr *);
 void		 kr_show_route(struct imsg *);
 void		 kr_ifinfo(char *);
 void		 kr_net_reload(u_int, uint64_t, struct network_head *);
@@ -1409,7 +1409,7 @@ const char	*log_in6addr(const struct in6_addr *);
 const char	*log_sockaddr(struct sockaddr *, socklen_t);
 const char	*log_as(uint32_t);
 const char	*log_rd(uint64_t);
-const char	*log_ext_subtype(short, uint8_t);
+const char	*log_ext_subtype(int, uint8_t);
 const char	*log_reason(const char *);
 const char	*log_rtr_error(enum rtr_error);
 int		 aspath_snprint(char *, size_t, void *, uint16_t);

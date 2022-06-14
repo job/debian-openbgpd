@@ -262,11 +262,11 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-noinst_HEADERS = net/pfkeyv2.h net/route.h netinet/in.h \
-	netinet/ip_ipsp.h sys/_null.h sys/queue.h sys/socket.h \
-	sys/time.h sys/tree.h sys/types.h endian.h imsg.h sha2.h \
-	sha2_openbsd.h siphash.h stdlib.h string.h unistd.h util.h \
-	vis.h
+noinst_HEADERS = linux/rtnetlink.h net/pfkeyv2.h net/route.h \
+	netinet/in.h netinet/ip_ipsp.h sys/_null.h sys/queue.h \
+	sys/socket.h sys/time.h sys/tree.h sys/types.h endian.h imsg.h \
+	sha2.h sha2_openbsd.h siphash.h stdlib.h string.h unistd.h \
+	util.h vis.h
 all: all-am
 
 .SUFFIXES:

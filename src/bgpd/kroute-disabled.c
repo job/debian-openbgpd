@@ -189,13 +189,10 @@ knexthop_clear(struct ktable *kt)
 }
 
 int
-kr_nexthop_add(u_int rtableid, struct bgpd_addr *addr, struct bgpd_config *conf)
+kr_nexthop_add(u_int rtableid, struct bgpd_addr *addr)
 {
 	struct ktable		*kt;
 	struct knexthop_node	*h;
-
-	if (rtableid == 0)
-		rtableid = conf->default_tableid;
 
 	if ((kt = ktable_get(rtableid)) == NULL) {
 		log_warnx("%s: non-existent rtableid %d", __func__, rtableid);
@@ -219,14 +216,10 @@ kr_nexthop_add(u_int rtableid, struct bgpd_addr *addr, struct bgpd_config *conf)
 }
 
 void
-kr_nexthop_delete(u_int rtableid, struct bgpd_addr *addr,
-    struct bgpd_config *conf)
+kr_nexthop_delete(u_int rtableid, struct bgpd_addr *addr)
 {
 	struct ktable		*kt;
 	struct knexthop_node	*kn;
-
-	if (rtableid == 0)
-		rtableid = conf->default_tableid;
 
 	if ((kt = ktable_get(rtableid)) == NULL) {
 		log_warnx("%s: non-existent rtableid %d", __func__,
@@ -343,9 +336,9 @@ knexthop_send_update(struct knexthop_node *kn)
 }
 
 int
-kr_init(int *fd)
+kr_init(int *fd, uint8_t fib_prio)
 {
-	struct ktable	*kt = &krt;;
+	struct ktable	*kt = &krt;
 
 	/* initialize structure ... */
 	strlcpy(kt->descr, "rdomain_0", sizeof(kt->descr));
@@ -363,50 +356,50 @@ kr_init(int *fd)
 }
 
 void
-kr_shutdown(uint8_t fib_prio, u_int rdomain)
+kr_shutdown(void)
 {
 	knexthop_clear(&krt);
 }
 
 void
-kr_fib_couple(u_int rtableid, uint8_t fib_prio)
+kr_fib_couple(u_int rtableid)
 {
 }
 
 void
-kr_fib_couple_all(uint8_t fib_prio)
+kr_fib_couple_all(void)
 {
 }
 
 void
-kr_fib_decouple(u_int rtableid, uint8_t fib_prio)
+kr_fib_decouple(u_int rtableid)
 {
 }
 
 void
-kr_fib_decouple_all(uint8_t fib_prio)
+kr_fib_decouple_all(void)
 {
 }
 
 void
-kr_fib_update_prio_all(uint8_t fib_prio)
+kr_fib_prio_set(uint8_t prio)
 {
 }
 
 int
-kr_dispatch_msg(u_int rdomain)
+kr_dispatch_msg(void)
 {
 	return (0);
 }
 
 int
-kr_change(u_int rtableid, struct kroute_full *kl, uint8_t fib_prio)
+kr_change(u_int rtableid, struct kroute_full *kl)
 {
 	return (0);
 }
 
 int
-kr_delete(u_int rtableid, struct kroute_full *kl, uint8_t fib_prio)
+kr_delete(u_int rtableid, struct kroute_full *kl)
 {
 	return (0);
 }
@@ -661,13 +654,13 @@ ktable_get(u_int rtableid)
 }
 
 static void
-ktable_free(u_int rtableid, uint8_t fib_prio)
+ktable_free(u_int rtableid)
 {
 	fatalx("%s not implemented", __func__);
 }
 
 int
-ktable_update(u_int rtableid, char *name, int flags, uint8_t fib_prio)
+ktable_update(u_int rtableid, char *name, int flags)
 {
 	struct ktable	*kt;
 
@@ -706,7 +699,7 @@ ktable_preload(void)
 }
 
 void
-ktable_postload(uint8_t fib_prio)
+ktable_postload(void)
 {
 	struct ktable	*kt;
 	struct network	*n, *xn;
@@ -716,7 +709,7 @@ ktable_postload(uint8_t fib_prio)
 		if ((kt = ktable_get(i - 1)) == NULL)
 			continue;
 		if (kt->state == RECONF_DELETE) {
-			ktable_free(i - 1, fib_prio);
+			ktable_free(i - 1);
 			continue;
 		} else if (kt->state == RECONF_REINIT)
 			kt->fib_sync = kt->fib_conf;

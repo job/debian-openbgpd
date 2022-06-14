@@ -1,4 +1,4 @@
-/*	$OpenBSD: bgpd.c,v 1.242 2022/02/06 09:51:19 claudio Exp $ */
+/*	$OpenBSD: bgpd.c,v 1.245 2022/06/09 16:45:19 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -273,7 +273,7 @@ main(int argc, char *argv[])
 	imsg_init(ibuf_rde, pipe_m2r[0]);
 	imsg_init(ibuf_rtr, pipe_m2roa[0]);
 	mrt_init(ibuf_rde, ibuf_se);
-	if (kr_init(&rfd) == -1)
+	if (kr_init(&rfd, conf->fib_priority) == -1)
 		quit = 1;
 	keyfd = pfkey_init();
 
@@ -388,7 +388,7 @@ BROKEN	if (pledge("stdio rpath wpath cpath fattr unix route recvfd sendfd",
 		}
 
 		if (pfd[PFD_SOCK_ROUTE].revents & POLLIN) {
-			if (kr_dispatch_msg(conf->default_tableid) == -1)
+			if (kr_dispatch_msg() == -1)
 				quit = 1;
 		}
 
@@ -460,7 +460,7 @@ BROKEN	if (pledge("stdio rpath wpath cpath fattr unix route recvfd sendfd",
 
 	/* cleanup kernel data structures */
 	carp_demote_shutdown();
-	kr_shutdown(conf->fib_priority, conf->default_tableid);
+	kr_shutdown();
 	pftable_clear_all();
 
 	RB_FOREACH(p, peer_head, &conf->peers)
@@ -627,9 +627,8 @@ send_config(struct bgpd_config *conf)
 	/* RIBs for the RDE */
 	while ((rr = SIMPLEQ_FIRST(&ribnames))) {
 		SIMPLEQ_REMOVE_HEAD(&ribnames, entry);
-		if (ktable_update(rr->rtableid, rr->name, rr->flags,
-		    conf->fib_priority) == -1) {
-			log_warnx("failed to load rdomain %d",
+		if (ktable_update(rr->rtableid, rr->name, rr->flags) == -1) {
+			log_warnx("failed to load routing table %d",
 			    rr->rtableid);
 			return (-1);
 		}
@@ -745,9 +744,9 @@ send_config(struct bgpd_config *conf)
 
 	while ((vpn = SIMPLEQ_FIRST(&conf->l3vpns)) != NULL) {
 		SIMPLEQ_REMOVE_HEAD(&conf->l3vpns, entry);
-		if (ktable_update(vpn->rtableid, vpn->descr, vpn->flags,
-		    conf->fib_priority) == -1) {
-			log_warnx("failed to load rdomain %d",
+		if (ktable_update(vpn->rtableid, vpn->descr, vpn->flags) ==
+		    -1) {
+			log_warnx("failed to load routing table %d",
 			    vpn->rtableid);
 			return (-1);
 		}
@@ -801,6 +800,7 @@ dispatch_imsg(struct imsgbuf *ibuf, int idx, struct bgpd_config *conf)
 	struct peer		*p;
 	struct rtr_config	*r;
 	ssize_t			 n;
+	u_int			 rtableid;
 	int			 rv, verbose;
 
 	rv = 0;
@@ -818,8 +818,7 @@ dispatch_imsg(struct imsgbuf *ibuf, int idx, struct bgpd_config *conf)
 			else if (imsg.hdr.len != IMSG_HEADER_SIZE +
 			    sizeof(struct kroute_full))
 				log_warnx("wrong imsg len");
-			else if (kr_change(imsg.hdr.peerid, imsg.data,
-			    conf->fib_priority))
+			else if (kr_change(imsg.hdr.peerid, imsg.data))
 				rv = -1;
 			break;
 		case IMSG_KROUTE_DELETE:
@@ -828,8 +827,7 @@ dispatch_imsg(struct imsgbuf *ibuf, int idx, struct bgpd_config *conf)
 			else if (imsg.hdr.len != IMSG_HEADER_SIZE +
 			    sizeof(struct kroute_full))
 				log_warnx("wrong imsg len");
-			else if (kr_delete(imsg.hdr.peerid, imsg.data,
-			    conf->fib_priority))
+			else if (kr_delete(imsg.hdr.peerid, imsg.data))
 				rv = -1;
 			break;
 		case IMSG_KROUTE_FLUSH:
@@ -846,9 +844,11 @@ dispatch_imsg(struct imsgbuf *ibuf, int idx, struct bgpd_config *conf)
 			else if (imsg.hdr.len != IMSG_HEADER_SIZE +
 			    sizeof(struct bgpd_addr))
 				log_warnx("wrong imsg len");
-			else if (kr_nexthop_add(imsg.hdr.peerid, imsg.data,
-			    conf) == -1)
-				rv = -1;
+			else {
+				rtableid = conf->default_tableid;
+				if (kr_nexthop_add(rtableid, imsg.data) == -1)
+					rv = -1;
+			}
 			break;
 		case IMSG_NEXTHOP_REMOVE:
 			if (idx != PFD_PIPE_RDE)
@@ -856,9 +856,10 @@ dispatch_imsg(struct imsgbuf *ibuf, int idx, struct bgpd_config *conf)
 			else if (imsg.hdr.len != IMSG_HEADER_SIZE +
 			    sizeof(struct bgpd_addr))
 				log_warnx("wrong imsg len");
-			else
-				kr_nexthop_delete(imsg.hdr.peerid, imsg.data,
-				    conf);
+			else {
+				rtableid = conf->default_tableid;
+				kr_nexthop_delete(rtableid, imsg.data);
+			}
 			break;
 		case IMSG_PFTABLE_ADD:
 			if (idx != PFD_PIPE_RDE)
@@ -916,15 +917,13 @@ dispatch_imsg(struct imsgbuf *ibuf, int idx, struct bgpd_config *conf)
 			if (idx != PFD_PIPE_SESSION)
 				log_warnx("couple request not from SE");
 			else
-				kr_fib_couple(imsg.hdr.peerid,
-				    conf->fib_priority);
+				kr_fib_couple(imsg.hdr.peerid);
 			break;
 		case IMSG_CTL_FIB_DECOUPLE:
 			if (idx != PFD_PIPE_SESSION)
 				log_warnx("decouple request not from SE");
 			else
-				kr_fib_decouple(imsg.hdr.peerid,
-				    conf->fib_priority);
+				kr_fib_decouple(imsg.hdr.peerid);
 			break;
 		case IMSG_CTL_KROUTE:
 		case IMSG_CTL_KROUTE_ADDR:
@@ -975,7 +974,7 @@ dispatch_imsg(struct imsgbuf *ibuf, int idx, struct bgpd_config *conf)
 				    0, -1, NULL, 0);
 
 				/* finally fix kroute information */
-				ktable_postload(conf->fib_priority);
+				ktable_postload();
 
 				/* redistribute list needs to be reloaded too */
 				kr_reload();

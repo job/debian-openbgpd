@@ -105,16 +105,16 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 sbin_PROGRAMS = bgpd$(EXEEXT)
-@HAVE_KROUTE_TRUE@am__append_1 = kroute.c
-@HAVE_KROUTE_FALSE@@HAVE_MNL_TRUE@am__append_2 = kroute-linux.c
-@HAVE_KROUTE_FALSE@@HAVE_MNL_FALSE@am__append_3 = kroute-disabled.c
-@HAVE_PFKEY_TRUE@am__append_4 = pfkey.c
-@HAVE_LINUX_TCPMD5_TRUE@@HAVE_PFKEY_FALSE@am__append_5 = pfkey-linux.c
-@HAVE_LINUX_TCPMD5_FALSE@@HAVE_PFKEY_FALSE@am__append_6 = pfkey-disabled.c
-@HAVE_PFTABLE_TRUE@am__append_7 = pftable.c
-@HAVE_PFTABLE_FALSE@am__append_8 = pftable-disabled.c
-@HAVE_CARP_TRUE@am__append_9 = carp.c
-@HAVE_CARP_FALSE@am__append_10 = carp-disabled.c
+@HOST_OPENBSD_TRUE@am__append_1 = kroute.c
+@HAVE_MNL_TRUE@@HOST_OPENBSD_FALSE@am__append_2 = kroute-linux.c
+@HAVE_MNL_FALSE@@HOST_OPENBSD_FALSE@am__append_3 = kroute-disabled.c
+@HOST_OPENBSD_TRUE@am__append_4 = pfkey.c
+@HAVE_LINUX_TCPMD5_TRUE@@HOST_OPENBSD_FALSE@am__append_5 = pfkey-linux.c
+@HAVE_LINUX_TCPMD5_FALSE@@HOST_OPENBSD_FALSE@am__append_6 = pfkey-disabled.c
+@HOST_OPENBSD_TRUE@am__append_7 = pftable.c
+@HOST_OPENBSD_FALSE@am__append_8 = pftable-disabled.c
+@HOST_OPENBSD_TRUE@am__append_9 = carp.c
+@HOST_OPENBSD_FALSE@am__append_10 = carp-disabled.c
 subdir = src/bgpd
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -138,17 +138,16 @@ am__bgpd_SOURCES_DIST = bgpd.c session.c log.c logmsg.c parse.y \
 	rde_community.c printconf.c rde_filter.c rde_sets.c rde_trie.c \
 	pftable.c pftable-disabled.c name2id.c util.c carp.c \
 	carp-disabled.c timer.c rde_peer.c rtr.c rtr_proto.c
-@HAVE_KROUTE_TRUE@am__objects_1 = bgpd-kroute.$(OBJEXT)
-@HAVE_KROUTE_FALSE@@HAVE_MNL_TRUE@am__objects_2 =  \
-@HAVE_KROUTE_FALSE@@HAVE_MNL_TRUE@	bgpd-kroute-linux.$(OBJEXT)
-@HAVE_KROUTE_FALSE@@HAVE_MNL_FALSE@am__objects_3 = bgpd-kroute-disabled.$(OBJEXT)
-@HAVE_PFKEY_TRUE@am__objects_4 = bgpd-pfkey.$(OBJEXT)
-@HAVE_LINUX_TCPMD5_TRUE@@HAVE_PFKEY_FALSE@am__objects_5 = bgpd-pfkey-linux.$(OBJEXT)
-@HAVE_LINUX_TCPMD5_FALSE@@HAVE_PFKEY_FALSE@am__objects_6 = bgpd-pfkey-disabled.$(OBJEXT)
-@HAVE_PFTABLE_TRUE@am__objects_7 = bgpd-pftable.$(OBJEXT)
-@HAVE_PFTABLE_FALSE@am__objects_8 = bgpd-pftable-disabled.$(OBJEXT)
-@HAVE_CARP_TRUE@am__objects_9 = bgpd-carp.$(OBJEXT)
-@HAVE_CARP_FALSE@am__objects_10 = bgpd-carp-disabled.$(OBJEXT)
+@HOST_OPENBSD_TRUE@am__objects_1 = bgpd-kroute.$(OBJEXT)
+@HAVE_MNL_TRUE@@HOST_OPENBSD_FALSE@am__objects_2 = bgpd-kroute-linux.$(OBJEXT)
+@HAVE_MNL_FALSE@@HOST_OPENBSD_FALSE@am__objects_3 = bgpd-kroute-disabled.$(OBJEXT)
+@HOST_OPENBSD_TRUE@am__objects_4 = bgpd-pfkey.$(OBJEXT)
+@HAVE_LINUX_TCPMD5_TRUE@@HOST_OPENBSD_FALSE@am__objects_5 = bgpd-pfkey-linux.$(OBJEXT)
+@HAVE_LINUX_TCPMD5_FALSE@@HOST_OPENBSD_FALSE@am__objects_6 = bgpd-pfkey-disabled.$(OBJEXT)
+@HOST_OPENBSD_TRUE@am__objects_7 = bgpd-pftable.$(OBJEXT)
+@HOST_OPENBSD_FALSE@am__objects_8 = bgpd-pftable-disabled.$(OBJEXT)
+@HOST_OPENBSD_TRUE@am__objects_9 = bgpd-carp.$(OBJEXT)
+@HOST_OPENBSD_FALSE@am__objects_10 = bgpd-carp-disabled.$(OBJEXT)
 am_bgpd_OBJECTS = bgpd-bgpd.$(OBJEXT) bgpd-session.$(OBJEXT) \
 	bgpd-log.$(OBJEXT) bgpd-logmsg.$(OBJEXT) bgpd-parse.$(OBJEXT) \
 	bgpd-config.$(OBJEXT) bgpd-rde.$(OBJEXT) \

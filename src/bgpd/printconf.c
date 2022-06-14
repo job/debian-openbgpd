@@ -1,4 +1,4 @@
-/*	$OpenBSD: printconf.c,v 1.150 2022/02/23 11:20:35 claudio Exp $	*/
+/*	$OpenBSD: printconf.c,v 1.152 2022/05/31 09:45:33 claudio Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -123,7 +123,7 @@ void
 print_community(struct community *c)
 {
 	struct in_addr addr;
-	short type;
+	int type;
 	uint8_t subtype;
 
 	switch ((uint8_t)c->flags) {
@@ -924,6 +924,13 @@ print_rule(struct bgpd_config *conf, struct filter_rule *r)
 			print_community(c);
 		}
 	}
+
+	if (r->match.maxcomm != 0)
+		printf("max-communities %d ", r->match.maxcomm - 1);
+	if (r->match.maxextcomm != 0)
+		printf("max-ext-communities %d ", r->match.maxextcomm - 1);
+	if (r->match.maxlargecomm != 0)
+		printf("max-large-communities %d ", r->match.maxlargecomm - 1);
 
 	print_set(&r->set);
 
