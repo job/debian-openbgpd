@@ -1,4 +1,4 @@
-/*	$OpenBSD: bgpctl.c,v 1.276 2022/03/21 10:16:23 claudio Exp $ */
+/*	$OpenBSD: bgpctl.c,v 1.280 2022/07/07 12:17:57 claudio Exp $ */
 
 /*
  * Copyright (c) 2003 Henning Brauer <henning@openbsd.org>
@@ -575,22 +575,17 @@ fmt_auth_method(enum auth_method method)
 	}
 }
 
-#define TF_BUFS	8
-#define TF_LEN	9
+#define TF_LEN	16
 
 const char *
 fmt_timeframe(time_t t)
 {
-	char		*buf;
-	static char	 tfbuf[TF_BUFS][TF_LEN];	/* ring buffer */
-	static int	 idx = 0;
+	static char	 buf[TF_LEN];
 	unsigned int	 sec, min, hrs, day;
-	unsigned long long	week;
+	unsigned long long	 week;
 
-	buf = tfbuf[idx++];
-	if (idx == TF_BUFS)
-		idx = 0;
-
+	if (t < 0)
+		t = 0;
 	week = t;
 
 	sec = week % 60;
@@ -602,7 +597,9 @@ fmt_timeframe(time_t t)
 	day = week % 7;
 	week /= 7;
 
-	if (week > 0)
+	if (week >= 1000)
+		snprintf(buf, TF_LEN, "%02lluw", week);
+	else if (week > 0)
 		snprintf(buf, TF_LEN, "%02lluw%01ud%02uh", week, day, hrs);
 	else if (day > 0)
 		snprintf(buf, TF_LEN, "%01ud%02uh%02um", day, hrs, min);
@@ -633,14 +630,12 @@ fmt_fib_flags(uint16_t flags)
 	else
 		strlcpy(buf, "*", sizeof(buf));
 
-	if (flags & F_BGPD_INSERTED)
+	if (flags & F_BGPD)
 		strlcat(buf, "B", sizeof(buf));
 	else if (flags & F_CONNECTED)
 		strlcat(buf, "C", sizeof(buf));
 	else if (flags & F_STATIC)
 		strlcat(buf, "S", sizeof(buf));
-	else if (flags & F_DYNAMIC)
-		strlcat(buf, "D", sizeof(buf));
 	else
 		strlcat(buf, " ", sizeof(buf));
 
@@ -680,7 +675,7 @@ fmt_origin(uint8_t origin, int sum)
 }
 
 const char *
-fmt_flags(uint8_t flags, int sum)
+fmt_flags(uint32_t flags, int sum)
 {
 	static char buf[80];
 	char	 flagstr[5];
@@ -689,6 +684,8 @@ fmt_flags(uint8_t flags, int sum)
 	if (sum) {
 		if (flags & F_PREF_INVALID)
 			*p++ = 'E';
+		if (flags & F_PREF_OTC_LOOP)
+			*p++ = 'L';
 		if (flags & F_PREF_ANNOUNCE)
 			*p++ = 'A';
 		if (flags & F_PREF_INTERNAL)
@@ -699,6 +696,10 @@ fmt_flags(uint8_t flags, int sum)
 			*p++ = '*';
 		if (flags & F_PREF_BEST)
 			*p++ = '>';
+		if (flags & F_PREF_ECMP)
+			*p++ = 'm';
+		if (flags & F_PREF_AS_WIDE)
+			*p++ = 'w';
 		*p = '\0';
 		snprintf(buf, sizeof(buf), "%-5s", flagstr);
 	} else {
@@ -707,12 +708,20 @@ fmt_flags(uint8_t flags, int sum)
 		else
 			strlcpy(buf, "external", sizeof(buf));
 
+		if (flags & F_PREF_INVALID)
+			strlcat(buf, ", invalid", sizeof(buf));
+		if (flags & F_PREF_OTC_LOOP)
+			strlcat(buf, ", otc loop", sizeof(buf));
 		if (flags & F_PREF_STALE)
 			strlcat(buf, ", stale", sizeof(buf));
 		if (flags & F_PREF_ELIGIBLE)
 			strlcat(buf, ", valid", sizeof(buf));
 		if (flags & F_PREF_BEST)
 			strlcat(buf, ", best", sizeof(buf));
+		if (flags & F_PREF_ECMP)
+			strlcat(buf, ", ecmp", sizeof(buf));
+		if (flags & F_PREF_AS_WIDE)
+			strlcat(buf, ", as-wide", sizeof(buf));
 		if (flags & F_PREF_ANNOUNCE)
 			strlcat(buf, ", announced", sizeof(buf));
 		if (strlen(buf) >= sizeof(buf) - 1)
@@ -886,6 +895,10 @@ fmt_attr(uint8_t type, int flags)
 	case ATTR_LARGE_COMMUNITIES:
 		CHECK_FLAGS(flags, ATTR_OPTIONAL|ATTR_TRANSITIVE, ATTR_PARTIAL);
 		strlcpy(cstr, "Large Communities", sizeof(cstr));
+		break;
+	case ATTR_OTC:
+		CHECK_FLAGS(flags, ATTR_OPTIONAL|ATTR_TRANSITIVE, ATTR_PARTIAL);
+		strlcpy(cstr, "OTC", sizeof(cstr));
 		break;
 	default:
 		/* ignore unknown attributes */

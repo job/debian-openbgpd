@@ -1,4 +1,4 @@
-.\" $OpenBSD: bgpd.8,v 1.72 2022/03/31 17:27:29 naddy Exp $
+.\" $OpenBSD: bgpd.8,v 1.75 2022/07/12 17:30:57 claudio Exp $
 .\"
 .\" Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: March 31 2022 $
+.Dd $Mdocdate: July 12 2022 $
 .Dt BGPD 8
 .Os
 .Sh NAME
@@ -323,7 +323,7 @@ has been started.
 .%A J. Heasley
 .%A D. Meyer
 .%A P. Savola
-.%A C. Pignatoro
+.%A C. Pignataro
 .%D October 2007
 .%R RFC 5082
 .%T The Generalized TTL Security Mechanism (GTSM)
@@ -401,6 +401,16 @@ has been started.
 .Re
 .Pp
 .Rs
+.%A D. Walton
+.%A A. Retana
+.%A E. Chen
+.%A J. Scudder
+.%D July 2016
+.%R RFC 7911
+.%T Advertisement of Multiple Paths in BGP
+.Re
+.Pp
+.Rs
 .%A C. Petrie
 .%A T. King
 .%D May 2017
@@ -473,6 +483,17 @@ has been started.
 .%D July 2021
 .%R RFC 9072
 .%T Extended Optional Parameters Length for BGP OPEN Message
+.Re
+.Pp
+.Rs
+.%A A. Azimov
+.%A E. Bogomazov
+.%A R. Bush
+.%A K. Patel
+.%A K. Sriram
+.%D May 2022
+.%R RFC 9234
+.%T Route Leak Prevention and Detection Using Roles in UPDATE and OPEN Messages
 .Re
 .Sh HISTORY
 The

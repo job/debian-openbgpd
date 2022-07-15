@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_peer.c,v 1.16 2022/05/23 13:40:12 deraadt Exp $ */
+/*	$OpenBSD: rde_peer.c,v 1.19 2022/07/11 17:08:21 claudio Exp $ */
 
 /*
  * Copyright (c) 2019 Claudio Jeker <claudio@openbsd.org>
@@ -58,7 +58,21 @@ peer_has_add_path(struct rde_peer *peer, uint8_t aid, int mode)
 {
 	if (aid > AID_MAX)
 		return 0;
+	if (aid == AID_UNSPEC) {
+		/* check if at capability is set for at least one AID */
+		for (aid = AID_MIN; aid < AID_MAX; aid++)
+			if (peer->capa.add_path[aid] & mode)
+				return 1;
+		return 0;
+	}
 	return (peer->capa.add_path[aid] & mode);
+}
+
+int
+peer_has_open_policy(struct rde_peer *peer, uint8_t *role)
+{
+	*role = peer->capa.role;
+	return (peer->capa.role_ena != 0);
 }
 
 int
@@ -193,6 +207,7 @@ peer_add(uint32_t id, struct peer_config *p_conf)
 	if (peer->loc_rib_id == RIB_NOTFOUND)
 		fatalx("King Bula's new peer met an unknown RIB");
 	peer->state = PEER_NONE;
+	peer->eval = peer->conf.eval;
 	peer->export_type = peer->conf.export_type;
 	peer->flags = peer->conf.flags;
 	SIMPLEQ_INIT(&peer->imsg_queue);
@@ -203,6 +218,69 @@ peer_add(uint32_t id, struct peer_config *p_conf)
 	LIST_INSERT_HEAD(&peerlist, peer, peer_l);
 
 	return (peer);
+}
+
+static void
+peer_generate_update(struct rde_peer *peer, uint16_t rib_id,
+    struct prefix *new, struct prefix *old, enum eval_mode mode)
+{
+	uint8_t		 aid;
+
+	if (new != NULL)
+		aid = new->pt->aid;
+	else if (old != NULL)
+		aid = old->pt->aid;
+	else
+		return;
+
+	/* skip ourself */
+	if (peer == peerself)
+		return;
+	if (peer->state != PEER_UP)
+		return;
+	/* skip peers using a different rib */
+	if (peer->loc_rib_id != rib_id)
+		return;
+	/* check if peer actually supports the address family */
+	if (peer->capa.mp[aid] == 0)
+		return;
+	/* skip peers with special export types */
+	if (peer->export_type == EXPORT_NONE ||
+	    peer->export_type == EXPORT_DEFAULT_ROUTE)
+		return;
+
+	/* if reconf skip peers which don't need to reconfigure */
+	if (mode == EVAL_RECONF && peer->reconf_out == 0)
+		return;
+
+	/* handle peers with add-path */
+	if (peer_has_add_path(peer, aid, CAPA_AP_SEND)) {
+		up_generate_addpath(out_rules, peer, new, old);
+		return;
+	}
+
+	/* skip regular peers if the best path didn't change */
+	if (mode == EVAL_ALL && (peer->flags & PEERFLAG_EVALUATE_ALL) == 0)
+		return;
+	up_generate_updates(out_rules, peer, new, old);
+}
+
+void
+rde_generate_updates(struct rib *rib, struct prefix *new, struct prefix *old,
+    enum eval_mode mode)
+{
+	struct rde_peer	*peer;
+
+	/*
+	 * If old is != NULL we know it was active and should be removed.
+	 * If new is != NULL we know it is reachable and then we should
+	 * generate an update.
+	 */
+	if (old == NULL && new == NULL)
+		return;
+
+	LIST_FOREACH(peer, &peerlist, peer_l)
+		peer_generate_update(peer, rib->id, new, old, mode);
 }
 
 /*
@@ -310,20 +388,10 @@ rde_up_dump_upcall(struct rib_entry *re, void *ptr)
 	struct rde_peer		*peer = ptr;
 	struct prefix		*p;
 
-	if (peer->state != PEER_UP)
-		return;
-	if (re->rib_id != peer->loc_rib_id)
-		fatalx("%s: Unexpected RIB %u != %u.", __func__, re->rib_id,
-		    peer->loc_rib_id);
-	if (peer->capa.mp[re->prefix->aid] == 0)
-		fatalx("%s: Unexpected %s prefix", __func__,
-		    aid2str(re->prefix->aid));
-
 	/* no eligible prefix, not even for 'evaluate all' */
 	if ((p = prefix_best(re)) == NULL)
 		return;
-
-	up_generate_updates(out_rules, peer, p, NULL);
+	peer_generate_update(peer, re->rib_id, p, NULL, 0);
 }
 
 static void
@@ -454,6 +522,7 @@ peer_stale(struct rde_peer *peer, uint8_t aid)
 	peer->staletime[aid] = now = getmonotime();
 	peer->state = PEER_DOWN;
 
+	/* XXX this is not quite correct */
 	/* mark Adj-RIB-Out stale for this peer */
 	if (prefix_dump_new(peer, AID_UNSPEC, 0, NULL,
 	    peer_adjout_stale_upcall, NULL, NULL) == -1)

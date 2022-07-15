@@ -106,15 +106,17 @@ build_triplet = @build@
 host_triplet = @host@
 sbin_PROGRAMS = bgpd$(EXEEXT)
 @HOST_OPENBSD_TRUE@am__append_1 = kroute.c
-@HAVE_MNL_TRUE@@HOST_OPENBSD_FALSE@am__append_2 = kroute-linux.c
-@HAVE_MNL_FALSE@@HOST_OPENBSD_FALSE@am__append_3 = kroute-disabled.c
-@HOST_OPENBSD_TRUE@am__append_4 = pfkey.c
-@HAVE_LINUX_TCPMD5_TRUE@@HOST_OPENBSD_FALSE@am__append_5 = pfkey-linux.c
-@HAVE_LINUX_TCPMD5_FALSE@@HOST_OPENBSD_FALSE@am__append_6 = pfkey-disabled.c
-@HOST_OPENBSD_TRUE@am__append_7 = pftable.c
-@HOST_OPENBSD_FALSE@am__append_8 = pftable-disabled.c
-@HOST_OPENBSD_TRUE@am__append_9 = carp.c
-@HOST_OPENBSD_FALSE@am__append_10 = carp-disabled.c
+@HOST_FREEBSD_TRUE@@HOST_OPENBSD_FALSE@am__append_2 = kroute-freebsd.c
+@HAVE_MNL_TRUE@@HOST_FREEBSD_FALSE@@HOST_OPENBSD_FALSE@am__append_3 = kroute-linux.c
+@HAVE_MNL_FALSE@@HOST_FREEBSD_FALSE@@HOST_OPENBSD_FALSE@am__append_4 = kroute-disabled.c
+@HOST_OPENBSD_TRUE@am__append_5 = pfkey.c
+@HOST_FREEBSD_TRUE@@HOST_OPENBSD_FALSE@am__append_6 = pfkey-freebsd.c
+@HAVE_LINUX_TCPMD5_TRUE@@HOST_FREEBSD_FALSE@@HOST_OPENBSD_FALSE@am__append_7 = pfkey-linux.c
+@HAVE_LINUX_TCPMD5_FALSE@@HOST_FREEBSD_FALSE@@HOST_OPENBSD_FALSE@am__append_8 = pfkey-disabled.c
+@HOST_OPENBSD_TRUE@am__append_9 = pftable.c
+@HOST_OPENBSD_FALSE@am__append_10 = pftable-disabled.c
+@HOST_OPENBSD_TRUE@am__append_11 = carp.c
+@HOST_OPENBSD_FALSE@am__append_12 = carp-disabled.c
 subdir = src/bgpd
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -133,34 +135,38 @@ am__installdirs = "$(DESTDIR)$(sbindir)" "$(DESTDIR)$(man5dir)" \
 PROGRAMS = $(sbin_PROGRAMS)
 am__bgpd_SOURCES_DIST = bgpd.c session.c log.c logmsg.c parse.y \
 	config.c rde.c rde_rib.c rde_decide.c rde_prefix.c mrt.c \
-	kroute.c kroute-linux.c kroute-disabled.c control.c pfkey.c \
-	pfkey-linux.c pfkey-disabled.c rde_update.c rde_attr.c \
-	rde_community.c printconf.c rde_filter.c rde_sets.c rde_trie.c \
-	pftable.c pftable-disabled.c name2id.c util.c carp.c \
-	carp-disabled.c timer.c rde_peer.c rtr.c rtr_proto.c
+	kroute.c kroute-freebsd.c kroute-linux.c kroute-disabled.c \
+	control.c pfkey.c pfkey-freebsd.c pfkey-linux.c \
+	pfkey-disabled.c rde_update.c rde_attr.c rde_community.c \
+	printconf.c rde_filter.c rde_sets.c rde_trie.c pftable.c \
+	pftable-disabled.c name2id.c util.c carp.c carp-disabled.c \
+	timer.c rde_peer.c rtr.c rtr_proto.c
 @HOST_OPENBSD_TRUE@am__objects_1 = bgpd-kroute.$(OBJEXT)
-@HAVE_MNL_TRUE@@HOST_OPENBSD_FALSE@am__objects_2 = bgpd-kroute-linux.$(OBJEXT)
-@HAVE_MNL_FALSE@@HOST_OPENBSD_FALSE@am__objects_3 = bgpd-kroute-disabled.$(OBJEXT)
-@HOST_OPENBSD_TRUE@am__objects_4 = bgpd-pfkey.$(OBJEXT)
-@HAVE_LINUX_TCPMD5_TRUE@@HOST_OPENBSD_FALSE@am__objects_5 = bgpd-pfkey-linux.$(OBJEXT)
-@HAVE_LINUX_TCPMD5_FALSE@@HOST_OPENBSD_FALSE@am__objects_6 = bgpd-pfkey-disabled.$(OBJEXT)
-@HOST_OPENBSD_TRUE@am__objects_7 = bgpd-pftable.$(OBJEXT)
-@HOST_OPENBSD_FALSE@am__objects_8 = bgpd-pftable-disabled.$(OBJEXT)
-@HOST_OPENBSD_TRUE@am__objects_9 = bgpd-carp.$(OBJEXT)
-@HOST_OPENBSD_FALSE@am__objects_10 = bgpd-carp-disabled.$(OBJEXT)
+@HOST_FREEBSD_TRUE@@HOST_OPENBSD_FALSE@am__objects_2 = bgpd-kroute-freebsd.$(OBJEXT)
+@HAVE_MNL_TRUE@@HOST_FREEBSD_FALSE@@HOST_OPENBSD_FALSE@am__objects_3 = bgpd-kroute-linux.$(OBJEXT)
+@HAVE_MNL_FALSE@@HOST_FREEBSD_FALSE@@HOST_OPENBSD_FALSE@am__objects_4 = bgpd-kroute-disabled.$(OBJEXT)
+@HOST_OPENBSD_TRUE@am__objects_5 = bgpd-pfkey.$(OBJEXT)
+@HOST_FREEBSD_TRUE@@HOST_OPENBSD_FALSE@am__objects_6 = bgpd-pfkey-freebsd.$(OBJEXT)
+@HAVE_LINUX_TCPMD5_TRUE@@HOST_FREEBSD_FALSE@@HOST_OPENBSD_FALSE@am__objects_7 = bgpd-pfkey-linux.$(OBJEXT)
+@HAVE_LINUX_TCPMD5_FALSE@@HOST_FREEBSD_FALSE@@HOST_OPENBSD_FALSE@am__objects_8 = bgpd-pfkey-disabled.$(OBJEXT)
+@HOST_OPENBSD_TRUE@am__objects_9 = bgpd-pftable.$(OBJEXT)
+@HOST_OPENBSD_FALSE@am__objects_10 = bgpd-pftable-disabled.$(OBJEXT)
+@HOST_OPENBSD_TRUE@am__objects_11 = bgpd-carp.$(OBJEXT)
+@HOST_OPENBSD_FALSE@am__objects_12 = bgpd-carp-disabled.$(OBJEXT)
 am_bgpd_OBJECTS = bgpd-bgpd.$(OBJEXT) bgpd-session.$(OBJEXT) \
 	bgpd-log.$(OBJEXT) bgpd-logmsg.$(OBJEXT) bgpd-parse.$(OBJEXT) \
 	bgpd-config.$(OBJEXT) bgpd-rde.$(OBJEXT) \
 	bgpd-rde_rib.$(OBJEXT) bgpd-rde_decide.$(OBJEXT) \
 	bgpd-rde_prefix.$(OBJEXT) bgpd-mrt.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) $(am__objects_3) bgpd-control.$(OBJEXT) \
-	$(am__objects_4) $(am__objects_5) $(am__objects_6) \
-	bgpd-rde_update.$(OBJEXT) bgpd-rde_attr.$(OBJEXT) \
-	bgpd-rde_community.$(OBJEXT) bgpd-printconf.$(OBJEXT) \
-	bgpd-rde_filter.$(OBJEXT) bgpd-rde_sets.$(OBJEXT) \
-	bgpd-rde_trie.$(OBJEXT) $(am__objects_7) $(am__objects_8) \
-	bgpd-name2id.$(OBJEXT) bgpd-util.$(OBJEXT) $(am__objects_9) \
-	$(am__objects_10) bgpd-timer.$(OBJEXT) bgpd-rde_peer.$(OBJEXT) \
+	$(am__objects_2) $(am__objects_3) $(am__objects_4) \
+	bgpd-control.$(OBJEXT) $(am__objects_5) $(am__objects_6) \
+	$(am__objects_7) $(am__objects_8) bgpd-rde_update.$(OBJEXT) \
+	bgpd-rde_attr.$(OBJEXT) bgpd-rde_community.$(OBJEXT) \
+	bgpd-printconf.$(OBJEXT) bgpd-rde_filter.$(OBJEXT) \
+	bgpd-rde_sets.$(OBJEXT) bgpd-rde_trie.$(OBJEXT) \
+	$(am__objects_9) $(am__objects_10) bgpd-name2id.$(OBJEXT) \
+	bgpd-util.$(OBJEXT) $(am__objects_11) $(am__objects_12) \
+	bgpd-timer.$(OBJEXT) bgpd-rde_peer.$(OBJEXT) \
 	bgpd-rtr.$(OBJEXT) bgpd-rtr_proto.$(OBJEXT)
 bgpd_OBJECTS = $(am_bgpd_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -189,10 +195,12 @@ am__depfiles_remade = ./$(DEPDIR)/bgpd-bgpd.Po \
 	./$(DEPDIR)/bgpd-carp-disabled.Po ./$(DEPDIR)/bgpd-carp.Po \
 	./$(DEPDIR)/bgpd-config.Po ./$(DEPDIR)/bgpd-control.Po \
 	./$(DEPDIR)/bgpd-kroute-disabled.Po \
+	./$(DEPDIR)/bgpd-kroute-freebsd.Po \
 	./$(DEPDIR)/bgpd-kroute-linux.Po ./$(DEPDIR)/bgpd-kroute.Po \
 	./$(DEPDIR)/bgpd-log.Po ./$(DEPDIR)/bgpd-logmsg.Po \
 	./$(DEPDIR)/bgpd-mrt.Po ./$(DEPDIR)/bgpd-name2id.Po \
 	./$(DEPDIR)/bgpd-parse.Po ./$(DEPDIR)/bgpd-pfkey-disabled.Po \
+	./$(DEPDIR)/bgpd-pfkey-freebsd.Po \
 	./$(DEPDIR)/bgpd-pfkey-linux.Po ./$(DEPDIR)/bgpd-pfkey.Po \
 	./$(DEPDIR)/bgpd-pftable-disabled.Po \
 	./$(DEPDIR)/bgpd-pftable.Po ./$(DEPDIR)/bgpd-printconf.Po \
@@ -305,6 +313,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BGPD_USER = @BGPD_USER@
+BGPLGD_USER = @BGPLGD_USER@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -330,6 +340,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEVENT_CFLAGS = @LIBEVENT_CFLAGS@
+LIBEVENT_LDFLAGS = @LIBEVENT_LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -353,7 +365,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PRIVSEP_USER = @PRIVSEP_USER@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -427,12 +438,12 @@ bgpd_LDADD = $(PLATFORM_LDADD) $(PROG_LDADD) -lutil \
 	$(top_builddir)/compat/libcompatnoopt.la
 bgpd_SOURCES = bgpd.c session.c log.c logmsg.c parse.y config.c rde.c \
 	rde_rib.c rde_decide.c rde_prefix.c mrt.c $(am__append_1) \
-	$(am__append_2) $(am__append_3) control.c $(am__append_4) \
-	$(am__append_5) $(am__append_6) rde_update.c rde_attr.c \
-	rde_community.c printconf.c rde_filter.c rde_sets.c rde_trie.c \
-	$(am__append_7) $(am__append_8) name2id.c util.c \
-	$(am__append_9) $(am__append_10) timer.c rde_peer.c rtr.c \
-	rtr_proto.c
+	$(am__append_2) $(am__append_3) $(am__append_4) control.c \
+	$(am__append_5) $(am__append_6) $(am__append_7) \
+	$(am__append_8) rde_update.c rde_attr.c rde_community.c \
+	printconf.c rde_filter.c rde_sets.c rde_trie.c $(am__append_9) \
+	$(am__append_10) name2id.c util.c $(am__append_11) \
+	$(am__append_12) timer.c rde_peer.c rtr.c rtr_proto.c
 bgpd_DEPENDENCIES = $(man_MANS)
 noinst_HEADERS = bgpd.h log.h mrt.h rde.h session.h version.h
 all: all-am
@@ -534,6 +545,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-config.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-control.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-kroute-disabled.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-kroute-freebsd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-kroute-linux.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-kroute.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-log.Po@am__quote@ # am--include-marker
@@ -542,6 +554,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-name2id.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-parse.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-pfkey-disabled.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-pfkey-freebsd.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-pfkey-linux.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-pfkey.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bgpd-pftable-disabled.Po@am__quote@ # am--include-marker
@@ -762,6 +775,20 @@ bgpd-kroute.obj: kroute.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -c -o bgpd-kroute.obj `if test -f 'kroute.c'; then $(CYGPATH_W) 'kroute.c'; else $(CYGPATH_W) '$(srcdir)/kroute.c'; fi`
 
+bgpd-kroute-freebsd.o: kroute-freebsd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -MT bgpd-kroute-freebsd.o -MD -MP -MF $(DEPDIR)/bgpd-kroute-freebsd.Tpo -c -o bgpd-kroute-freebsd.o `test -f 'kroute-freebsd.c' || echo '$(srcdir)/'`kroute-freebsd.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bgpd-kroute-freebsd.Tpo $(DEPDIR)/bgpd-kroute-freebsd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='kroute-freebsd.c' object='bgpd-kroute-freebsd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -c -o bgpd-kroute-freebsd.o `test -f 'kroute-freebsd.c' || echo '$(srcdir)/'`kroute-freebsd.c
+
+bgpd-kroute-freebsd.obj: kroute-freebsd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -MT bgpd-kroute-freebsd.obj -MD -MP -MF $(DEPDIR)/bgpd-kroute-freebsd.Tpo -c -o bgpd-kroute-freebsd.obj `if test -f 'kroute-freebsd.c'; then $(CYGPATH_W) 'kroute-freebsd.c'; else $(CYGPATH_W) '$(srcdir)/kroute-freebsd.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bgpd-kroute-freebsd.Tpo $(DEPDIR)/bgpd-kroute-freebsd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='kroute-freebsd.c' object='bgpd-kroute-freebsd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -c -o bgpd-kroute-freebsd.obj `if test -f 'kroute-freebsd.c'; then $(CYGPATH_W) 'kroute-freebsd.c'; else $(CYGPATH_W) '$(srcdir)/kroute-freebsd.c'; fi`
+
 bgpd-kroute-linux.o: kroute-linux.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -MT bgpd-kroute-linux.o -MD -MP -MF $(DEPDIR)/bgpd-kroute-linux.Tpo -c -o bgpd-kroute-linux.o `test -f 'kroute-linux.c' || echo '$(srcdir)/'`kroute-linux.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bgpd-kroute-linux.Tpo $(DEPDIR)/bgpd-kroute-linux.Po
@@ -817,6 +844,20 @@ bgpd-pfkey.obj: pfkey.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pfkey.c' object='bgpd-pfkey.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -c -o bgpd-pfkey.obj `if test -f 'pfkey.c'; then $(CYGPATH_W) 'pfkey.c'; else $(CYGPATH_W) '$(srcdir)/pfkey.c'; fi`
+
+bgpd-pfkey-freebsd.o: pfkey-freebsd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -MT bgpd-pfkey-freebsd.o -MD -MP -MF $(DEPDIR)/bgpd-pfkey-freebsd.Tpo -c -o bgpd-pfkey-freebsd.o `test -f 'pfkey-freebsd.c' || echo '$(srcdir)/'`pfkey-freebsd.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bgpd-pfkey-freebsd.Tpo $(DEPDIR)/bgpd-pfkey-freebsd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pfkey-freebsd.c' object='bgpd-pfkey-freebsd.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -c -o bgpd-pfkey-freebsd.o `test -f 'pfkey-freebsd.c' || echo '$(srcdir)/'`pfkey-freebsd.c
+
+bgpd-pfkey-freebsd.obj: pfkey-freebsd.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -MT bgpd-pfkey-freebsd.obj -MD -MP -MF $(DEPDIR)/bgpd-pfkey-freebsd.Tpo -c -o bgpd-pfkey-freebsd.obj `if test -f 'pfkey-freebsd.c'; then $(CYGPATH_W) 'pfkey-freebsd.c'; else $(CYGPATH_W) '$(srcdir)/pfkey-freebsd.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bgpd-pfkey-freebsd.Tpo $(DEPDIR)/bgpd-pfkey-freebsd.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pfkey-freebsd.c' object='bgpd-pfkey-freebsd.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -c -o bgpd-pfkey-freebsd.obj `if test -f 'pfkey-freebsd.c'; then $(CYGPATH_W) 'pfkey-freebsd.c'; else $(CYGPATH_W) '$(srcdir)/pfkey-freebsd.c'; fi`
 
 bgpd-pfkey-linux.o: pfkey-linux.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(bgpd_CFLAGS) $(CFLAGS) -MT bgpd-pfkey-linux.o -MD -MP -MF $(DEPDIR)/bgpd-pfkey-linux.Tpo -c -o bgpd-pfkey-linux.o `test -f 'pfkey-linux.c' || echo '$(srcdir)/'`pfkey-linux.c
@@ -1315,6 +1356,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/bgpd-config.Po
 	-rm -f ./$(DEPDIR)/bgpd-control.Po
 	-rm -f ./$(DEPDIR)/bgpd-kroute-disabled.Po
+	-rm -f ./$(DEPDIR)/bgpd-kroute-freebsd.Po
 	-rm -f ./$(DEPDIR)/bgpd-kroute-linux.Po
 	-rm -f ./$(DEPDIR)/bgpd-kroute.Po
 	-rm -f ./$(DEPDIR)/bgpd-log.Po
@@ -1323,6 +1365,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/bgpd-name2id.Po
 	-rm -f ./$(DEPDIR)/bgpd-parse.Po
 	-rm -f ./$(DEPDIR)/bgpd-pfkey-disabled.Po
+	-rm -f ./$(DEPDIR)/bgpd-pfkey-freebsd.Po
 	-rm -f ./$(DEPDIR)/bgpd-pfkey-linux.Po
 	-rm -f ./$(DEPDIR)/bgpd-pfkey.Po
 	-rm -f ./$(DEPDIR)/bgpd-pftable-disabled.Po
@@ -1395,6 +1438,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/bgpd-config.Po
 	-rm -f ./$(DEPDIR)/bgpd-control.Po
 	-rm -f ./$(DEPDIR)/bgpd-kroute-disabled.Po
+	-rm -f ./$(DEPDIR)/bgpd-kroute-freebsd.Po
 	-rm -f ./$(DEPDIR)/bgpd-kroute-linux.Po
 	-rm -f ./$(DEPDIR)/bgpd-kroute.Po
 	-rm -f ./$(DEPDIR)/bgpd-log.Po
@@ -1403,6 +1447,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/bgpd-name2id.Po
 	-rm -f ./$(DEPDIR)/bgpd-parse.Po
 	-rm -f ./$(DEPDIR)/bgpd-pfkey-disabled.Po
+	-rm -f ./$(DEPDIR)/bgpd-pfkey-freebsd.Po
 	-rm -f ./$(DEPDIR)/bgpd-pfkey-linux.Po
 	-rm -f ./$(DEPDIR)/bgpd-pfkey.Po
 	-rm -f ./$(DEPDIR)/bgpd-pftable-disabled.Po

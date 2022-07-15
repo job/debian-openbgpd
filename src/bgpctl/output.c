@@ -1,4 +1,4 @@
-/*	$OpenBSD: output.c,v 1.20 2022/02/06 09:52:32 claudio Exp $ */
+/*	$OpenBSD: output.c,v 1.24 2022/07/08 16:12:11 claudio Exp $ */
 
 /*
  * Copyright (c) 2003 Henning Brauer <henning@openbsd.org>
@@ -46,7 +46,7 @@ show_head(struct parse_result *res)
 		break;
 	case SHOW_FIB:
 		printf("flags: * = valid, B = BGP, C = Connected, "
-		    "S = Static, D = Dynamic\n");
+		    "S = Static\n");
 		printf("       "
 		    "N = BGP Nexthop reachable via this route\n");
 		printf("       r = reject route, b = blackhole route\n\n");
@@ -138,7 +138,7 @@ show_neighbor_capa_mp(struct capabilities *capa)
 	uint8_t	i;
 
 	printf("    Multiprotocol extensions: ");
-	for (i = 0, comma = 0; i < AID_MAX; i++)
+	for (i = AID_MIN, comma = 0; i < AID_MAX; i++)
 		if (capa->mp[i]) {
 			printf("%s%s", comma ? ", " : "", aid2str(i));
 			comma = 1;
@@ -154,7 +154,7 @@ show_neighbor_capa_add_path(struct capabilities *capa)
 	uint8_t		i;
 
 	printf("    Add-path: ");
-	for (i = 0, comma = 0; i < AID_MAX; i++) {
+	for (i = AID_MIN, comma = 0; i < AID_MAX; i++) {
 		switch (capa->add_path[i]) {
 		case 0:
 		default:
@@ -183,7 +183,7 @@ show_neighbor_capa_restart(struct capabilities *capa)
 	printf("    Graceful Restart");
 	if (capa->grestart.timeout)
 		printf(": Timeout: %d, ", capa->grestart.timeout);
-	for (i = 0, comma = 0; i < AID_MAX; i++)
+	for (i = AID_MIN, comma = 0; i < AID_MAX; i++)
 		if (capa->grestart.flags[i] & CAPA_GR_PRESENT) {
 			if (!comma &&
 			    capa->grestart.flags[i] & CAPA_GR_RESTART)
@@ -325,7 +325,7 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 	}
 	if (hascapamp || hascapaap || p->capa.peer.grestart.restart ||
 	    p->capa.peer.refresh || p->capa.peer.enhanced_rr ||
-	    p->capa.peer.as4byte) {
+	    p->capa.peer.as4byte || p->capa.peer.role_ena) {
 		printf("  Neighbor capabilities:\n");
 		if (hascapamp)
 			show_neighbor_capa_mp(&p->capa.peer);
@@ -339,6 +339,10 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 			show_neighbor_capa_restart(&p->capa.peer);
 		if (hascapaap)
 			show_neighbor_capa_add_path(&p->capa.peer);
+		if (p->capa.peer.role_ena)
+			printf("    Open Policy role %s (local %s)\n",
+			    log_policy(p->capa.peer.role),
+			    log_policy(p->capa.ann.role));
 	}
 
 	hascapamp = 0;
@@ -351,7 +355,7 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 	}
 	if (hascapamp || hascapaap || p->capa.neg.grestart.restart ||
 	    p->capa.neg.refresh || p->capa.neg.enhanced_rr ||
-	    p->capa.neg.as4byte) {
+	    p->capa.neg.as4byte || p->capa.neg.role_ena) {
 		printf("  Negotiated capabilities:\n");
 		if (hascapamp)
 			show_neighbor_capa_mp(&p->capa.neg);
@@ -365,6 +369,10 @@ show_neighbor_full(struct peer *p, struct parse_result *res)
 			show_neighbor_capa_restart(&p->capa.neg);
 		if (hascapaap)
 			show_neighbor_capa_add_path(&p->capa.neg);
+		if (p->capa.neg.role_ena)
+			printf("    Open Policy role %s (local %s)\n",
+			    log_policy(p->capa.neg.role),
+			    log_policy(p->capa.ann.role));
 	}
 	printf("\n");
 
@@ -480,8 +488,6 @@ show_fib_table(struct ktable *kt)
 static void
 show_nexthop(struct ctl_show_nexthop *nh)
 {
-	struct kroute	*k;
-	struct kroute6	*k6;
 	char		*s;
 
 	printf("%s %-15s ", nh->valid ? "*" : " ", log_addr(&nh->addr));
@@ -489,33 +495,15 @@ show_nexthop(struct ctl_show_nexthop *nh)
 		printf("\n");
 		return;
 	}
-	switch (nh->addr.aid) {
-	case AID_INET:
-		k = &nh->kr.kr4;
-		if (asprintf(&s, "%s/%u", inet_ntoa(k->prefix),
-		    k->prefixlen) == -1)
-			err(1, NULL);
-		printf("%-20s", s);
-		free(s);
-		printf("%3i %-15s ", k->priority,
-		    k->flags & F_CONNECTED ? "connected" :
-		    inet_ntoa(k->nexthop));
-		break;
-	case AID_INET6:
-		k6 = &nh->kr.kr6;
-		if (asprintf(&s, "%s/%u", log_in6addr(&k6->prefix),
-		    k6->prefixlen) == -1)
-			err(1, NULL);
-		printf("%-20s", s);
-		free(s);
-		printf("%3i %-15s ", k6->priority,
-		    k6->flags & F_CONNECTED ? "connected" :
-		    log_in6addr(&k6->nexthop));
-		break;
-	default:
-		printf("unknown address family\n");
-		return;
-	}
+	if (asprintf(&s, "%s/%u", log_addr(&nh->kr.prefix),
+	    nh->kr.prefixlen) == -1)
+		err(1, NULL);
+	printf("%-20s", s);
+	free(s);
+	printf("%3i %-15s ", nh->kr.priority,
+	    nh->kr.flags & F_CONNECTED ? "connected" :
+	    log_addr(&nh->kr.nexthop));
+
 	if (nh->iface.ifname[0]) {
 		printf("%s (%s, %s)", nh->iface.ifname,
 		    nh->iface.is_up ? "UP" : "DOWN",
@@ -894,6 +882,15 @@ show_attr(u_char *data, size_t len, int reqflags, int addpath)
 		break;
 	case ATTR_LARGE_COMMUNITIES:
 		show_large_community(data, alen);
+		break;
+	case ATTR_OTC:
+		if (alen == 4) {
+			memcpy(&as, data, sizeof(as));
+			as = ntohl(as);
+			printf("%s", log_as(as));
+		} else {
+			printf("bad length");
+		}
 		break;
 	case ATTR_ATOMIC_AGGREGATE:
 	default:

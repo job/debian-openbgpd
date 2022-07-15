@@ -1,4 +1,4 @@
-/*	$OpenBSD: util.c,v 1.63 2022/05/25 16:03:34 claudio Exp $ */
+/*	$OpenBSD: util.c,v 1.69 2022/06/28 05:49:05 tb Exp $ */
 
 /*
  * Copyright (c) 2006 Claudio Jeker <claudio@openbsd.org>
@@ -66,8 +66,10 @@ log_in6addr(const struct in6_addr *addr)
 
 #ifdef __KAME__
 	/* XXX thanks, KAME, for this ugliness... adopted from route/show.c */
-	if (IN6_IS_ADDR_LINKLOCAL(&sa_in6.sin6_addr) ||
-	    IN6_IS_ADDR_MC_LINKLOCAL(&sa_in6.sin6_addr)) {
+	if ((IN6_IS_ADDR_LINKLOCAL(&sa_in6.sin6_addr) ||
+	    IN6_IS_ADDR_MC_LINKLOCAL(&sa_in6.sin6_addr) ||
+	    IN6_IS_ADDR_MC_NODELOCAL(&sa_in6.sin6_addr)) &&
+	    sa_in6.sin6_scope_id == 0) {
 		uint16_t tmp16;
 		memcpy(&tmp16, &sa_in6.sin6_addr.s6_addr[2], sizeof(tmp16));
 		sa_in6.sin6_scope_id = ntohs(tmp16);
@@ -190,6 +192,25 @@ log_rtr_error(enum rtr_error err)
 	default:
 		snprintf(buf, sizeof(buf), "unknown %u", err);
 		return buf;
+	}
+}
+
+const char *
+log_policy(uint8_t role)
+{
+	switch (role) {
+	case CAPA_ROLE_PROVIDER:
+		return "provider";
+	case CAPA_ROLE_RS:
+		return "rs";
+	case CAPA_ROLE_RS_CLIENT:
+		return "rs-client";
+	case CAPA_ROLE_CUSTOMER:
+		return "customer";
+	case CAPA_ROLE_PEER:
+		return "peer";
+	default:
+		return "unknown";
 	}
 }
 
@@ -675,7 +696,14 @@ nlri_get_vpn6(u_char *p, uint16_t len, struct bgpd_addr *prefix,
 	return (plen + rv);
 }
 
+static in_addr_t
+prefixlen2mask(uint8_t prefixlen)
+{
+	if (prefixlen == 0)
+		return (0);
 
+	return (0xffffffff << (32 - prefixlen));
+}
 
 /*
  * This function will have undefined behaviour if the passed in prefixlen is
@@ -750,15 +778,6 @@ prefix_compare(const struct bgpd_addr *a, const struct bgpd_addr *b,
 
 }
 
-in_addr_t
-prefixlen2mask(uint8_t prefixlen)
-{
-	if (prefixlen == 0)
-		return (0);
-
-	return (0xffffffff << (32 - prefixlen));
-}
-
 void
 inet4applymask(struct in_addr *dest, const struct in_addr *src, int prefixlen)
 {
@@ -783,6 +802,22 @@ inet6applymask(struct in6_addr *dest, const struct in6_addr *src, int prefixlen)
 
 	for (i = 0; i < 16; i++)
 		dest->s6_addr[i] = src->s6_addr[i] & mask.s6_addr[i];
+}
+
+void
+applymask(struct bgpd_addr *dest, const struct bgpd_addr *src, int prefixlen)
+{
+	*dest = *src;
+	switch (src->aid) {
+	case AID_INET:
+	case AID_VPN_IPv4:
+		inet4applymask(&dest->v4, &src->v4, prefixlen);
+		break;
+	case AID_INET6:
+	case AID_VPN_IPv6:
+		inet6applymask(&dest->v6, &src->v6, prefixlen);
+		break;
+	}
 }
 
 /* address family translation functions */
@@ -899,24 +934,24 @@ sa2addr(struct sockaddr *sa, struct bgpd_addr *addr, uint16_t *port)
 		break;
 	case AF_INET6:
 		addr->aid = AID_INET6;
-		memcpy(&addr->v6, &sa_in6->sin6_addr, sizeof(addr->v6));
 #ifdef __KAME__
 		/*
 		 * XXX thanks, KAME, for this ugliness...
 		 * adopted from route/show.c
 		 */
-		if (IN6_IS_ADDR_LINKLOCAL(&sa_in6->sin6_addr) ||
-		    IN6_IS_ADDR_MC_LINKLOCAL(&sa_in6->sin6_addr)) {
+		if ((IN6_IS_ADDR_LINKLOCAL(&sa_in6->sin6_addr) ||
+		    IN6_IS_ADDR_MC_LINKLOCAL(&sa_in6->sin6_addr) ||
+		    IN6_IS_ADDR_MC_NODELOCAL(&sa_in6->sin6_addr)) &&
+		    sa_in6->sin6_scope_id == 0) {
 			uint16_t tmp16;
 			memcpy(&tmp16, &sa_in6->sin6_addr.s6_addr[2],
 			    sizeof(tmp16));
-			if (tmp16 != 0) {
-				sa_in6->sin6_scope_id = ntohs(tmp16);
-				sa_in6->sin6_addr.s6_addr[2] = 0;
-				sa_in6->sin6_addr.s6_addr[3] = 0;
-			}
+			sa_in6->sin6_scope_id = ntohs(tmp16);
+			sa_in6->sin6_addr.s6_addr[2] = 0;
+			sa_in6->sin6_addr.s6_addr[3] = 0;
 		}
 #endif
+		memcpy(&addr->v6, &sa_in6->sin6_addr, sizeof(addr->v6));
 		addr->scope_id = sa_in6->sin6_scope_id; /* I hate v6 */
 		if (port)
 			*port = ntohs(sa_in6->sin6_port);

@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde.h,v 1.253 2022/05/31 09:45:33 claudio Exp $ */
+/*	$OpenBSD: rde.h,v 1.259 2022/07/11 17:08:21 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Claudio Jeker <claudio@openbsd.org> and
@@ -87,6 +87,7 @@ struct rde_peer {
 	struct bgpd_addr		 local_v4_addr;
 	struct bgpd_addr		 local_v6_addr;
 	struct capabilities		 capa;
+	struct addpath_eval		 eval;
 	struct prefix_index		 adj_rib_out;
 	struct prefix_tree		 updates[AID_MAX];
 	struct prefix_tree		 withdraws[AID_MAX];
@@ -148,6 +149,7 @@ enum attrtypes {
 	ATTR_AS4_PATH=17,
 	ATTR_AS4_AGGREGATOR=18,
 	ATTR_LARGE_COMMUNITIES=32,
+	ATTR_OTC=35,
 	ATTR_FIRST_UNKNOWN,	/* after this all attributes are unknown */
 };
 
@@ -205,9 +207,10 @@ struct rde_community {
 #define	F_ATTR_LOOP		0x00200 /* path would cause a route loop */
 #define	F_PREFIX_ANNOUNCED	0x00400
 #define	F_ANN_DYNAMIC		0x00800
+#define	F_ATTR_OTC		0x01000	/* OTC present */
+#define	F_ATTR_OTC_LOOP		0x02000 /* otc loop, not eligable */
 #define	F_ATTR_PARSE_ERR	0x10000 /* parse error, not eligable */
 #define	F_ATTR_LINKED		0x20000 /* if set path is on various lists */
-
 
 #define ORIGIN_IGP		0
 #define ORIGIN_EGP		1
@@ -334,7 +337,7 @@ struct prefix {
 	uint32_t			 path_id_tx;
 	uint8_t				 validation_state;
 	uint8_t				 nhflags;
-	uint8_t				 unused;
+	int8_t				 dmetric;	/* decision metric */
 	uint8_t				 flags;
 #define	PREFIX_FLAG_WITHDRAW	0x01	/* enqueued on withdraw queue */
 #define	PREFIX_FLAG_UPDATE	0x02	/* enqueued on update queue */
@@ -345,6 +348,13 @@ struct prefix {
 #define	PREFIX_FLAG_EOR		0x20	/* prefix is EoR */
 #define	PREFIX_NEXTHOP_LINKED	0x40	/* prefix is linked onto nexthop list */
 #define	PREFIX_FLAG_LOCKED	0x80	/* locked by rib walker */
+
+#define	PREFIX_DMETRIC_NONE	0
+#define	PREFIX_DMETRIC_INVALID	1
+#define	PREFIX_DMETRIC_VALID	2
+#define	PREFIX_DMETRIC_AS_WIDE	3
+#define	PREFIX_DMETRIC_ECMP	4
+#define	PREFIX_DMETRIC_BEST	5
 };
 
 /* possible states for nhflags */
@@ -358,6 +368,12 @@ struct filterstate {
 	struct rde_community	 communities;
 	struct nexthop		*nexthop;
 	uint8_t			 nhflags;
+};
+
+enum eval_mode {
+	EVAL_DEFAULT,
+	EVAL_ALL,
+	EVAL_RECONF,
 };
 
 extern struct rde_memstats rdemem;
@@ -382,7 +398,7 @@ void		rde_pftable_del(uint16_t, struct prefix *);
 
 int		rde_evaluate_all(void);
 void		rde_generate_updates(struct rib *, struct prefix *,
-		    struct prefix *, int);
+		    struct prefix *, enum eval_mode);
 uint32_t	rde_local_as(void);
 int		rde_decisionflags(void);
 void		rde_peer_send_rrefresh(struct rde_peer *, uint8_t, uint8_t);
@@ -391,6 +407,7 @@ int		rde_match_peer(struct rde_peer *, struct ctl_neighbor *);
 /* rde_peer.c */
 int		 peer_has_as4byte(struct rde_peer *);
 int		 peer_has_add_path(struct rde_peer *, uint8_t, int);
+int		 peer_has_open_policy(struct rde_peer *, uint8_t *);
 int		 peer_accept_no_as_set(struct rde_peer *);
 void		 peer_init(uint32_t);
 void		 peer_shutdown(void);
@@ -595,12 +612,14 @@ struct prefix	*prefix_adjout_lookup(struct rde_peer *, struct bgpd_addr *,
 		     int);
 struct prefix	*prefix_adjout_next(struct rde_peer *, struct prefix *);
 int		 prefix_update(struct rib *, struct rde_peer *, uint32_t,
-		     struct filterstate *, struct bgpd_addr *, int, uint8_t);
+		     uint32_t, struct filterstate *, struct bgpd_addr *,
+		     int, uint8_t);
 int		 prefix_withdraw(struct rib *, struct rde_peer *, uint32_t,
 		    struct bgpd_addr *, int);
 void		 prefix_add_eor(struct rde_peer *, uint8_t);
-void		 prefix_adjout_update(struct rde_peer *, struct filterstate *,
-		    struct bgpd_addr *, int, uint8_t);
+void		 prefix_adjout_update(struct prefix *, struct rde_peer *,
+		    struct filterstate *, struct bgpd_addr *, int,
+		    uint32_t, uint8_t);
 void		 prefix_adjout_withdraw(struct prefix *);
 void		 prefix_adjout_destroy(struct prefix *);
 void		 prefix_adjout_dump(struct rde_peer *, void *,
@@ -678,6 +697,8 @@ int		 nexthop_compare(struct nexthop *, struct nexthop *);
 /* rde_update.c */
 void		 up_init(struct rde_peer *);
 void		 up_generate_updates(struct filter_head *, struct rde_peer *,
+		     struct prefix *, struct prefix *);
+void		 up_generate_addpath(struct filter_head *, struct rde_peer *,
 		     struct prefix *, struct prefix *);
 void		 up_generate_default(struct filter_head *, struct rde_peer *,
 		     uint8_t);

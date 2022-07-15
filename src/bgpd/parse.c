@@ -239,7 +239,7 @@ typedef struct {
 		struct filter_prefixlen	prefixlen;
 		struct prefixset_item	*prefixset_item;
 		struct {
-			uint8_t			enc_alg;
+			enum auth_enc_alg	enc_alg;
 			uint8_t			enc_key_len;
 			char			enc_key[IPSEC_ENC_KEY_LEN];
 		}			encspec;
@@ -335,89 +335,92 @@ extern int yydebug;
     ADDPATH = 301,                 /* ADDPATH  */
     SEND = 302,                    /* SEND  */
     RECV = 303,                    /* RECV  */
-    DEMOTE = 304,                  /* DEMOTE  */
-    ENFORCE = 305,                 /* ENFORCE  */
-    NEIGHBORAS = 306,              /* NEIGHBORAS  */
-    ASOVERRIDE = 307,              /* ASOVERRIDE  */
-    REFLECTOR = 308,               /* REFLECTOR  */
-    DEPEND = 309,                  /* DEPEND  */
-    DOWN = 310,                    /* DOWN  */
-    DUMP = 311,                    /* DUMP  */
-    IN = 312,                      /* IN  */
-    OUT = 313,                     /* OUT  */
-    SOCKET = 314,                  /* SOCKET  */
-    RESTRICTED = 315,              /* RESTRICTED  */
-    LOG = 316,                     /* LOG  */
-    TRANSPARENT = 317,             /* TRANSPARENT  */
-    TCP = 318,                     /* TCP  */
-    MD5SIG = 319,                  /* MD5SIG  */
-    PASSWORD = 320,                /* PASSWORD  */
-    KEY = 321,                     /* KEY  */
-    TTLSECURITY = 322,             /* TTLSECURITY  */
-    ALLOW = 323,                   /* ALLOW  */
-    DENY = 324,                    /* DENY  */
-    MATCH = 325,                   /* MATCH  */
-    QUICK = 326,                   /* QUICK  */
-    FROM = 327,                    /* FROM  */
-    TO = 328,                      /* TO  */
-    ANY = 329,                     /* ANY  */
-    CONNECTED = 330,               /* CONNECTED  */
-    STATIC = 331,                  /* STATIC  */
-    COMMUNITY = 332,               /* COMMUNITY  */
-    EXTCOMMUNITY = 333,            /* EXTCOMMUNITY  */
-    LARGECOMMUNITY = 334,          /* LARGECOMMUNITY  */
-    DELETE = 335,                  /* DELETE  */
-    MAXCOMMUNITIES = 336,          /* MAXCOMMUNITIES  */
-    MAXEXTCOMMUNITIES = 337,       /* MAXEXTCOMMUNITIES  */
-    MAXLARGECOMMUNITIES = 338,     /* MAXLARGECOMMUNITIES  */
-    PREFIX = 339,                  /* PREFIX  */
-    PREFIXLEN = 340,               /* PREFIXLEN  */
-    PREFIXSET = 341,               /* PREFIXSET  */
-    ROASET = 342,                  /* ROASET  */
-    ORIGINSET = 343,               /* ORIGINSET  */
-    OVS = 344,                     /* OVS  */
-    EXPIRES = 345,                 /* EXPIRES  */
-    ASSET = 346,                   /* ASSET  */
-    SOURCEAS = 347,                /* SOURCEAS  */
-    TRANSITAS = 348,               /* TRANSITAS  */
-    PEERAS = 349,                  /* PEERAS  */
-    MAXASLEN = 350,                /* MAXASLEN  */
-    MAXASSEQ = 351,                /* MAXASSEQ  */
-    SET = 352,                     /* SET  */
-    LOCALPREF = 353,               /* LOCALPREF  */
-    MED = 354,                     /* MED  */
-    METRIC = 355,                  /* METRIC  */
-    NEXTHOP = 356,                 /* NEXTHOP  */
-    REJECT = 357,                  /* REJECT  */
-    BLACKHOLE = 358,               /* BLACKHOLE  */
-    NOMODIFY = 359,                /* NOMODIFY  */
-    SELF = 360,                    /* SELF  */
-    PREPEND_SELF = 361,            /* PREPEND_SELF  */
-    PREPEND_PEER = 362,            /* PREPEND_PEER  */
-    PFTABLE = 363,                 /* PFTABLE  */
-    WEIGHT = 364,                  /* WEIGHT  */
-    RTLABEL = 365,                 /* RTLABEL  */
-    ORIGIN = 366,                  /* ORIGIN  */
-    PRIORITY = 367,                /* PRIORITY  */
-    ERROR = 368,                   /* ERROR  */
-    INCLUDE = 369,                 /* INCLUDE  */
-    IPSEC = 370,                   /* IPSEC  */
-    ESP = 371,                     /* ESP  */
-    AH = 372,                      /* AH  */
-    SPI = 373,                     /* SPI  */
-    IKE = 374,                     /* IKE  */
-    IPV4 = 375,                    /* IPV4  */
-    IPV6 = 376,                    /* IPV6  */
-    QUALIFY = 377,                 /* QUALIFY  */
-    VIA = 378,                     /* VIA  */
-    NE = 379,                      /* NE  */
-    LE = 380,                      /* LE  */
-    GE = 381,                      /* GE  */
-    XRANGE = 382,                  /* XRANGE  */
-    LONGER = 383,                  /* LONGER  */
-    MAXLEN = 384,                  /* MAXLEN  */
-    STRING = 385,                  /* STRING  */
-    NUMBER = 386                   /* NUMBER  */
+    PLUS = 304,                    /* PLUS  */
+    POLICY = 305,                  /* POLICY  */
+    DEMOTE = 306,                  /* DEMOTE  */
+    ENFORCE = 307,                 /* ENFORCE  */
+    NEIGHBORAS = 308,              /* NEIGHBORAS  */
+    ASOVERRIDE = 309,              /* ASOVERRIDE  */
+    REFLECTOR = 310,               /* REFLECTOR  */
+    DEPEND = 311,                  /* DEPEND  */
+    DOWN = 312,                    /* DOWN  */
+    DUMP = 313,                    /* DUMP  */
+    IN = 314,                      /* IN  */
+    OUT = 315,                     /* OUT  */
+    SOCKET = 316,                  /* SOCKET  */
+    RESTRICTED = 317,              /* RESTRICTED  */
+    LOG = 318,                     /* LOG  */
+    TRANSPARENT = 319,             /* TRANSPARENT  */
+    TCP = 320,                     /* TCP  */
+    MD5SIG = 321,                  /* MD5SIG  */
+    PASSWORD = 322,                /* PASSWORD  */
+    KEY = 323,                     /* KEY  */
+    TTLSECURITY = 324,             /* TTLSECURITY  */
+    ALLOW = 325,                   /* ALLOW  */
+    DENY = 326,                    /* DENY  */
+    MATCH = 327,                   /* MATCH  */
+    QUICK = 328,                   /* QUICK  */
+    FROM = 329,                    /* FROM  */
+    TO = 330,                      /* TO  */
+    ANY = 331,                     /* ANY  */
+    CONNECTED = 332,               /* CONNECTED  */
+    STATIC = 333,                  /* STATIC  */
+    COMMUNITY = 334,               /* COMMUNITY  */
+    EXTCOMMUNITY = 335,            /* EXTCOMMUNITY  */
+    LARGECOMMUNITY = 336,          /* LARGECOMMUNITY  */
+    DELETE = 337,                  /* DELETE  */
+    MAXCOMMUNITIES = 338,          /* MAXCOMMUNITIES  */
+    MAXEXTCOMMUNITIES = 339,       /* MAXEXTCOMMUNITIES  */
+    MAXLARGECOMMUNITIES = 340,     /* MAXLARGECOMMUNITIES  */
+    PREFIX = 341,                  /* PREFIX  */
+    PREFIXLEN = 342,               /* PREFIXLEN  */
+    PREFIXSET = 343,               /* PREFIXSET  */
+    ROASET = 344,                  /* ROASET  */
+    ORIGINSET = 345,               /* ORIGINSET  */
+    OVS = 346,                     /* OVS  */
+    EXPIRES = 347,                 /* EXPIRES  */
+    ASSET = 348,                   /* ASSET  */
+    SOURCEAS = 349,                /* SOURCEAS  */
+    TRANSITAS = 350,               /* TRANSITAS  */
+    PEERAS = 351,                  /* PEERAS  */
+    MAXASLEN = 352,                /* MAXASLEN  */
+    MAXASSEQ = 353,                /* MAXASSEQ  */
+    SET = 354,                     /* SET  */
+    LOCALPREF = 355,               /* LOCALPREF  */
+    MED = 356,                     /* MED  */
+    METRIC = 357,                  /* METRIC  */
+    NEXTHOP = 358,                 /* NEXTHOP  */
+    REJECT = 359,                  /* REJECT  */
+    BLACKHOLE = 360,               /* BLACKHOLE  */
+    NOMODIFY = 361,                /* NOMODIFY  */
+    SELF = 362,                    /* SELF  */
+    PREPEND_SELF = 363,            /* PREPEND_SELF  */
+    PREPEND_PEER = 364,            /* PREPEND_PEER  */
+    PFTABLE = 365,                 /* PFTABLE  */
+    WEIGHT = 366,                  /* WEIGHT  */
+    RTLABEL = 367,                 /* RTLABEL  */
+    ORIGIN = 368,                  /* ORIGIN  */
+    PRIORITY = 369,                /* PRIORITY  */
+    ERROR = 370,                   /* ERROR  */
+    INCLUDE = 371,                 /* INCLUDE  */
+    IPSEC = 372,                   /* IPSEC  */
+    ESP = 373,                     /* ESP  */
+    AH = 374,                      /* AH  */
+    SPI = 375,                     /* SPI  */
+    IKE = 376,                     /* IKE  */
+    IPV4 = 377,                    /* IPV4  */
+    IPV6 = 378,                    /* IPV6  */
+    QUALIFY = 379,                 /* QUALIFY  */
+    VIA = 380,                     /* VIA  */
+    NE = 381,                      /* NE  */
+    LE = 382,                      /* LE  */
+    GE = 383,                      /* GE  */
+    XRANGE = 384,                  /* XRANGE  */
+    LONGER = 385,                  /* LONGER  */
+    MAXLEN = 386,                  /* MAXLEN  */
+    MAX = 387,                     /* MAX  */
+    STRING = 388,                  /* STRING  */
+    NUMBER = 389                   /* NUMBER  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -472,89 +475,92 @@ extern int yydebug;
 #define ADDPATH 301
 #define SEND 302
 #define RECV 303
-#define DEMOTE 304
-#define ENFORCE 305
-#define NEIGHBORAS 306
-#define ASOVERRIDE 307
-#define REFLECTOR 308
-#define DEPEND 309
-#define DOWN 310
-#define DUMP 311
-#define IN 312
-#define OUT 313
-#define SOCKET 314
-#define RESTRICTED 315
-#define LOG 316
-#define TRANSPARENT 317
-#define TCP 318
-#define MD5SIG 319
-#define PASSWORD 320
-#define KEY 321
-#define TTLSECURITY 322
-#define ALLOW 323
-#define DENY 324
-#define MATCH 325
-#define QUICK 326
-#define FROM 327
-#define TO 328
-#define ANY 329
-#define CONNECTED 330
-#define STATIC 331
-#define COMMUNITY 332
-#define EXTCOMMUNITY 333
-#define LARGECOMMUNITY 334
-#define DELETE 335
-#define MAXCOMMUNITIES 336
-#define MAXEXTCOMMUNITIES 337
-#define MAXLARGECOMMUNITIES 338
-#define PREFIX 339
-#define PREFIXLEN 340
-#define PREFIXSET 341
-#define ROASET 342
-#define ORIGINSET 343
-#define OVS 344
-#define EXPIRES 345
-#define ASSET 346
-#define SOURCEAS 347
-#define TRANSITAS 348
-#define PEERAS 349
-#define MAXASLEN 350
-#define MAXASSEQ 351
-#define SET 352
-#define LOCALPREF 353
-#define MED 354
-#define METRIC 355
-#define NEXTHOP 356
-#define REJECT 357
-#define BLACKHOLE 358
-#define NOMODIFY 359
-#define SELF 360
-#define PREPEND_SELF 361
-#define PREPEND_PEER 362
-#define PFTABLE 363
-#define WEIGHT 364
-#define RTLABEL 365
-#define ORIGIN 366
-#define PRIORITY 367
-#define ERROR 368
-#define INCLUDE 369
-#define IPSEC 370
-#define ESP 371
-#define AH 372
-#define SPI 373
-#define IKE 374
-#define IPV4 375
-#define IPV6 376
-#define QUALIFY 377
-#define VIA 378
-#define NE 379
-#define LE 380
-#define GE 381
-#define XRANGE 382
-#define LONGER 383
-#define MAXLEN 384
-#define STRING 385
-#define NUMBER 386
+#define PLUS 304
+#define POLICY 305
+#define DEMOTE 306
+#define ENFORCE 307
+#define NEIGHBORAS 308
+#define ASOVERRIDE 309
+#define REFLECTOR 310
+#define DEPEND 311
+#define DOWN 312
+#define DUMP 313
+#define IN 314
+#define OUT 315
+#define SOCKET 316
+#define RESTRICTED 317
+#define LOG 318
+#define TRANSPARENT 319
+#define TCP 320
+#define MD5SIG 321
+#define PASSWORD 322
+#define KEY 323
+#define TTLSECURITY 324
+#define ALLOW 325
+#define DENY 326
+#define MATCH 327
+#define QUICK 328
+#define FROM 329
+#define TO 330
+#define ANY 331
+#define CONNECTED 332
+#define STATIC 333
+#define COMMUNITY 334
+#define EXTCOMMUNITY 335
+#define LARGECOMMUNITY 336
+#define DELETE 337
+#define MAXCOMMUNITIES 338
+#define MAXEXTCOMMUNITIES 339
+#define MAXLARGECOMMUNITIES 340
+#define PREFIX 341
+#define PREFIXLEN 342
+#define PREFIXSET 343
+#define ROASET 344
+#define ORIGINSET 345
+#define OVS 346
+#define EXPIRES 347
+#define ASSET 348
+#define SOURCEAS 349
+#define TRANSITAS 350
+#define PEERAS 351
+#define MAXASLEN 352
+#define MAXASSEQ 353
+#define SET 354
+#define LOCALPREF 355
+#define MED 356
+#define METRIC 357
+#define NEXTHOP 358
+#define REJECT 359
+#define BLACKHOLE 360
+#define NOMODIFY 361
+#define SELF 362
+#define PREPEND_SELF 363
+#define PREPEND_PEER 364
+#define PFTABLE 365
+#define WEIGHT 366
+#define RTLABEL 367
+#define ORIGIN 368
+#define PRIORITY 369
+#define ERROR 370
+#define INCLUDE 371
+#define IPSEC 372
+#define ESP 373
+#define AH 374
+#define SPI 375
+#define IKE 376
+#define IPV4 377
+#define IPV6 378
+#define QUALIFY 379
+#define VIA 380
+#define NE 381
+#define LE 382
+#define GE 383
+#define XRANGE 384
+#define LONGER 385
+#define MAXLEN 386
+#define MAX 387
+#define STRING 388
+#define NUMBER 389
 
 /* Value type.  */
 
@@ -617,195 +623,201 @@ enum yysymbol_kind_t
   YYSYMBOL_ADDPATH = 46,                   /* ADDPATH  */
   YYSYMBOL_SEND = 47,                      /* SEND  */
   YYSYMBOL_RECV = 48,                      /* RECV  */
-  YYSYMBOL_DEMOTE = 49,                    /* DEMOTE  */
-  YYSYMBOL_ENFORCE = 50,                   /* ENFORCE  */
-  YYSYMBOL_NEIGHBORAS = 51,                /* NEIGHBORAS  */
-  YYSYMBOL_ASOVERRIDE = 52,                /* ASOVERRIDE  */
-  YYSYMBOL_REFLECTOR = 53,                 /* REFLECTOR  */
-  YYSYMBOL_DEPEND = 54,                    /* DEPEND  */
-  YYSYMBOL_DOWN = 55,                      /* DOWN  */
-  YYSYMBOL_DUMP = 56,                      /* DUMP  */
-  YYSYMBOL_IN = 57,                        /* IN  */
-  YYSYMBOL_OUT = 58,                       /* OUT  */
-  YYSYMBOL_SOCKET = 59,                    /* SOCKET  */
-  YYSYMBOL_RESTRICTED = 60,                /* RESTRICTED  */
-  YYSYMBOL_LOG = 61,                       /* LOG  */
-  YYSYMBOL_TRANSPARENT = 62,               /* TRANSPARENT  */
-  YYSYMBOL_TCP = 63,                       /* TCP  */
-  YYSYMBOL_MD5SIG = 64,                    /* MD5SIG  */
-  YYSYMBOL_PASSWORD = 65,                  /* PASSWORD  */
-  YYSYMBOL_KEY = 66,                       /* KEY  */
-  YYSYMBOL_TTLSECURITY = 67,               /* TTLSECURITY  */
-  YYSYMBOL_ALLOW = 68,                     /* ALLOW  */
-  YYSYMBOL_DENY = 69,                      /* DENY  */
-  YYSYMBOL_MATCH = 70,                     /* MATCH  */
-  YYSYMBOL_QUICK = 71,                     /* QUICK  */
-  YYSYMBOL_FROM = 72,                      /* FROM  */
-  YYSYMBOL_TO = 73,                        /* TO  */
-  YYSYMBOL_ANY = 74,                       /* ANY  */
-  YYSYMBOL_CONNECTED = 75,                 /* CONNECTED  */
-  YYSYMBOL_STATIC = 76,                    /* STATIC  */
-  YYSYMBOL_COMMUNITY = 77,                 /* COMMUNITY  */
-  YYSYMBOL_EXTCOMMUNITY = 78,              /* EXTCOMMUNITY  */
-  YYSYMBOL_LARGECOMMUNITY = 79,            /* LARGECOMMUNITY  */
-  YYSYMBOL_DELETE = 80,                    /* DELETE  */
-  YYSYMBOL_MAXCOMMUNITIES = 81,            /* MAXCOMMUNITIES  */
-  YYSYMBOL_MAXEXTCOMMUNITIES = 82,         /* MAXEXTCOMMUNITIES  */
-  YYSYMBOL_MAXLARGECOMMUNITIES = 83,       /* MAXLARGECOMMUNITIES  */
-  YYSYMBOL_PREFIX = 84,                    /* PREFIX  */
-  YYSYMBOL_PREFIXLEN = 85,                 /* PREFIXLEN  */
-  YYSYMBOL_PREFIXSET = 86,                 /* PREFIXSET  */
-  YYSYMBOL_ROASET = 87,                    /* ROASET  */
-  YYSYMBOL_ORIGINSET = 88,                 /* ORIGINSET  */
-  YYSYMBOL_OVS = 89,                       /* OVS  */
-  YYSYMBOL_EXPIRES = 90,                   /* EXPIRES  */
-  YYSYMBOL_ASSET = 91,                     /* ASSET  */
-  YYSYMBOL_SOURCEAS = 92,                  /* SOURCEAS  */
-  YYSYMBOL_TRANSITAS = 93,                 /* TRANSITAS  */
-  YYSYMBOL_PEERAS = 94,                    /* PEERAS  */
-  YYSYMBOL_MAXASLEN = 95,                  /* MAXASLEN  */
-  YYSYMBOL_MAXASSEQ = 96,                  /* MAXASSEQ  */
-  YYSYMBOL_SET = 97,                       /* SET  */
-  YYSYMBOL_LOCALPREF = 98,                 /* LOCALPREF  */
-  YYSYMBOL_MED = 99,                       /* MED  */
-  YYSYMBOL_METRIC = 100,                   /* METRIC  */
-  YYSYMBOL_NEXTHOP = 101,                  /* NEXTHOP  */
-  YYSYMBOL_REJECT = 102,                   /* REJECT  */
-  YYSYMBOL_BLACKHOLE = 103,                /* BLACKHOLE  */
-  YYSYMBOL_NOMODIFY = 104,                 /* NOMODIFY  */
-  YYSYMBOL_SELF = 105,                     /* SELF  */
-  YYSYMBOL_PREPEND_SELF = 106,             /* PREPEND_SELF  */
-  YYSYMBOL_PREPEND_PEER = 107,             /* PREPEND_PEER  */
-  YYSYMBOL_PFTABLE = 108,                  /* PFTABLE  */
-  YYSYMBOL_WEIGHT = 109,                   /* WEIGHT  */
-  YYSYMBOL_RTLABEL = 110,                  /* RTLABEL  */
-  YYSYMBOL_ORIGIN = 111,                   /* ORIGIN  */
-  YYSYMBOL_PRIORITY = 112,                 /* PRIORITY  */
-  YYSYMBOL_ERROR = 113,                    /* ERROR  */
-  YYSYMBOL_INCLUDE = 114,                  /* INCLUDE  */
-  YYSYMBOL_IPSEC = 115,                    /* IPSEC  */
-  YYSYMBOL_ESP = 116,                      /* ESP  */
-  YYSYMBOL_AH = 117,                       /* AH  */
-  YYSYMBOL_SPI = 118,                      /* SPI  */
-  YYSYMBOL_IKE = 119,                      /* IKE  */
-  YYSYMBOL_IPV4 = 120,                     /* IPV4  */
-  YYSYMBOL_IPV6 = 121,                     /* IPV6  */
-  YYSYMBOL_QUALIFY = 122,                  /* QUALIFY  */
-  YYSYMBOL_VIA = 123,                      /* VIA  */
-  YYSYMBOL_NE = 124,                       /* NE  */
-  YYSYMBOL_LE = 125,                       /* LE  */
-  YYSYMBOL_GE = 126,                       /* GE  */
-  YYSYMBOL_XRANGE = 127,                   /* XRANGE  */
-  YYSYMBOL_LONGER = 128,                   /* LONGER  */
-  YYSYMBOL_MAXLEN = 129,                   /* MAXLEN  */
-  YYSYMBOL_STRING = 130,                   /* STRING  */
-  YYSYMBOL_NUMBER = 131,                   /* NUMBER  */
-  YYSYMBOL_132_n_ = 132,                   /* '\n'  */
-  YYSYMBOL_133_ = 133,                     /* '='  */
-  YYSYMBOL_134_ = 134,                     /* '{'  */
-  YYSYMBOL_135_ = 135,                     /* '}'  */
-  YYSYMBOL_136_ = 136,                     /* '/'  */
-  YYSYMBOL_137_ = 137,                     /* '+'  */
-  YYSYMBOL_138_ = 138,                     /* '-'  */
-  YYSYMBOL_139_ = 139,                     /* ','  */
-  YYSYMBOL_140_ = 140,                     /* '<'  */
-  YYSYMBOL_141_ = 141,                     /* '>'  */
-  YYSYMBOL_YYACCEPT = 142,                 /* $accept  */
-  YYSYMBOL_grammar = 143,                  /* grammar  */
-  YYSYMBOL_asnumber = 144,                 /* asnumber  */
-  YYSYMBOL_as4number = 145,                /* as4number  */
-  YYSYMBOL_as4number_any = 146,            /* as4number_any  */
-  YYSYMBOL_string = 147,                   /* string  */
-  YYSYMBOL_yesno = 148,                    /* yesno  */
-  YYSYMBOL_varset = 149,                   /* varset  */
-  YYSYMBOL_include = 150,                  /* include  */
-  YYSYMBOL_as_set = 151,                   /* as_set  */
-  YYSYMBOL_152_1 = 152,                    /* $@1  */
-  YYSYMBOL_as_set_l = 153,                 /* as_set_l  */
-  YYSYMBOL_prefixset = 154,                /* prefixset  */
-  YYSYMBOL_155_2 = 155,                    /* $@2  */
-  YYSYMBOL_prefixset_l = 156,              /* prefixset_l  */
-  YYSYMBOL_prefixset_item = 157,           /* prefixset_item  */
-  YYSYMBOL_roa_set = 158,                  /* roa_set  */
-  YYSYMBOL_159_3 = 159,                    /* $@3  */
-  YYSYMBOL_origin_set = 160,               /* origin_set  */
-  YYSYMBOL_161_4 = 161,                    /* $@4  */
-  YYSYMBOL_expires = 162,                  /* expires  */
-  YYSYMBOL_roa_set_l = 163,                /* roa_set_l  */
-  YYSYMBOL_rtr = 164,                      /* rtr  */
-  YYSYMBOL_165_5 = 165,                    /* $@5  */
-  YYSYMBOL_rtropt_l = 166,                 /* rtropt_l  */
-  YYSYMBOL_rtropt = 167,                   /* rtropt  */
-  YYSYMBOL_conf_main = 168,                /* conf_main  */
-  YYSYMBOL_rib = 169,                      /* rib  */
-  YYSYMBOL_170_6 = 170,                    /* $@6  */
-  YYSYMBOL_ribopts = 171,                  /* ribopts  */
-  YYSYMBOL_fibupdate = 172,                /* fibupdate  */
-  YYSYMBOL_mrtdump = 173,                  /* mrtdump  */
-  YYSYMBOL_network = 174,                  /* network  */
-  YYSYMBOL_inout = 175,                    /* inout  */
-  YYSYMBOL_restricted = 176,               /* restricted  */
-  YYSYMBOL_address = 177,                  /* address  */
-  YYSYMBOL_prefix = 178,                   /* prefix  */
-  YYSYMBOL_addrspec = 179,                 /* addrspec  */
-  YYSYMBOL_optnumber = 180,                /* optnumber  */
-  YYSYMBOL_l3vpn = 181,                    /* l3vpn  */
-  YYSYMBOL_182_7 = 182,                    /* $@7  */
-  YYSYMBOL_l3vpnopts_l = 183,              /* l3vpnopts_l  */
-  YYSYMBOL_l3vpnopts = 184,                /* l3vpnopts  */
-  YYSYMBOL_neighbor = 185,                 /* neighbor  */
-  YYSYMBOL_186_8 = 186,                    /* $@8  */
-  YYSYMBOL_187_9 = 187,                    /* $@9  */
-  YYSYMBOL_group = 188,                    /* group  */
-  YYSYMBOL_189_10 = 189,                   /* $@10  */
-  YYSYMBOL_groupopts_l = 190,              /* groupopts_l  */
-  YYSYMBOL_peeropts_h = 191,               /* peeropts_h  */
-  YYSYMBOL_peeropts_l = 192,               /* peeropts_l  */
-  YYSYMBOL_peeropts = 193,                 /* peeropts  */
-  YYSYMBOL_restart = 194,                  /* restart  */
-  YYSYMBOL_family = 195,                   /* family  */
-  YYSYMBOL_safi = 196,                     /* safi  */
-  YYSYMBOL_nettype = 197,                  /* nettype  */
-  YYSYMBOL_espah = 198,                    /* espah  */
-  YYSYMBOL_encspec = 199,                  /* encspec  */
-  YYSYMBOL_filterrule = 200,               /* filterrule  */
-  YYSYMBOL_action = 201,                   /* action  */
-  YYSYMBOL_quick = 202,                    /* quick  */
-  YYSYMBOL_direction = 203,                /* direction  */
-  YYSYMBOL_filter_rib_h = 204,             /* filter_rib_h  */
-  YYSYMBOL_filter_rib_l = 205,             /* filter_rib_l  */
-  YYSYMBOL_filter_rib = 206,               /* filter_rib  */
-  YYSYMBOL_filter_peer_h = 207,            /* filter_peer_h  */
-  YYSYMBOL_filter_peer_l = 208,            /* filter_peer_l  */
-  YYSYMBOL_filter_peer = 209,              /* filter_peer  */
-  YYSYMBOL_filter_prefix_h = 210,          /* filter_prefix_h  */
-  YYSYMBOL_filter_prefix_m = 211,          /* filter_prefix_m  */
-  YYSYMBOL_filter_prefix_l = 212,          /* filter_prefix_l  */
-  YYSYMBOL_filter_prefix = 213,            /* filter_prefix  */
-  YYSYMBOL_filter_as_h = 214,              /* filter_as_h  */
-  YYSYMBOL_filter_as_t_l = 215,            /* filter_as_t_l  */
-  YYSYMBOL_filter_as_t = 216,              /* filter_as_t  */
-  YYSYMBOL_filter_as_l_h = 217,            /* filter_as_l_h  */
-  YYSYMBOL_filter_as_l = 218,              /* filter_as_l  */
-  YYSYMBOL_filter_as = 219,                /* filter_as  */
-  YYSYMBOL_filter_match_h = 220,           /* filter_match_h  */
-  YYSYMBOL_221_11 = 221,                   /* $@11  */
-  YYSYMBOL_filter_match = 222,             /* filter_match  */
-  YYSYMBOL_filter_elm = 223,               /* filter_elm  */
-  YYSYMBOL_prefixlenop = 224,              /* prefixlenop  */
-  YYSYMBOL_filter_as_type = 225,           /* filter_as_type  */
-  YYSYMBOL_filter_set = 226,               /* filter_set  */
-  YYSYMBOL_filter_set_l = 227,             /* filter_set_l  */
-  YYSYMBOL_community = 228,                /* community  */
-  YYSYMBOL_delete = 229,                   /* delete  */
-  YYSYMBOL_filter_set_opt = 230,           /* filter_set_opt  */
-  YYSYMBOL_origincode = 231,               /* origincode  */
-  YYSYMBOL_validity = 232,                 /* validity  */
-  YYSYMBOL_optnl = 233,                    /* optnl  */
-  YYSYMBOL_comma = 234,                    /* comma  */
-  YYSYMBOL_unaryop = 235,                  /* unaryop  */
-  YYSYMBOL_equalityop = 236,               /* equalityop  */
-  YYSYMBOL_binaryop = 237                  /* binaryop  */
+  YYSYMBOL_PLUS = 49,                      /* PLUS  */
+  YYSYMBOL_POLICY = 50,                    /* POLICY  */
+  YYSYMBOL_DEMOTE = 51,                    /* DEMOTE  */
+  YYSYMBOL_ENFORCE = 52,                   /* ENFORCE  */
+  YYSYMBOL_NEIGHBORAS = 53,                /* NEIGHBORAS  */
+  YYSYMBOL_ASOVERRIDE = 54,                /* ASOVERRIDE  */
+  YYSYMBOL_REFLECTOR = 55,                 /* REFLECTOR  */
+  YYSYMBOL_DEPEND = 56,                    /* DEPEND  */
+  YYSYMBOL_DOWN = 57,                      /* DOWN  */
+  YYSYMBOL_DUMP = 58,                      /* DUMP  */
+  YYSYMBOL_IN = 59,                        /* IN  */
+  YYSYMBOL_OUT = 60,                       /* OUT  */
+  YYSYMBOL_SOCKET = 61,                    /* SOCKET  */
+  YYSYMBOL_RESTRICTED = 62,                /* RESTRICTED  */
+  YYSYMBOL_LOG = 63,                       /* LOG  */
+  YYSYMBOL_TRANSPARENT = 64,               /* TRANSPARENT  */
+  YYSYMBOL_TCP = 65,                       /* TCP  */
+  YYSYMBOL_MD5SIG = 66,                    /* MD5SIG  */
+  YYSYMBOL_PASSWORD = 67,                  /* PASSWORD  */
+  YYSYMBOL_KEY = 68,                       /* KEY  */
+  YYSYMBOL_TTLSECURITY = 69,               /* TTLSECURITY  */
+  YYSYMBOL_ALLOW = 70,                     /* ALLOW  */
+  YYSYMBOL_DENY = 71,                      /* DENY  */
+  YYSYMBOL_MATCH = 72,                     /* MATCH  */
+  YYSYMBOL_QUICK = 73,                     /* QUICK  */
+  YYSYMBOL_FROM = 74,                      /* FROM  */
+  YYSYMBOL_TO = 75,                        /* TO  */
+  YYSYMBOL_ANY = 76,                       /* ANY  */
+  YYSYMBOL_CONNECTED = 77,                 /* CONNECTED  */
+  YYSYMBOL_STATIC = 78,                    /* STATIC  */
+  YYSYMBOL_COMMUNITY = 79,                 /* COMMUNITY  */
+  YYSYMBOL_EXTCOMMUNITY = 80,              /* EXTCOMMUNITY  */
+  YYSYMBOL_LARGECOMMUNITY = 81,            /* LARGECOMMUNITY  */
+  YYSYMBOL_DELETE = 82,                    /* DELETE  */
+  YYSYMBOL_MAXCOMMUNITIES = 83,            /* MAXCOMMUNITIES  */
+  YYSYMBOL_MAXEXTCOMMUNITIES = 84,         /* MAXEXTCOMMUNITIES  */
+  YYSYMBOL_MAXLARGECOMMUNITIES = 85,       /* MAXLARGECOMMUNITIES  */
+  YYSYMBOL_PREFIX = 86,                    /* PREFIX  */
+  YYSYMBOL_PREFIXLEN = 87,                 /* PREFIXLEN  */
+  YYSYMBOL_PREFIXSET = 88,                 /* PREFIXSET  */
+  YYSYMBOL_ROASET = 89,                    /* ROASET  */
+  YYSYMBOL_ORIGINSET = 90,                 /* ORIGINSET  */
+  YYSYMBOL_OVS = 91,                       /* OVS  */
+  YYSYMBOL_EXPIRES = 92,                   /* EXPIRES  */
+  YYSYMBOL_ASSET = 93,                     /* ASSET  */
+  YYSYMBOL_SOURCEAS = 94,                  /* SOURCEAS  */
+  YYSYMBOL_TRANSITAS = 95,                 /* TRANSITAS  */
+  YYSYMBOL_PEERAS = 96,                    /* PEERAS  */
+  YYSYMBOL_MAXASLEN = 97,                  /* MAXASLEN  */
+  YYSYMBOL_MAXASSEQ = 98,                  /* MAXASSEQ  */
+  YYSYMBOL_SET = 99,                       /* SET  */
+  YYSYMBOL_LOCALPREF = 100,                /* LOCALPREF  */
+  YYSYMBOL_MED = 101,                      /* MED  */
+  YYSYMBOL_METRIC = 102,                   /* METRIC  */
+  YYSYMBOL_NEXTHOP = 103,                  /* NEXTHOP  */
+  YYSYMBOL_REJECT = 104,                   /* REJECT  */
+  YYSYMBOL_BLACKHOLE = 105,                /* BLACKHOLE  */
+  YYSYMBOL_NOMODIFY = 106,                 /* NOMODIFY  */
+  YYSYMBOL_SELF = 107,                     /* SELF  */
+  YYSYMBOL_PREPEND_SELF = 108,             /* PREPEND_SELF  */
+  YYSYMBOL_PREPEND_PEER = 109,             /* PREPEND_PEER  */
+  YYSYMBOL_PFTABLE = 110,                  /* PFTABLE  */
+  YYSYMBOL_WEIGHT = 111,                   /* WEIGHT  */
+  YYSYMBOL_RTLABEL = 112,                  /* RTLABEL  */
+  YYSYMBOL_ORIGIN = 113,                   /* ORIGIN  */
+  YYSYMBOL_PRIORITY = 114,                 /* PRIORITY  */
+  YYSYMBOL_ERROR = 115,                    /* ERROR  */
+  YYSYMBOL_INCLUDE = 116,                  /* INCLUDE  */
+  YYSYMBOL_IPSEC = 117,                    /* IPSEC  */
+  YYSYMBOL_ESP = 118,                      /* ESP  */
+  YYSYMBOL_AH = 119,                       /* AH  */
+  YYSYMBOL_SPI = 120,                      /* SPI  */
+  YYSYMBOL_IKE = 121,                      /* IKE  */
+  YYSYMBOL_IPV4 = 122,                     /* IPV4  */
+  YYSYMBOL_IPV6 = 123,                     /* IPV6  */
+  YYSYMBOL_QUALIFY = 124,                  /* QUALIFY  */
+  YYSYMBOL_VIA = 125,                      /* VIA  */
+  YYSYMBOL_NE = 126,                       /* NE  */
+  YYSYMBOL_LE = 127,                       /* LE  */
+  YYSYMBOL_GE = 128,                       /* GE  */
+  YYSYMBOL_XRANGE = 129,                   /* XRANGE  */
+  YYSYMBOL_LONGER = 130,                   /* LONGER  */
+  YYSYMBOL_MAXLEN = 131,                   /* MAXLEN  */
+  YYSYMBOL_MAX = 132,                      /* MAX  */
+  YYSYMBOL_STRING = 133,                   /* STRING  */
+  YYSYMBOL_NUMBER = 134,                   /* NUMBER  */
+  YYSYMBOL_135_n_ = 135,                   /* '\n'  */
+  YYSYMBOL_136_ = 136,                     /* '='  */
+  YYSYMBOL_137_ = 137,                     /* '{'  */
+  YYSYMBOL_138_ = 138,                     /* '}'  */
+  YYSYMBOL_139_ = 139,                     /* '/'  */
+  YYSYMBOL_140_ = 140,                     /* '+'  */
+  YYSYMBOL_141_ = 141,                     /* '-'  */
+  YYSYMBOL_142_ = 142,                     /* ','  */
+  YYSYMBOL_143_ = 143,                     /* '<'  */
+  YYSYMBOL_144_ = 144,                     /* '>'  */
+  YYSYMBOL_YYACCEPT = 145,                 /* $accept  */
+  YYSYMBOL_grammar = 146,                  /* grammar  */
+  YYSYMBOL_asnumber = 147,                 /* asnumber  */
+  YYSYMBOL_as4number = 148,                /* as4number  */
+  YYSYMBOL_as4number_any = 149,            /* as4number_any  */
+  YYSYMBOL_string = 150,                   /* string  */
+  YYSYMBOL_yesno = 151,                    /* yesno  */
+  YYSYMBOL_varset = 152,                   /* varset  */
+  YYSYMBOL_include = 153,                  /* include  */
+  YYSYMBOL_as_set = 154,                   /* as_set  */
+  YYSYMBOL_155_1 = 155,                    /* $@1  */
+  YYSYMBOL_as_set_l = 156,                 /* as_set_l  */
+  YYSYMBOL_prefixset = 157,                /* prefixset  */
+  YYSYMBOL_158_2 = 158,                    /* $@2  */
+  YYSYMBOL_prefixset_l = 159,              /* prefixset_l  */
+  YYSYMBOL_prefixset_item = 160,           /* prefixset_item  */
+  YYSYMBOL_roa_set = 161,                  /* roa_set  */
+  YYSYMBOL_162_3 = 162,                    /* $@3  */
+  YYSYMBOL_origin_set = 163,               /* origin_set  */
+  YYSYMBOL_164_4 = 164,                    /* $@4  */
+  YYSYMBOL_expires = 165,                  /* expires  */
+  YYSYMBOL_roa_set_l = 166,                /* roa_set_l  */
+  YYSYMBOL_rtr = 167,                      /* rtr  */
+  YYSYMBOL_168_5 = 168,                    /* $@5  */
+  YYSYMBOL_rtropt_l = 169,                 /* rtropt_l  */
+  YYSYMBOL_rtropt = 170,                   /* rtropt  */
+  YYSYMBOL_conf_main = 171,                /* conf_main  */
+  YYSYMBOL_rib = 172,                      /* rib  */
+  YYSYMBOL_173_6 = 173,                    /* $@6  */
+  YYSYMBOL_ribopts = 174,                  /* ribopts  */
+  YYSYMBOL_fibupdate = 175,                /* fibupdate  */
+  YYSYMBOL_mrtdump = 176,                  /* mrtdump  */
+  YYSYMBOL_network = 177,                  /* network  */
+  YYSYMBOL_inout = 178,                    /* inout  */
+  YYSYMBOL_restricted = 179,               /* restricted  */
+  YYSYMBOL_address = 180,                  /* address  */
+  YYSYMBOL_prefix = 181,                   /* prefix  */
+  YYSYMBOL_addrspec = 182,                 /* addrspec  */
+  YYSYMBOL_optnumber = 183,                /* optnumber  */
+  YYSYMBOL_l3vpn = 184,                    /* l3vpn  */
+  YYSYMBOL_185_7 = 185,                    /* $@7  */
+  YYSYMBOL_l3vpnopts_l = 186,              /* l3vpnopts_l  */
+  YYSYMBOL_l3vpnopts = 187,                /* l3vpnopts  */
+  YYSYMBOL_neighbor = 188,                 /* neighbor  */
+  YYSYMBOL_189_8 = 189,                    /* $@8  */
+  YYSYMBOL_190_9 = 190,                    /* $@9  */
+  YYSYMBOL_group = 191,                    /* group  */
+  YYSYMBOL_192_10 = 192,                   /* $@10  */
+  YYSYMBOL_groupopts_l = 193,              /* groupopts_l  */
+  YYSYMBOL_addpathextra = 194,             /* addpathextra  */
+  YYSYMBOL_addpathmax = 195,               /* addpathmax  */
+  YYSYMBOL_peeropts_h = 196,               /* peeropts_h  */
+  YYSYMBOL_peeropts_l = 197,               /* peeropts_l  */
+  YYSYMBOL_peeropts = 198,                 /* peeropts  */
+  YYSYMBOL_restart = 199,                  /* restart  */
+  YYSYMBOL_family = 200,                   /* family  */
+  YYSYMBOL_safi = 201,                     /* safi  */
+  YYSYMBOL_nettype = 202,                  /* nettype  */
+  YYSYMBOL_espah = 203,                    /* espah  */
+  YYSYMBOL_encspec = 204,                  /* encspec  */
+  YYSYMBOL_filterrule = 205,               /* filterrule  */
+  YYSYMBOL_action = 206,                   /* action  */
+  YYSYMBOL_quick = 207,                    /* quick  */
+  YYSYMBOL_direction = 208,                /* direction  */
+  YYSYMBOL_filter_rib_h = 209,             /* filter_rib_h  */
+  YYSYMBOL_filter_rib_l = 210,             /* filter_rib_l  */
+  YYSYMBOL_filter_rib = 211,               /* filter_rib  */
+  YYSYMBOL_filter_peer_h = 212,            /* filter_peer_h  */
+  YYSYMBOL_filter_peer_l = 213,            /* filter_peer_l  */
+  YYSYMBOL_filter_peer = 214,              /* filter_peer  */
+  YYSYMBOL_filter_prefix_h = 215,          /* filter_prefix_h  */
+  YYSYMBOL_filter_prefix_m = 216,          /* filter_prefix_m  */
+  YYSYMBOL_filter_prefix_l = 217,          /* filter_prefix_l  */
+  YYSYMBOL_filter_prefix = 218,            /* filter_prefix  */
+  YYSYMBOL_filter_as_h = 219,              /* filter_as_h  */
+  YYSYMBOL_filter_as_t_l = 220,            /* filter_as_t_l  */
+  YYSYMBOL_filter_as_t = 221,              /* filter_as_t  */
+  YYSYMBOL_filter_as_l_h = 222,            /* filter_as_l_h  */
+  YYSYMBOL_filter_as_l = 223,              /* filter_as_l  */
+  YYSYMBOL_filter_as = 224,                /* filter_as  */
+  YYSYMBOL_filter_match_h = 225,           /* filter_match_h  */
+  YYSYMBOL_226_11 = 226,                   /* $@11  */
+  YYSYMBOL_filter_match = 227,             /* filter_match  */
+  YYSYMBOL_filter_elm = 228,               /* filter_elm  */
+  YYSYMBOL_prefixlenop = 229,              /* prefixlenop  */
+  YYSYMBOL_filter_as_type = 230,           /* filter_as_type  */
+  YYSYMBOL_filter_set = 231,               /* filter_set  */
+  YYSYMBOL_filter_set_l = 232,             /* filter_set_l  */
+  YYSYMBOL_community = 233,                /* community  */
+  YYSYMBOL_delete = 234,                   /* delete  */
+  YYSYMBOL_enforce = 235,                  /* enforce  */
+  YYSYMBOL_filter_set_opt = 236,           /* filter_set_opt  */
+  YYSYMBOL_origincode = 237,               /* origincode  */
+  YYSYMBOL_validity = 238,                 /* validity  */
+  YYSYMBOL_optnl = 239,                    /* optnl  */
+  YYSYMBOL_comma = 240,                    /* comma  */
+  YYSYMBOL_unaryop = 241,                  /* unaryop  */
+  YYSYMBOL_equalityop = 242,               /* equalityop  */
+  YYSYMBOL_binaryop = 243                  /* binaryop  */
 };
 typedef enum yysymbol_kind_t yysymbol_kind_t;
 
@@ -1130,16 +1142,16 @@ union yyalloc
 #define YYLAST   731
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  142
+#define YYNTOKENS  145
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  96
+#define YYNNTS  99
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  321
+#define YYNRULES  329
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  599
+#define YYNSTATES  611
 
 /* YYMAXUTOK -- Last valid token kind.  */
-#define YYMAXUTOK   386
+#define YYMAXUTOK   389
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -1154,18 +1166,18 @@ union yyalloc
 static const yytype_uint8 yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     132,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     135,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,   137,   139,   138,     2,   136,     2,     2,
+       2,     2,     2,   140,   142,   141,     2,   139,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-     140,   133,   141,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     143,   136,   144,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,   134,     2,   135,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,   137,     2,   138,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -1191,46 +1203,46 @@ static const yytype_uint8 yytranslate[] =
       95,    96,    97,    98,    99,   100,   101,   102,   103,   104,
      105,   106,   107,   108,   109,   110,   111,   112,   113,   114,
      115,   116,   117,   118,   119,   120,   121,   122,   123,   124,
-     125,   126,   127,   128,   129,   130,   131
+     125,   126,   127,   128,   129,   130,   131,   132,   133,   134
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   258,   258,   259,   260,   261,   262,   263,   264,   265,
-     266,   267,   268,   269,   270,   271,   272,   273,   276,   287,
-     319,   329,   356,   361,   367,   370,   385,   413,   428,   428,
-     442,   450,   451,   453,   453,   463,   473,   487,   503,   520,
-     520,   527,   530,   530,   543,   555,   558,   566,   576,   588,
-     597,   597,   609,   610,   612,   623,   631,   641,   648,   652,
-     659,   667,   675,   689,   709,   717,   728,   734,   740,   749,
-     750,   778,   810,   811,   821,   831,   844,   857,   870,   886,
-     893,   909,   909,   919,   920,   929,   938,   939,   947,   977,
-     998,  1027,  1046,  1070,  1090,  1091,  1094,  1095,  1098,  1119,
-    1137,  1157,  1164,  1167,  1168,  1171,  1171,  1216,  1217,  1218,
-    1219,  1222,  1240,  1258,  1276,  1282,  1285,  1286,  1285,  1320,
-    1320,  1352,  1353,  1354,  1355,  1356,  1359,  1360,  1361,  1364,
-    1365,  1366,  1367,  1370,  1373,  1380,  1384,  1395,  1408,  1418,
-    1425,  1428,  1431,  1442,  1458,  1466,  1474,  1493,  1496,  1499,
-    1502,  1505,  1508,  1518,  1521,  1524,  1530,  1536,  1551,  1559,
-    1567,  1585,  1601,  1611,  1704,  1707,  1714,  1726,  1727,  1737,
-    1753,  1765,  1789,  1795,  1806,  1812,  1820,  1835,  1836,  1846,
-    1847,  1850,  1851,  1852,  1855,  1856,  1859,  1860,  1863,  1866,
-    1899,  1926,  1927,  1928,  1931,  1932,  1935,  1936,  1939,  1940,
-    1941,  1943,  1944,  1950,  1972,  1973,  1976,  1977,  1983,  1990,
-    2010,  2017,  2038,  2044,  2052,  2067,  2082,  2083,  2086,  2087,
-    2088,  2100,  2101,  2107,  2122,  2123,  2126,  2127,  2139,  2143,
-    2150,  2173,  2174,  2175,  2188,  2189,  2195,  2203,  2209,  2217,
-    2231,  2234,  2234,  2242,  2243,  2246,  2259,  2266,  2278,  2290,
-    2308,  2330,  2349,  2365,  2377,  2389,  2397,  2404,  2453,  2473,
-    2483,  2484,  2490,  2501,  2544,  2560,  2561,  2562,  2563,  2566,
-    2567,  2574,  2577,  2582,  2591,  2592,  2595,  2596,  2599,  2614,
-    2624,  2634,  2649,  2659,  2669,  2684,  2694,  2704,  2719,  2729,
-    2739,  2746,  2751,  2756,  2761,  2766,  2776,  2786,  2791,  2818,
-    2832,  2860,  2878,  2894,  2902,  2917,  2932,  2933,  2936,  2937,
-    2938,  2939,  2942,  2943,  2944,  2945,  2946,  2947,  2950,  2951,
-    2954,  2955
+       0,   259,   259,   260,   261,   262,   263,   264,   265,   266,
+     267,   268,   269,   270,   271,   272,   273,   274,   277,   288,
+     320,   330,   357,   362,   368,   371,   386,   414,   429,   429,
+     443,   451,   452,   454,   454,   464,   474,   488,   504,   521,
+     521,   528,   531,   531,   544,   556,   559,   567,   577,   589,
+     598,   598,   610,   611,   613,   624,   632,   642,   649,   653,
+     660,   668,   676,   690,   710,   718,   729,   735,   741,   750,
+     751,   779,   811,   812,   822,   832,   845,   858,   871,   887,
+     894,   910,   910,   920,   921,   930,   939,   940,   948,   978,
+     999,  1028,  1047,  1071,  1091,  1092,  1095,  1096,  1099,  1120,
+    1138,  1158,  1165,  1168,  1169,  1172,  1172,  1217,  1218,  1219,
+    1220,  1223,  1241,  1259,  1277,  1283,  1286,  1287,  1286,  1321,
+    1321,  1353,  1354,  1355,  1356,  1357,  1360,  1361,  1371,  1372,
+    1382,  1383,  1384,  1387,  1388,  1389,  1390,  1393,  1396,  1403,
+    1407,  1418,  1431,  1441,  1448,  1451,  1454,  1465,  1481,  1489,
+    1497,  1516,  1519,  1522,  1525,  1528,  1531,  1541,  1585,  1612,
+    1615,  1618,  1624,  1630,  1645,  1653,  1661,  1679,  1695,  1705,
+    1798,  1801,  1808,  1820,  1821,  1831,  1847,  1859,  1883,  1889,
+    1900,  1906,  1914,  1929,  1930,  1940,  1941,  1944,  1945,  1946,
+    1949,  1950,  1953,  1954,  1957,  1960,  1993,  2020,  2021,  2022,
+    2025,  2026,  2029,  2030,  2033,  2034,  2035,  2037,  2038,  2044,
+    2066,  2067,  2070,  2071,  2077,  2084,  2104,  2111,  2132,  2138,
+    2146,  2161,  2176,  2177,  2180,  2181,  2182,  2194,  2195,  2201,
+    2216,  2217,  2220,  2221,  2233,  2237,  2244,  2267,  2268,  2269,
+    2282,  2283,  2289,  2297,  2303,  2311,  2325,  2328,  2328,  2336,
+    2337,  2340,  2353,  2360,  2372,  2384,  2402,  2424,  2443,  2459,
+    2471,  2483,  2491,  2498,  2547,  2567,  2577,  2578,  2584,  2595,
+    2638,  2654,  2655,  2656,  2657,  2660,  2661,  2668,  2671,  2676,
+    2685,  2686,  2689,  2690,  2693,  2694,  2697,  2712,  2722,  2732,
+    2747,  2757,  2767,  2782,  2792,  2802,  2817,  2827,  2837,  2844,
+    2849,  2854,  2859,  2864,  2874,  2884,  2889,  2916,  2930,  2958,
+    2976,  2992,  3000,  3015,  3030,  3031,  3034,  3035,  3036,  3037,
+    3040,  3041,  3042,  3043,  3044,  3045,  3048,  3049,  3052,  3053
 };
 #endif
 
@@ -1253,38 +1265,39 @@ static const char *const yytname[] =
   "PORT", "GROUP", "NEIGHBOR", "NETWORK", "EBGP", "IBGP", "LOCALAS",
   "REMOTEAS", "DESCR", "LOCALADDR", "MULTIHOP", "PASSIVE", "MAXPREFIX",
   "RESTART", "ANNOUNCE", "CAPABILITIES", "REFRESH", "AS4BYTE",
-  "CONNECTRETRY", "ENHANCED", "ADDPATH", "SEND", "RECV", "DEMOTE",
-  "ENFORCE", "NEIGHBORAS", "ASOVERRIDE", "REFLECTOR", "DEPEND", "DOWN",
-  "DUMP", "IN", "OUT", "SOCKET", "RESTRICTED", "LOG", "TRANSPARENT", "TCP",
-  "MD5SIG", "PASSWORD", "KEY", "TTLSECURITY", "ALLOW", "DENY", "MATCH",
-  "QUICK", "FROM", "TO", "ANY", "CONNECTED", "STATIC", "COMMUNITY",
-  "EXTCOMMUNITY", "LARGECOMMUNITY", "DELETE", "MAXCOMMUNITIES",
-  "MAXEXTCOMMUNITIES", "MAXLARGECOMMUNITIES", "PREFIX", "PREFIXLEN",
-  "PREFIXSET", "ROASET", "ORIGINSET", "OVS", "EXPIRES", "ASSET",
-  "SOURCEAS", "TRANSITAS", "PEERAS", "MAXASLEN", "MAXASSEQ", "SET",
-  "LOCALPREF", "MED", "METRIC", "NEXTHOP", "REJECT", "BLACKHOLE",
+  "CONNECTRETRY", "ENHANCED", "ADDPATH", "SEND", "RECV", "PLUS", "POLICY",
+  "DEMOTE", "ENFORCE", "NEIGHBORAS", "ASOVERRIDE", "REFLECTOR", "DEPEND",
+  "DOWN", "DUMP", "IN", "OUT", "SOCKET", "RESTRICTED", "LOG",
+  "TRANSPARENT", "TCP", "MD5SIG", "PASSWORD", "KEY", "TTLSECURITY",
+  "ALLOW", "DENY", "MATCH", "QUICK", "FROM", "TO", "ANY", "CONNECTED",
+  "STATIC", "COMMUNITY", "EXTCOMMUNITY", "LARGECOMMUNITY", "DELETE",
+  "MAXCOMMUNITIES", "MAXEXTCOMMUNITIES", "MAXLARGECOMMUNITIES", "PREFIX",
+  "PREFIXLEN", "PREFIXSET", "ROASET", "ORIGINSET", "OVS", "EXPIRES",
+  "ASSET", "SOURCEAS", "TRANSITAS", "PEERAS", "MAXASLEN", "MAXASSEQ",
+  "SET", "LOCALPREF", "MED", "METRIC", "NEXTHOP", "REJECT", "BLACKHOLE",
   "NOMODIFY", "SELF", "PREPEND_SELF", "PREPEND_PEER", "PFTABLE", "WEIGHT",
   "RTLABEL", "ORIGIN", "PRIORITY", "ERROR", "INCLUDE", "IPSEC", "ESP",
   "AH", "SPI", "IKE", "IPV4", "IPV6", "QUALIFY", "VIA", "NE", "LE", "GE",
-  "XRANGE", "LONGER", "MAXLEN", "STRING", "NUMBER", "'\\n'", "'='", "'{'",
-  "'}'", "'/'", "'+'", "'-'", "','", "'<'", "'>'", "$accept", "grammar",
-  "asnumber", "as4number", "as4number_any", "string", "yesno", "varset",
-  "include", "as_set", "$@1", "as_set_l", "prefixset", "$@2",
+  "XRANGE", "LONGER", "MAXLEN", "MAX", "STRING", "NUMBER", "'\\n'", "'='",
+  "'{'", "'}'", "'/'", "'+'", "'-'", "','", "'<'", "'>'", "$accept",
+  "grammar", "asnumber", "as4number", "as4number_any", "string", "yesno",
+  "varset", "include", "as_set", "$@1", "as_set_l", "prefixset", "$@2",
   "prefixset_l", "prefixset_item", "roa_set", "$@3", "origin_set", "$@4",
   "expires", "roa_set_l", "rtr", "$@5", "rtropt_l", "rtropt", "conf_main",
   "rib", "$@6", "ribopts", "fibupdate", "mrtdump", "network", "inout",
   "restricted", "address", "prefix", "addrspec", "optnumber", "l3vpn",
   "$@7", "l3vpnopts_l", "l3vpnopts", "neighbor", "$@8", "$@9", "group",
-  "$@10", "groupopts_l", "peeropts_h", "peeropts_l", "peeropts", "restart",
-  "family", "safi", "nettype", "espah", "encspec", "filterrule", "action",
-  "quick", "direction", "filter_rib_h", "filter_rib_l", "filter_rib",
-  "filter_peer_h", "filter_peer_l", "filter_peer", "filter_prefix_h",
-  "filter_prefix_m", "filter_prefix_l", "filter_prefix", "filter_as_h",
-  "filter_as_t_l", "filter_as_t", "filter_as_l_h", "filter_as_l",
-  "filter_as", "filter_match_h", "$@11", "filter_match", "filter_elm",
-  "prefixlenop", "filter_as_type", "filter_set", "filter_set_l",
-  "community", "delete", "filter_set_opt", "origincode", "validity",
-  "optnl", "comma", "unaryop", "equalityop", "binaryop", YY_NULLPTR
+  "$@10", "groupopts_l", "addpathextra", "addpathmax", "peeropts_h",
+  "peeropts_l", "peeropts", "restart", "family", "safi", "nettype",
+  "espah", "encspec", "filterrule", "action", "quick", "direction",
+  "filter_rib_h", "filter_rib_l", "filter_rib", "filter_peer_h",
+  "filter_peer_l", "filter_peer", "filter_prefix_h", "filter_prefix_m",
+  "filter_prefix_l", "filter_prefix", "filter_as_h", "filter_as_t_l",
+  "filter_as_t", "filter_as_l_h", "filter_as_l", "filter_as",
+  "filter_match_h", "$@11", "filter_match", "filter_elm", "prefixlenop",
+  "filter_as_type", "filter_set", "filter_set_l", "community", "delete",
+  "enforce", "filter_set_opt", "origincode", "validity", "optnl", "comma",
+  "unaryop", "equalityop", "binaryop", YY_NULLPTR
 };
 
 static const char *
@@ -1312,17 +1325,17 @@ static const yytype_int16 yytoknum[] =
      355,   356,   357,   358,   359,   360,   361,   362,   363,   364,
      365,   366,   367,   368,   369,   370,   371,   372,   373,   374,
      375,   376,   377,   378,   379,   380,   381,   382,   383,   384,
-     385,   386,    10,    61,   123,   125,    47,    43,    45,    44,
-      60,    62
+     385,   386,   387,   388,   389,    10,    61,   123,   125,    47,
+      43,    45,    44,    60,    62
 };
 #endif
 
-#define YYPACT_NINF (-423)
+#define YYPACT_NINF (-424)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-309)
+#define YYTABLE_NINF (-317)
 
 #define yytable_value_is_error(Yyn) \
   0
@@ -1331,66 +1344,68 @@ static const yytype_int16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-    -423,   291,  -423,   -63,   -51,   -42,    19,    86,   -28,   -26,
-      -6,    -8,    25,   -42,     4,   -13,    20,     8,    10,    32,
-     -28,  -423,  -423,  -423,    34,    35,    61,    67,    77,   110,
-      73,    80,  -423,    88,    91,   103,   111,   118,   123,   128,
-     134,   138,  -423,  -423,   140,   144,   190,   147,   150,   160,
-    -423,  -423,  -423,  -423,   166,  -423,  -423,   168,  -423,   -42,
-    -423,  -423,  -423,  -423,   285,   174,   177,   298,   162,   181,
-    -423,   196,   202,  -423,  -423,   206,   215,   249,    17,  -423,
-     224,    29,   310,  -423,  -423,   228,   239,   238,   240,   250,
-     -28,  -423,     4,  -423,  -423,  -423,  -423,  -423,  -423,  -423,
-    -423,  -423,  -423,  -423,    78,  -423,  -423,  -423,   354,  -423,
-    -423,   355,   253,  -423,  -423,   254,  -423,  -423,   246,  -423,
-     251,   249,   257,   258,   568,  -423,  -423,  -423,   260,   263,
-     249,   261,  -423,  -423,   264,   266,  -423,  -423,   239,   239,
-     262,   239,   239,   268,  -423,   196,   206,  -423,  -423,  -423,
-      -2,   172,   269,  -423,    31,  -423,   239,  -423,  -423,  -423,
-    -423,  -423,  -423,   319,  -423,    69,    99,   101,    74,   270,
-     273,   276,   121,   277,   278,   239,   319,  -423,   249,   249,
-    -423,   279,  -423,  -423,   264,   283,  -423,  -423,   210,   287,
-     289,  -423,   280,  -423,   239,  -423,  -423,  -423,    24,  -423,
-     286,   -28,   281,   389,  -423,  -423,    56,   414,  -423,   -21,
-    -423,   294,   295,  -423,   296,   297,  -423,   301,   305,  -423,
-    -423,  -423,  -423,  -423,  -423,  -423,  -423,  -423,   306,   307,
-    -423,  -423,  -423,   620,   299,  -423,  -423,   264,  -423,  -423,
-     210,   321,   130,   -32,  -423,   210,  -423,   214,   556,  -423,
-     311,   -51,   313,  -423,  -423,  -423,   239,  -423,   -16,  -423,
-    -423,  -423,   408,  -423,   314,   323,   -42,   239,  -423,   312,
-      26,    66,   433,   326,   327,   -51,   -51,     4,   -42,   330,
-    -423,   331,   282,   335,    33,   -28,   -42,   449,   341,   342,
-     343,   -28,   410,   -28,   583,   387,   232,  -423,  -423,   444,
-    -423,   348,   350,   353,   356,  -423,  -423,  -423,  -423,  -423,
-    -423,  -423,  -423,   130,  -423,  -423,  -423,   130,  -423,   214,
-     239,   352,   357,   210,   116,  -423,   358,  -423,   130,  -423,
-    -423,  -423,   130,  -423,   360,    50,  -423,  -423,  -423,    30,
-     249,   133,    21,  -423,  -423,  -423,  -423,     9,  -423,   359,
-    -423,  -423,  -423,   361,  -423,  -423,   166,  -423,   196,  -423,
-    -423,    37,   -28,   -28,   -28,   -28,   443,   439,   154,  -423,
-     -28,   -28,  -423,  -423,   363,  -423,   308,  -423,  -423,   302,
-    -423,   239,  -423,   -28,  -423,  -423,    -9,  -423,  -423,  -423,
-    -423,  -423,   362,   620,   364,   210,   398,   365,   239,  -423,
-     404,  -423,  -423,  -423,   -64,  -423,  -423,  -423,   367,  -423,
-     366,   368,   214,   501,  -423,   369,   311,   130,  -423,  -423,
-    -423,   -19,   374,   376,   377,   178,   379,   380,   382,  -423,
-    -423,  -423,   383,   384,     0,   -32,   -32,    49,  -423,  -423,
-    -423,   133,  -423,    15,   388,   381,   -28,   390,   393,   394,
-    -423,  -423,  -423,   396,  -423,  -423,  -423,  -423,  -423,   395,
-     480,  -423,  -423,  -423,  -423,  -423,   -28,   -28,  -423,  -423,
-    -423,  -423,  -423,  -423,  -423,     4,     4,   620,  -423,  -423,
-     407,  -423,  -423,  -423,  -423,   399,  -423,  -423,   214,  -423,
-    -423,   400,  -423,  -423,  -423,  -423,   411,  -423,  -423,   413,
-    -423,  -423,   397,    30,   417,   418,  -423,  -423,  -423,   183,
-     -32,  -423,   -32,  -423,  -423,  -423,  -423,  -423,  -423,  -423,
-    -423,  -423,   142,  -423,  -423,  -423,   422,  -423,  -423,    62,
-     -64,  -423,   214,  -423,  -423,  -423,  -423,   428,   429,  -423,
-    -423,  -423,  -423,  -423,   196,   196,   130,   409,  -423,   398,
-    -423,  -423,  -423,  -423,  -423,  -423,  -423,   210,   425,   171,
-    -423,  -423,  -423,   239,  -423,    49,  -423,   -10,   431,   198,
-    -423,   214,  -423,  -423,  -423,   432,   440,  -423,   199,  -423,
-     210,  -423,  -423,   204,  -423,   -10,  -423,  -423,   441,   183,
-    -423,    62,  -423,   445,  -423,  -423,   448,  -423,  -423
+    -424,   454,  -424,   -71,   109,   -59,    17,    72,   -47,   -29,
+      10,   -39,    12,   -59,   -11,   -35,    14,    42,    20,    43,
+     -47,  -424,  -424,  -424,    47,    13,    60,    73,    90,   130,
+      95,    97,  -424,    96,   100,   110,   120,   140,   145,   165,
+     167,   171,  -424,  -424,   182,   197,   240,   228,   238,   198,
+    -424,  -424,  -424,  -424,   180,  -424,  -424,   194,  -424,   -59,
+    -424,  -424,  -424,  -424,   338,   242,   243,   350,   225,   244,
+    -424,   246,   247,  -424,  -424,   239,   250,   283,    -2,  -424,
+     251,   -12,   323,  -424,  -424,   249,   257,   259,   260,   269,
+     -47,  -424,   -11,  -424,  -424,  -424,  -424,  -424,  -424,  -424,
+    -424,  -424,  -424,  -424,   126,  -424,  -424,  -424,   377,  -424,
+    -424,   380,   275,  -424,  -424,   276,  -424,  -424,   273,  -424,
+     277,   283,   278,   279,   558,  -424,  -424,  -424,   282,   286,
+     283,   284,  -424,  -424,   292,   294,  -424,  -424,   257,   257,
+     290,   257,   257,   296,  -424,   246,   239,  -424,  -424,  -424,
+     -19,   245,   300,  -424,    16,  -424,   257,  -424,  -424,  -424,
+    -424,  -424,  -424,   353,  -424,   124,   133,   136,   106,   303,
+     305,   308,   184,   309,   310,   257,   353,  -424,   283,   283,
+    -424,   311,  -424,  -424,   292,   312,  -424,  -424,   218,   313,
+     315,  -424,   319,  -424,   257,  -424,  -424,  -424,    19,  -424,
+     330,   -47,   318,   423,  -424,  -424,    99,   367,  -424,   -51,
+    -424,   335,   336,  -424,   339,   341,  -424,   342,   343,  -424,
+    -424,  -424,  -424,  -424,  -424,  -424,  -424,  -424,   344,   346,
+    -424,  -424,  -424,   618,   316,  -424,  -424,   292,  -424,  -424,
+     218,   352,    53,   -28,  -424,   218,  -424,   220,   546,  -424,
+     354,   109,   355,  -424,  -424,  -424,   257,  -424,   -34,  -424,
+    -424,  -424,   438,  -424,   351,   356,   -59,   257,  -424,   337,
+      35,    58,   426,   357,   358,   109,   109,   -11,   -59,   359,
+    -424,   360,   211,   362,    39,   -47,   -59,   478,   363,   366,
+     368,   -47,   425,   -47,   574,   410,   241,  -424,  -424,   469,
+    -424,   371,   372,   375,   376,  -424,  -424,  -424,  -424,  -424,
+    -424,  -424,  -424,    53,  -424,  -424,  -424,    53,  -424,   220,
+     257,   378,   373,   218,   195,  -424,   382,  -424,    53,  -424,
+    -424,  -424,    53,  -424,   381,    82,  -424,  -424,  -424,    54,
+     283,   213,    27,  -424,  -424,  -424,  -424,    26,  -424,   386,
+    -424,  -424,  -424,   388,  -424,  -424,   180,  -424,   246,  -424,
+    -424,    51,   -47,   -47,   -47,   -47,   468,   314,   389,   191,
+    -424,   -47,   -47,  -424,  -424,   390,  -424,   307,  -424,  -424,
+     302,  -424,   257,  -424,   -47,  -424,  -424,    -5,  -424,  -424,
+    -424,  -424,  -424,   391,   618,   392,   218,   422,   393,   257,
+    -424,   433,  -424,  -424,  -424,   -63,  -424,  -424,  -424,   394,
+    -424,   395,   396,   220,   103,  -424,   397,   354,    53,  -424,
+    -424,  -424,   -40,   398,   402,   403,   -37,   405,   406,   407,
+    -424,  -424,  -424,   411,   412,     9,   -28,   -28,    32,  -424,
+    -424,  -424,   213,  -424,    93,   408,   414,   -47,   417,   419,
+     420,  -424,  -424,  -424,   421,  -424,  -424,  -424,  -424,  -424,
+     427,   515,  -424,  -424,  -424,  -424,  -424,   -47,   430,   -47,
+     503,  -424,  -424,  -424,  -424,  -424,  -424,  -424,   -11,   -11,
+     618,  -424,  -424,   439,  -424,  -424,  -424,  -424,   431,  -424,
+    -424,   220,  -424,  -424,   434,  -424,  -424,  -424,  -424,   429,
+    -424,  -424,   436,  -424,  -424,   437,    54,   441,   443,  -424,
+    -424,  -424,   193,   -28,  -424,   -28,  -424,  -424,  -424,  -424,
+    -424,  -424,  -424,  -424,  -424,    83,  -424,  -424,  -424,   444,
+    -424,  -424,    64,   -63,  -424,   220,  -424,  -424,  -424,  -424,
+     455,   457,  -424,  -424,  -424,  -424,   511,  -424,  -424,  -424,
+     246,   246,    53,   435,  -424,   422,  -424,  -424,  -424,  -424,
+    -424,  -424,  -424,   218,   453,   102,  -424,  -424,  -424,   257,
+    -424,    32,  -424,   179,   456,   205,  -424,   220,  -424,  -424,
+    -424,   458,   461,   467,   462,  -424,   206,  -424,   218,  -424,
+    -424,   207,  -424,   179,  -424,  -424,   465,  -424,  -424,   463,
+     193,  -424,    64,  -424,  -424,   473,  -424,  -424,   474,  -424,
+    -424
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -1400,94 +1415,96 @@ static const yytype_int16 yydefact[] =
 {
        2,     0,     1,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,   191,   192,   193,     0,     0,     0,     0,     0,     0,
+       0,   197,   198,   199,     0,     0,     0,     0,     0,     0,
        0,     0,     3,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,    72,    69,     0,     0,     0,     0,     0,   194,
+       0,     0,    72,    69,     0,     0,     0,     0,     0,   200,
       17,    19,    18,    20,    57,    98,    59,     0,    60,     0,
       25,    65,    64,    78,     0,     0,     0,     0,     0,    49,
-      24,   119,     0,   179,   180,     0,     0,   269,     0,    79,
-       0,     0,    97,    68,    66,     0,   306,     0,     0,     0,
+      24,   119,     0,   185,   186,     0,     0,   275,     0,    79,
+       0,     0,    97,    68,    66,     0,   314,     0,     0,     0,
        0,    27,     0,     4,     5,     6,     7,     8,     9,    10,
-      12,    11,    13,    14,     0,    15,    16,   195,   198,    58,
+      12,    11,    13,    14,     0,    15,    16,   201,   204,    58,
       61,    62,     0,    81,    76,     0,    73,    74,     0,    23,
-       0,   269,     0,     0,     0,    89,   185,   184,     0,     0,
-     269,     0,    94,    95,   103,     0,    96,    80,   306,   306,
-      39,   306,   306,     0,    67,    26,    98,   101,   102,   117,
-       0,     0,     0,   105,    86,    75,   306,   121,    90,    99,
-     100,   297,   274,   276,   275,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,   306,   276,   270,   269,   269,
-      93,     0,   104,    70,   103,    33,   307,    41,     0,    42,
-      28,    77,   128,   203,   306,   199,   196,   197,     0,    63,
-       0,     0,     0,     0,    82,    83,     0,     0,   277,     0,
-     278,     0,     0,   281,     0,     0,   284,     0,     0,   292,
-     291,   293,   294,   290,   295,   296,   298,   287,     0,     0,
-     299,   304,   303,     0,     0,    91,    92,   103,    88,    35,
-       0,     0,   308,   260,    44,     0,    30,     0,     0,   118,
-       0,     0,     0,   212,   213,   208,   306,   209,   241,   204,
-     107,    87,    86,    85,     0,     0,     0,   306,    52,     0,
+       0,   275,     0,     0,     0,    89,   191,   190,     0,     0,
+     275,     0,    94,    95,   103,     0,    96,    80,   314,   314,
+      39,   314,   314,     0,    67,    26,    98,   101,   102,   117,
+       0,     0,     0,   105,    86,    75,   314,   121,    90,    99,
+     100,   305,   280,   282,   281,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,   314,   282,   276,   275,   275,
+      93,     0,   104,    70,   103,    33,   315,    41,     0,    42,
+      28,    77,   132,   209,   314,   205,   202,   203,     0,    63,
+       0,     0,     0,     0,    82,    83,     0,     0,   283,     0,
+     286,     0,     0,   289,     0,     0,   292,     0,     0,   300,
+     299,   301,   302,   298,   303,   304,   306,   295,     0,     0,
+     307,   312,   311,     0,     0,    91,    92,   103,    88,    35,
+       0,     0,   316,   266,    44,     0,    30,     0,     0,   118,
+       0,     0,     0,   218,   219,   214,   314,   215,   247,   210,
+     107,    87,    86,    85,     0,     0,     0,   314,    52,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-     140,     0,     0,     0,     0,     0,   168,     0,   141,     0,
+     144,     0,     0,     0,     0,     0,   174,     0,   145,     0,
        0,     0,     0,     0,     0,     0,     0,   122,   120,     0,
-     167,     0,     0,     0,     0,   279,   280,   282,   283,   285,
-     286,   288,   289,   308,   273,   300,    71,   308,    36,     0,
-     306,   309,     0,     0,     0,   261,     0,    38,   308,    21,
-      22,    31,   308,   129,     0,   306,   201,   210,   211,     0,
-     269,     0,     0,    84,    56,    54,    55,     0,   125,     0,
-     144,   153,   154,     0,   143,   175,   134,   133,   136,   137,
-     139,   177,     0,     0,     0,     0,     0,     0,     0,   171,
-       0,     0,   157,   169,     0,   142,     0,   173,   172,     0,
-     164,   306,   165,     0,   186,   187,     0,   138,   124,   123,
-     302,   301,     0,     0,     0,     0,    45,   310,   306,    40,
-       0,   313,   314,   316,     0,   312,   315,   317,     0,   262,
-       0,     0,     0,     0,   127,     0,     0,   308,   206,   190,
-     265,     0,     0,     0,     0,     0,     0,     0,     0,   266,
-     267,   268,     0,     0,     0,   260,   260,     0,   245,   246,
-     224,   242,   243,     0,     0,     0,     0,     0,     0,     0,
-     108,   106,   115,     0,    51,    53,   145,   176,   135,     0,
-     177,   158,   150,   147,   148,   151,     0,     0,   181,   182,
-     183,   146,   156,   155,   170,     0,     0,     0,   174,   162,
-       0,   271,   272,    34,    37,     0,    47,   311,     0,   321,
-     320,     0,   263,    43,    29,    32,     0,   130,   126,     0,
-     200,   202,     0,     0,     0,     0,   252,   253,   254,     0,
-     260,   216,   260,   258,   305,   259,   247,   248,   256,   255,
-     214,   215,   308,   226,   244,   237,     0,   319,   318,     0,
-     236,   228,     0,   249,   110,   114,   111,     0,     0,   109,
-     178,   159,   149,   152,   160,   161,   308,     0,    46,    45,
-     264,   132,   131,   205,   207,   251,   250,     0,     0,   308,
-     221,   223,   257,   306,   225,     0,   230,     0,     0,   308,
-     234,     0,   238,   112,   113,     0,     0,    48,   308,   217,
-       0,   310,   227,   308,   229,     0,   239,   166,     0,   219,
-     222,   232,   235,   188,   220,   233,     0,   163,   189
+     173,     0,     0,     0,     0,   287,   288,   290,   291,   293,
+     294,   296,   297,   316,   279,   308,    71,   316,    36,     0,
+     314,   317,     0,     0,     0,   267,     0,    38,   316,    21,
+      22,    31,   316,   133,     0,   314,   207,   216,   217,     0,
+     275,     0,     0,    84,    56,    54,    55,     0,   125,     0,
+     148,   159,   160,     0,   147,   181,   138,   137,   140,   141,
+     143,   183,     0,     0,     0,     0,     0,     0,     0,     0,
+     177,     0,     0,   163,   175,     0,   146,     0,   179,   178,
+       0,   170,   314,   171,     0,   192,   193,     0,   142,   124,
+     123,   310,   309,     0,     0,     0,     0,    45,   318,   314,
+      40,     0,   321,   322,   324,     0,   320,   323,   325,     0,
+     268,     0,     0,     0,     0,   131,     0,     0,   316,   212,
+     196,   271,     0,     0,     0,     0,     0,     0,     0,     0,
+     272,   273,   274,     0,     0,     0,   266,   266,     0,   251,
+     252,   230,   248,   249,     0,     0,     0,     0,     0,     0,
+       0,   108,   106,   115,     0,    51,    53,   149,   182,   139,
+       0,   183,   164,   154,   151,   152,   155,     0,     0,     0,
+     284,   187,   188,   189,   150,   162,   161,   176,     0,     0,
+       0,   180,   168,     0,   277,   278,    34,    37,     0,    47,
+     319,     0,   329,   328,     0,   269,    43,    29,    32,     0,
+     134,   130,     0,   206,   208,     0,     0,     0,     0,   258,
+     259,   260,     0,   266,   222,   266,   264,   313,   265,   253,
+     254,   262,   261,   220,   221,   316,   232,   250,   243,     0,
+     327,   326,     0,   242,   234,     0,   255,   110,   114,   111,
+       0,     0,   109,   184,   165,   153,   126,   156,   285,   158,
+     166,   167,   316,     0,    46,    45,   270,   136,   135,   211,
+     213,   257,   256,     0,     0,   316,   227,   229,   263,   314,
+     231,     0,   236,     0,     0,   316,   240,     0,   244,   112,
+     113,     0,   128,     0,     0,    48,   316,   223,     0,   318,
+     233,   316,   235,     0,   245,   127,     0,   157,   172,     0,
+     225,   228,   238,   241,   129,   194,   226,   239,     0,   169,
+     195
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -423,  -423,    13,  -176,  -242,   -89,    -7,  -423,  -423,  -423,
-    -423,  -423,  -423,  -423,  -423,  -220,  -423,  -423,  -423,  -423,
-      36,   324,  -423,  -423,  -423,   226,  -423,  -423,  -423,  -423,
-     317,   579,   241,   195,  -423,    -3,   -15,  -423,  -122,  -423,
-    -423,  -423,  -423,   392,  -423,  -423,  -423,  -423,  -423,  -423,
-    -423,  -232,   124,   304,  -423,  -423,  -423,  -423,  -423,  -423,
-    -423,  -423,  -423,  -423,  -244,  -423,  -423,  -332,  -423,     6,
-      40,  -407,  -423,  -423,  -413,    -4,    46,  -422,  -423,  -423,
-    -423,   159,  -377,  -423,  -107,   125,  -310,   438,  -120,  -423,
-    -423,  -130,  -298,  -423,  -423,    71
+    -424,  -424,    15,  -208,  -240,   -88,    -7,  -424,  -424,  -424,
+    -424,  -424,  -424,  -424,  -424,  -214,  -424,  -424,  -424,  -424,
+      59,   374,  -424,  -424,  -424,   261,  -424,  -424,  -424,  -424,
+     361,   612,   274,   230,  -424,     3,   -15,  -424,  -146,  -424,
+    -424,  -424,  -424,   413,  -424,  -424,  -424,  -424,  -424,  -424,
+    -424,  -424,  -424,  -231,   157,   340,  -424,  -424,  -424,  -424,
+    -424,  -424,  -424,  -424,  -424,  -424,  -239,  -424,  -424,  -321,
+    -424,    21,    61,  -414,  -424,  -424,  -408,    23,    56,  -423,
+    -424,  -424,  -424,   185,  -228,  -424,  -106,   146,  -310,   459,
+    -424,  -115,  -424,  -424,  -136,  -303,  -424,  -424,    98
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-       0,     1,   330,    54,   530,    71,   299,    33,    34,    35,
+       0,     1,   330,    54,   533,    71,   299,    33,    34,    35,
      247,   332,    36,   240,   317,   241,    37,   188,    38,   245,
-     486,   242,    39,   118,   267,   268,    40,    41,   154,   204,
+     489,   242,    39,   118,   267,   268,    40,    41,   154,   204,
      205,   300,    43,   135,   137,   257,   243,   149,   183,    44,
-     200,   342,   453,    45,    46,   192,    47,   120,   207,   249,
-     413,   302,   461,    78,   471,   130,   386,   597,    48,    49,
-     108,   198,   151,   335,   195,   258,   417,   259,   438,   558,
-     559,   560,   439,   522,   440,   568,   569,   570,   340,   341,
-     441,   442,   327,   443,   125,   313,   176,   209,   314,   232,
-     515,   140,   323,   408,   532,   491
+     200,   342,   454,    45,    46,   192,    47,   120,   207,   582,
+     597,   249,   414,   302,   462,    78,   474,   130,   387,   609,
+      48,    49,   108,   198,   151,   335,   195,   258,   418,   259,
+     439,   564,   565,   566,   440,   525,   441,   574,   575,   576,
+     340,   341,   442,   443,   327,   444,   125,   313,   176,   209,
+     549,   314,   232,   518,   140,   323,   409,   535,   494
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -1495,262 +1512,264 @@ static const yytype_int16 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int16 yytable[] =
 {
-      77,    61,    56,   145,   177,   331,   336,   418,   185,   186,
-      69,   189,   190,    84,   158,   393,   334,    53,   511,   395,
-     318,   531,   445,   180,   523,    57,   206,   251,   518,    80,
-     446,   444,   349,   251,   412,   264,   447,   416,   448,   449,
-     201,   525,   202,   265,   266,   233,    65,    66,   132,   133,
-      15,   252,   420,   324,   253,   254,   111,   252,   520,   521,
-     253,   254,   238,   489,   250,   370,   525,   109,   303,    50,
-     504,   235,   236,    72,   490,   337,   459,   396,   351,    51,
-      52,  -240,   264,   144,   371,   352,   132,   133,    55,   148,
-     265,   266,   126,   127,    59,   460,   325,   326,   255,   356,
-     357,   147,    60,   400,   255,    62,   526,    73,    74,   304,
-     479,   505,   322,   525,   527,   316,  -240,    75,    76,   503,
-     329,    52,    64,   528,    67,    63,   339,   128,   193,   129,
-      55,   444,   194,   561,    70,   562,   420,   347,    81,   527,
-      82,   429,   430,   431,   454,   329,    52,   203,   528,   529,
-      58,    79,   582,   450,    55,    68,   451,   350,   256,   134,
-      55,    60,    83,   592,    85,   223,   468,   469,   470,    86,
-     495,   554,   501,   590,   382,   484,   219,   220,   221,   222,
-    -308,   499,   320,   392,   116,   117,   527,   394,   358,   321,
-     397,    87,   329,    52,   261,   528,   567,    88,   410,    89,
-     210,    90,   411,    91,    55,   415,   211,   212,   146,    76,
-     162,   421,   164,    92,   422,   423,   424,   425,   104,   426,
-      93,   427,   428,    94,   565,   429,   430,   431,   432,   433,
-     213,   107,   216,   419,   434,    95,   214,   215,   217,   218,
-     401,   402,   403,    96,   196,   197,   549,   404,   393,   405,
-      97,   477,   227,   435,   436,    98,   406,   407,   228,   229,
-      99,   580,   320,   346,    53,  -306,   100,   437,   487,   321,
-     101,   585,   102,   482,   563,   359,   103,   564,   372,   105,
-     580,   321,   106,   373,   378,   585,   380,   502,    53,    53,
-     572,     2,     3,   112,     4,     5,     6,    52,     7,   110,
-       8,     9,    10,   563,   113,    11,  -218,   114,    75,    76,
-     321,    12,   509,    75,    76,   -50,    13,   557,    14,  -116,
-      15,   362,   115,   363,   364,   365,   119,   366,   367,   586,
-     563,   563,   121,  -231,   589,    16,   563,   321,   321,   591,
-      75,    76,   122,   321,   329,    52,   124,    17,   384,   385,
-      18,   123,    19,    20,   131,   462,   463,   464,   465,    21,
-      22,    23,   138,   472,   473,   132,   133,   475,   476,   458,
-     136,   139,   141,   143,   142,   150,   478,    24,    25,    26,
-     156,   152,    27,   153,   155,   157,   544,   545,   159,   160,
-     178,   181,    28,    29,   179,   182,   184,   187,   191,   208,
-     199,   224,    73,    74,   225,    30,   226,   230,   231,   237,
-     510,   263,   262,   319,   248,   269,   575,   201,   239,   270,
-     260,    31,   244,    32,   246,   305,   306,   307,   308,   315,
-     271,   519,   309,   581,   272,   273,   310,   311,   312,   535,
-     274,   193,  -116,   338,   348,   344,   275,   276,   277,   278,
-     279,   280,   281,   345,   282,   353,   354,   374,   355,   542,
-     543,   360,   361,   283,   284,   369,   285,   286,   287,   288,
-     289,   375,   376,   377,   379,   290,   291,   292,   383,   387,
-     388,   293,   389,   390,   398,   466,   391,   467,   485,   409,
-     456,   457,   399,   474,   510,   414,   488,   481,   492,   483,
-    -307,   493,   496,   494,   500,   506,   270,   507,   508,   512,
-     513,   294,   514,   534,   516,   517,   295,   271,   533,   459,
-     536,   272,   273,   537,   538,   547,   540,   274,   539,   296,
-     548,   550,   553,   275,   276,   277,   278,   279,   280,   281,
-     576,   282,   510,   551,    60,   552,   297,   555,   556,   298,
-     283,   284,   566,   285,   286,   287,   288,   289,   573,   574,
-     579,   270,   290,   291,   292,   510,   584,   587,   293,   328,
-     588,   593,   271,   455,   510,   596,   272,   273,   598,   343,
-      42,   480,   274,   452,   541,   577,   368,   595,   275,   276,
-     277,   278,   279,   280,   281,   594,   282,   578,   294,   301,
-     524,   571,   546,   295,     0,   283,   284,     0,   285,   286,
-     287,   288,   289,   583,   234,     0,   296,   290,   291,   292,
-     161,     0,     0,   293,     0,     0,     0,     0,     0,     0,
-       0,    60,     0,   497,     0,   161,   498,     0,     0,     0,
-       0,     0,     0,     0,     0,   162,   163,   164,     0,     0,
-       0,     0,     0,   294,     0,     0,     0,     0,   295,     0,
-     162,   163,   164,     0,     0,     0,   165,   166,   167,   168,
-       0,   296,   161,     0,   169,   170,   171,   172,   173,   174,
-       0,   165,   166,   167,   168,     0,    60,     0,   333,   169,
-     170,   171,   172,   173,   174,     0,     0,   162,   163,   164,
-       0,     0,   175,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,   381,   165,   166,
+      77,    61,   185,   186,   145,   189,   190,   331,    56,   177,
+     394,   336,   514,    84,   396,   158,    69,   334,   419,    53,
+     206,   534,   251,    57,   180,   201,   318,   202,   446,   413,
+     526,   445,   417,    65,    66,   421,   447,   521,   238,   233,
+     303,   349,   448,   337,   449,   450,   252,   132,   133,   253,
+     254,   507,   264,    72,   132,   133,    15,   251,   250,   324,
+     265,   266,   111,    80,    50,  -246,   492,   356,   357,   109,
+     351,   371,   235,   236,    55,   126,   127,   352,   493,   397,
+      59,   252,   304,   144,   253,   254,    60,    73,    74,   148,
+     460,   316,   372,   508,    64,   255,    75,    76,    75,    76,
+     512,  -246,   325,   326,   499,    62,   322,   147,   270,   401,
+     128,   461,   129,    67,   193,   506,   482,   528,   194,   271,
+     339,   134,    70,   272,   273,   264,   430,   431,   432,   274,
+     255,   347,   445,   265,   266,   275,   276,   277,   278,   279,
+     280,   281,    55,   282,    63,    68,   528,   203,    79,    60,
+      86,    58,    55,    82,   283,   284,   256,   285,   286,   287,
+     288,   289,   451,   590,   455,   452,   290,   291,   292,   350,
+     603,   223,   293,   498,   601,    81,    83,   393,   504,   383,
+      85,   395,   487,   502,   398,   560,   529,    55,   320,   358,
+     530,  -314,   411,    87,   261,   321,   412,   329,    52,   416,
+     531,   573,   294,   471,   472,   473,    88,   295,   523,   524,
+     219,   220,   221,   222,    89,  -316,   421,   320,   569,   530,
+     296,   570,   571,    90,   321,   321,   329,    52,    91,   531,
+     532,    93,   528,    92,   420,    94,    60,   569,   500,    55,
+    -224,   501,    51,    52,   321,    95,   480,   116,   117,   394,
+     362,   555,   363,   364,   365,    96,   366,   367,   210,   146,
+      76,   368,   588,   490,   211,   212,    53,   213,   104,   346,
+     216,   107,   593,   214,   215,    97,   217,   218,   373,   485,
+      98,   359,   505,   588,   379,   567,   381,   568,   593,   374,
+      53,    53,   162,   422,   164,   578,   423,   424,   425,   426,
+      99,   427,   100,   428,   429,   530,   101,   430,   431,   432,
+     433,   434,   329,    52,    52,   531,   435,   102,   227,   196,
+     197,   402,   403,   404,   228,   229,    75,    76,   110,   405,
+     563,   406,   103,    73,    74,   436,   437,   594,   407,   408,
+     569,   569,   569,  -237,   600,   602,   112,   321,   321,   321,
+     438,    75,    76,   329,    52,   463,   464,   465,   466,   385,
+     386,   468,   469,   105,   475,   476,   132,   133,   269,   478,
+     479,   459,   270,   106,   115,   113,   114,   481,   122,   119,
+     121,   -50,   124,   271,   131,   136,   138,   272,   273,   123,
+     550,   551,   139,   274,   143,  -116,   141,   142,   150,   275,
+     276,   277,   278,   279,   280,   281,   152,   282,   153,   155,
+     156,   513,   159,   160,   157,   178,   583,   181,   283,   284,
+     179,   285,   286,   287,   288,   289,   182,   184,   187,   191,
+     290,   291,   292,   589,   199,   208,   293,   224,   522,   225,
+     538,   226,   230,   231,   237,   263,   319,   201,   353,   315,
+     239,   244,   262,   246,     2,     3,   248,     4,     5,     6,
+     545,     7,   547,     8,     9,    10,   294,   260,    11,   305,
+     306,   295,   348,   307,    12,   308,   309,   310,   311,    13,
+     312,    14,  -116,    15,   296,   344,   375,   193,   338,   345,
+     354,   380,   355,   360,   361,   370,   376,   513,    16,   377,
+      60,   378,   297,   384,   388,   298,   389,   390,   391,   392,
+     467,   400,    17,   399,   488,    18,   410,    19,    20,   415,
+     457,   458,   470,   477,    21,    22,    23,   491,   495,   484,
+     486,  -315,   509,   496,   497,   503,   510,   511,   515,   516,
+     517,   536,    24,    25,    26,   519,   520,    27,   513,   537,
+     539,   270,   540,   541,   460,   548,   542,    28,    29,   553,
+     581,   543,   271,   546,   557,   554,   272,   273,   556,   584,
+      30,   558,   274,   513,   561,   559,   562,   572,   275,   276,
+     277,   278,   279,   280,   281,   513,   282,    31,   579,    32,
+     580,   587,   595,   596,   592,   599,   605,   283,   284,   604,
+     285,   286,   287,   288,   289,   598,   608,   610,   456,   290,
+     291,   292,   161,    42,   585,   293,   453,   483,   544,   328,
+     301,   606,   369,   343,   586,   607,   552,   527,   161,   591,
+       0,   577,     0,     0,     0,   234,     0,   162,   163,   164,
+       0,     0,     0,     0,     0,   294,     0,     0,     0,     0,
+     295,     0,     0,   162,   163,   164,     0,     0,   165,   166,
+     167,   168,     0,   296,     0,     0,   169,   170,   171,   172,
+     173,   174,   161,     0,   165,   166,   167,   168,     0,    60,
+       0,   333,   169,   170,   171,   172,   173,   174,     0,     0,
+       0,     0,     0,     0,     0,   175,     0,   162,   163,   164,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,   382,     0,     0,     0,     0,     0,     0,   165,   166,
      167,   168,     0,     0,     0,     0,   169,   170,   171,   172,
      173,   174
 };
 
 static const yytype_int16 yycheck[] =
 {
-      15,     8,     5,    92,   124,   247,   250,   339,   138,   139,
-      13,   141,   142,    20,   121,   313,   248,     4,   425,   317,
-     240,   443,     1,   130,   437,     6,   156,     3,    28,    21,
-       9,   341,     6,     3,   332,    26,    15,   335,    17,    18,
-       9,    51,    11,    34,    35,   175,    21,    22,    57,    58,
-      29,    27,     3,    85,    30,    31,    59,    27,   435,   436,
-      30,    31,   184,   127,   194,    32,    51,    54,    89,   132,
-      89,   178,   179,    86,   138,   251,    39,   319,    12,   130,
-     131,    97,    26,    90,    51,    19,    57,    58,   130,   104,
-      34,    35,    75,    76,     8,    58,   128,   129,    74,   275,
-     276,   104,   130,   323,    74,   131,    91,   120,   121,   130,
-     119,   130,   242,    51,   124,   237,   132,   130,   131,   417,
-     130,   131,   130,   133,    99,   131,   256,   110,   130,   112,
-     130,   441,   134,   510,   130,   512,     3,   267,   130,   124,
-     130,    92,    93,    94,   135,   130,   131,   154,   133,   134,
-     131,   131,   565,   132,   130,   130,   135,   131,   134,   130,
-     130,   130,   130,   585,   130,   168,    12,    13,    14,   134,
-     412,   503,   416,   580,   294,   395,   102,   103,   104,   105,
-     130,   413,   132,   313,    22,    23,   124,   317,   277,   139,
-     320,   130,   130,   131,   201,   133,   134,   130,   328,   122,
-     131,    91,   332,   130,   130,   335,   137,   138,   130,   131,
-      77,    78,    79,   133,    81,    82,    83,    84,    28,    86,
-     132,    88,    89,   132,   522,    92,    93,    94,    95,    96,
-     131,    71,   131,   340,   101,   132,   137,   138,   137,   138,
-     124,   125,   126,   132,    72,    73,   488,   131,   546,   133,
-     132,   381,   131,   120,   121,   132,   140,   141,   137,   138,
-     132,   559,   132,   266,   251,   135,   132,   134,   398,   139,
-     132,   569,   132,   393,   132,   278,   132,   135,   285,   132,
-     578,   139,   132,   286,   291,   583,   293,   417,   275,   276,
-     532,     0,     1,     8,     3,     4,     5,   131,     7,   131,
-       9,    10,    11,   132,   130,    14,   135,   130,   130,   131,
-     139,    20,   134,   130,   131,   134,    25,   134,    27,    28,
-      29,    39,    24,    41,    42,    43,   130,    45,    46,   571,
-     132,   132,   130,   135,   135,    44,   132,   139,   139,   135,
-     130,   131,   136,   139,   130,   131,    97,    56,   116,   117,
-      59,   136,    61,    62,   130,   362,   363,   364,   365,    68,
-      69,    70,   134,   370,   371,    57,    58,    65,    66,   356,
-      60,   132,   134,   123,   134,    21,   383,    86,    87,    88,
-     134,    26,    91,   130,   130,   134,   475,   476,   131,   131,
-     130,   130,   101,   102,   131,   131,   130,   135,   130,    80,
-     131,   131,   120,   121,   131,   114,   130,   130,   130,   130,
-     425,    22,   131,    92,   134,     1,   546,     9,   135,     5,
-     134,   130,   135,   132,   135,   131,   131,   131,   131,   130,
-      16,   434,   131,   563,    20,    21,   131,   131,   131,   446,
-      26,   130,    28,   130,   132,   131,    32,    33,    34,    35,
-      36,    37,    38,   130,    40,    22,   130,     8,   131,   466,
-     467,   131,   131,    49,    50,   130,    52,    53,    54,    55,
-      56,   130,   130,   130,    64,    61,    62,    63,    91,    35,
-     132,    67,   132,   130,   132,    42,   130,    48,    90,   131,
-     131,   130,   135,   130,   509,   135,    92,   135,   131,   135,
-     135,   135,     1,   135,   135,   131,     5,   131,   131,   130,
-     130,    97,   130,   132,   131,   131,   102,    16,   130,    39,
-     130,    20,    21,   130,   130,   118,   131,    26,   132,   115,
-     131,   131,   135,    32,    33,    34,    35,    36,    37,    38,
-     131,    40,   557,   132,   130,   132,   132,   130,   130,   135,
-      49,    50,   130,    52,    53,    54,    55,    56,   130,   130,
-     135,     5,    61,    62,    63,   580,   135,   135,    67,   245,
-     130,   130,    16,   347,   589,   130,    20,    21,   130,   262,
-       1,   386,    26,   342,   460,   549,   282,   591,    32,    33,
-      34,    35,    36,    37,    38,   589,    40,   557,    97,   207,
-     441,   530,   477,   102,    -1,    49,    50,    -1,    52,    53,
-      54,    55,    56,   567,   176,    -1,   115,    61,    62,    63,
-      52,    -1,    -1,    67,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,   130,    -1,   132,    -1,    52,   135,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    77,    78,    79,    -1,    -1,
-      -1,    -1,    -1,    97,    -1,    -1,    -1,    -1,   102,    -1,
-      77,    78,    79,    -1,    -1,    -1,    98,    99,   100,   101,
-      -1,   115,    52,    -1,   106,   107,   108,   109,   110,   111,
-      -1,    98,    99,   100,   101,    -1,   130,    -1,   132,   106,
-     107,   108,   109,   110,   111,    -1,    -1,    77,    78,    79,
-      -1,    -1,   134,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,    -1,    -1,   134,    98,    99,
-     100,   101,    -1,    -1,    -1,    -1,   106,   107,   108,   109,
-     110,   111
+      15,     8,   138,   139,    92,   141,   142,   247,     5,   124,
+     313,   250,   426,    20,   317,   121,    13,   248,   339,     4,
+     156,   444,     3,     6,   130,     9,   240,    11,     1,   332,
+     438,   341,   335,    21,    22,     3,     9,    28,   184,   175,
+      91,     6,    15,   251,    17,    18,    27,    59,    60,    30,
+      31,    91,    26,    88,    59,    60,    29,     3,   194,    87,
+      34,    35,    59,    21,   135,    99,   129,   275,   276,    54,
+      12,    32,   178,   179,   133,    77,    78,    19,   141,   319,
+       8,    27,   133,    90,    30,    31,   133,   122,   123,   104,
+      39,   237,    53,   133,   133,    76,   133,   134,   133,   134,
+     137,   135,   130,   131,     1,   134,   242,   104,     5,   323,
+     112,    60,   114,   101,   133,   418,   121,    53,   137,    16,
+     256,   133,   133,    20,    21,    26,    94,    95,    96,    26,
+      76,   267,   442,    34,    35,    32,    33,    34,    35,    36,
+      37,    38,   133,    40,   134,   133,    53,   154,   134,   133,
+     137,   134,   133,   133,    51,    52,   137,    54,    55,    56,
+      57,    58,   135,   571,   138,   138,    63,    64,    65,   134,
+     593,   168,    69,   413,   588,   133,   133,   313,   417,   294,
+     133,   317,   396,   414,   320,   506,    93,   133,   135,   277,
+     126,   138,   328,   133,   201,   142,   332,   133,   134,   335,
+     136,   137,    99,    12,    13,    14,   133,   104,   436,   437,
+     104,   105,   106,   107,   124,   133,     3,   135,   135,   126,
+     117,   138,   525,    93,   142,   142,   133,   134,   133,   136,
+     137,   135,    53,   136,   340,   135,   133,   135,   135,   133,
+     138,   138,   133,   134,   142,   135,   382,    22,    23,   552,
+      39,   491,    41,    42,    43,   135,    45,    46,   134,   133,
+     134,    50,   565,   399,   140,   141,   251,   134,    28,   266,
+     134,    73,   575,   140,   141,   135,   140,   141,   285,   394,
+     135,   278,   418,   586,   291,   513,   293,   515,   591,   286,
+     275,   276,    79,    80,    81,   535,    83,    84,    85,    86,
+     135,    88,   135,    90,    91,   126,   135,    94,    95,    96,
+      97,    98,   133,   134,   134,   136,   103,   135,   134,    74,
+      75,   126,   127,   128,   140,   141,   133,   134,   134,   134,
+     137,   136,   135,   122,   123,   122,   123,   577,   143,   144,
+     135,   135,   135,   138,   138,   138,     8,   142,   142,   142,
+     137,   133,   134,   133,   134,   362,   363,   364,   365,   118,
+     119,    47,    48,   135,   371,   372,    59,    60,     1,    67,
+      68,   356,     5,   135,    24,   133,   133,   384,   139,   133,
+     133,   137,    99,    16,   133,    62,   137,    20,    21,   139,
+     478,   479,   135,    26,   125,    28,   137,   137,    21,    32,
+      33,    34,    35,    36,    37,    38,    26,    40,   133,   133,
+     137,   426,   134,   134,   137,   133,   552,   133,    51,    52,
+     134,    54,    55,    56,    57,    58,   134,   133,   138,   133,
+      63,    64,    65,   569,   134,    82,    69,   134,   435,   134,
+     447,   133,   133,   133,   133,    22,    94,     9,    22,   133,
+     138,   138,   134,   138,     0,     1,   137,     3,     4,     5,
+     467,     7,   469,     9,    10,    11,    99,   137,    14,   134,
+     134,   104,   135,   134,    20,   134,   134,   134,   134,    25,
+     134,    27,    28,    29,   117,   134,     8,   133,   133,   133,
+     133,    66,   134,   134,   134,   133,   133,   512,    44,   133,
+     133,   133,   135,    93,    35,   138,   135,   135,   133,   133,
+      42,   138,    58,   135,    92,    61,   134,    63,    64,   138,
+     134,   133,   133,   133,    70,    71,    72,    94,   134,   138,
+     138,   138,   134,   138,   138,   138,   134,   134,   133,   133,
+     133,   133,    88,    89,    90,   134,   134,    93,   563,   135,
+     133,     5,   133,   133,    39,    52,   135,   103,   104,   120,
+      49,   134,    16,   133,   135,   134,    20,    21,   134,   134,
+     116,   135,    26,   588,   133,   138,   133,   133,    32,    33,
+      34,    35,    36,    37,    38,   600,    40,   133,   133,   135,
+     133,   138,   134,   132,   138,   133,   133,    51,    52,   134,
+      54,    55,    56,    57,    58,   138,   133,   133,   347,    63,
+      64,    65,    54,     1,   555,    69,   342,   387,   461,   245,
+     207,   600,   282,   262,   563,   602,   480,   442,    54,   573,
+      -1,   533,    -1,    -1,    -1,   176,    -1,    79,    80,    81,
+      -1,    -1,    -1,    -1,    -1,    99,    -1,    -1,    -1,    -1,
+     104,    -1,    -1,    79,    80,    81,    -1,    -1,   100,   101,
+     102,   103,    -1,   117,    -1,    -1,   108,   109,   110,   111,
+     112,   113,    54,    -1,   100,   101,   102,   103,    -1,   133,
+      -1,   135,   108,   109,   110,   111,   112,   113,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,   137,    -1,    79,    80,    81,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+      -1,   137,    -1,    -1,    -1,    -1,    -1,    -1,   100,   101,
+     102,   103,    -1,    -1,    -1,    -1,   108,   109,   110,   111,
+     112,   113
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,   143,     0,     1,     3,     4,     5,     7,     9,    10,
-      11,    14,    20,    25,    27,    29,    44,    56,    59,    61,
-      62,    68,    69,    70,    86,    87,    88,    91,   101,   102,
-     114,   130,   132,   149,   150,   151,   154,   158,   160,   164,
-     168,   169,   173,   174,   181,   185,   186,   188,   200,   201,
-     132,   130,   131,   144,   145,   130,   177,     6,   131,     8,
-     130,   148,   131,   131,   130,    21,    22,    99,   130,   177,
-     130,   147,    86,   120,   121,   130,   131,   178,   195,   131,
-      21,   130,   130,   130,   148,   130,   134,   130,   130,   122,
-      91,   130,   133,   132,   132,   132,   132,   132,   132,   132,
-     132,   132,   132,   132,    28,   132,   132,    71,   202,   144,
-     131,   177,     8,   130,   130,    24,    22,    23,   165,   130,
-     189,   130,   136,   136,    97,   226,    75,    76,   110,   112,
-     197,   130,    57,    58,   130,   175,    60,   176,   134,   132,
-     233,   134,   134,   123,   148,   147,   130,   177,   178,   179,
-      21,   204,    26,   130,   170,   130,   134,   134,   226,   131,
-     131,    52,    77,    78,    79,    98,    99,   100,   101,   106,
-     107,   108,   109,   110,   111,   134,   228,   230,   130,   131,
-     226,   130,   131,   180,   130,   233,   233,   135,   159,   233,
-     233,   130,   187,   130,   134,   206,    72,    73,   203,   131,
-     182,     9,    11,   148,   171,   172,   233,   190,    80,   229,
-     131,   137,   138,   131,   137,   138,   131,   137,   138,   102,
-     103,   104,   105,   177,   131,   131,   130,   131,   137,   138,
-     130,   130,   231,   233,   229,   226,   226,   130,   180,   135,
-     155,   157,   163,   178,   135,   161,   135,   152,   134,   191,
-     233,     3,    27,    30,    31,    74,   134,   177,   207,   209,
-     134,   148,   131,    22,    26,    34,    35,   166,   167,     1,
+       0,   146,     0,     1,     3,     4,     5,     7,     9,    10,
+      11,    14,    20,    25,    27,    29,    44,    58,    61,    63,
+      64,    70,    71,    72,    88,    89,    90,    93,   103,   104,
+     116,   133,   135,   152,   153,   154,   157,   161,   163,   167,
+     171,   172,   176,   177,   184,   188,   189,   191,   205,   206,
+     135,   133,   134,   147,   148,   133,   180,     6,   134,     8,
+     133,   151,   134,   134,   133,    21,    22,   101,   133,   180,
+     133,   150,    88,   122,   123,   133,   134,   181,   200,   134,
+      21,   133,   133,   133,   151,   133,   137,   133,   133,   124,
+      93,   133,   136,   135,   135,   135,   135,   135,   135,   135,
+     135,   135,   135,   135,    28,   135,   135,    73,   207,   147,
+     134,   180,     8,   133,   133,    24,    22,    23,   168,   133,
+     192,   133,   139,   139,    99,   231,    77,    78,   112,   114,
+     202,   133,    59,    60,   133,   178,    62,   179,   137,   135,
+     239,   137,   137,   125,   151,   150,   133,   180,   181,   182,
+      21,   209,    26,   133,   173,   133,   137,   137,   231,   134,
+     134,    54,    79,    80,    81,   100,   101,   102,   103,   108,
+     109,   110,   111,   112,   113,   137,   233,   236,   133,   134,
+     231,   133,   134,   183,   133,   239,   239,   138,   162,   239,
+     239,   133,   190,   133,   137,   211,    74,    75,   208,   134,
+     185,     9,    11,   151,   174,   175,   239,   193,    82,   234,
+     134,   140,   141,   134,   140,   141,   134,   140,   141,   104,
+     105,   106,   107,   180,   134,   134,   133,   134,   140,   141,
+     133,   133,   237,   239,   234,   231,   231,   133,   183,   138,
+     158,   160,   166,   181,   138,   164,   138,   155,   137,   196,
+     239,     3,    27,    30,    31,    76,   137,   180,   212,   214,
+     137,   151,   134,    22,    26,    34,    35,   169,   170,     1,
        5,    16,    20,    21,    26,    32,    33,    34,    35,    36,
-      37,    38,    40,    49,    50,    52,    53,    54,    55,    56,
-      61,    62,    63,    67,    97,   102,   115,   132,   135,   148,
-     173,   185,   193,    89,   130,   131,   131,   131,   131,   131,
-     131,   131,   131,   227,   230,   130,   180,   156,   157,    92,
-     132,   139,   233,   234,    85,   128,   129,   224,   163,   130,
-     144,   146,   153,   132,   193,   205,   206,   145,   130,   233,
-     220,   221,   183,   172,   131,   130,   177,   233,   132,     6,
-     131,    12,    19,    22,   130,   131,   145,   145,   147,   177,
-     131,   131,    39,    41,    42,    43,    45,    46,   195,   130,
-      32,    51,   148,   177,     8,   130,   130,   130,   148,    64,
-     148,   134,   230,    91,   116,   117,   198,    35,   132,   132,
-     130,   130,   233,   234,   233,   234,   146,   233,   132,   135,
-     157,   124,   125,   126,   131,   133,   140,   141,   235,   131,
-     233,   233,   234,   192,   135,   233,   234,   208,   209,   226,
-       3,    78,    81,    82,    83,    84,    86,    88,    89,    92,
-      93,    94,    95,    96,   101,   120,   121,   134,   210,   214,
-     216,   222,   223,   225,   228,     1,     9,    15,    17,    18,
-     132,   135,   174,   184,   135,   167,   131,   130,   144,    39,
-      58,   194,   148,   148,   148,   148,    42,    48,    12,    13,
-      14,   196,   148,   148,   130,    65,    66,   233,   148,   119,
-     175,   135,   230,   135,   157,    90,   162,   233,    92,   127,
-     138,   237,   131,   135,   135,   146,     1,   132,   135,   193,
-     135,   206,   233,   234,    89,   130,   131,   131,   131,   134,
-     178,   213,   130,   130,   130,   232,   131,   131,    28,   177,
-     224,   224,   215,   216,   223,    51,    91,   124,   133,   134,
-     146,   219,   236,   130,   132,   148,   130,   130,   130,   132,
-     131,   194,   148,   148,   147,   147,   227,   118,   131,   146,
-     131,   132,   132,   135,   209,   130,   130,   134,   211,   212,
-     213,   224,   224,   132,   135,   234,   130,   134,   217,   218,
-     219,   237,   146,   130,   130,   233,   131,   162,   212,   135,
-     234,   233,   216,   218,   135,   234,   146,   135,   130,   135,
-     213,   135,   219,   130,   211,   217,   130,   199,   130
+      37,    38,    40,    51,    52,    54,    55,    56,    57,    58,
+      63,    64,    65,    69,    99,   104,   117,   135,   138,   151,
+     176,   188,   198,    91,   133,   134,   134,   134,   134,   134,
+     134,   134,   134,   232,   236,   133,   183,   159,   160,    94,
+     135,   142,   239,   240,    87,   130,   131,   229,   166,   133,
+     147,   149,   156,   135,   198,   210,   211,   148,   133,   239,
+     225,   226,   186,   175,   134,   133,   180,   239,   135,     6,
+     134,    12,    19,    22,   133,   134,   148,   148,   150,   180,
+     134,   134,    39,    41,    42,    43,    45,    46,    50,   200,
+     133,    32,    53,   151,   180,     8,   133,   133,   133,   151,
+      66,   151,   137,   236,    93,   118,   119,   203,    35,   135,
+     135,   133,   133,   239,   240,   239,   240,   149,   239,   135,
+     138,   160,   126,   127,   128,   134,   136,   143,   144,   241,
+     134,   239,   239,   240,   197,   138,   239,   240,   213,   214,
+     231,     3,    80,    83,    84,    85,    86,    88,    90,    91,
+      94,    95,    96,    97,    98,   103,   122,   123,   137,   215,
+     219,   221,   227,   228,   230,   233,     1,     9,    15,    17,
+      18,   135,   138,   177,   187,   138,   170,   134,   133,   147,
+      39,    60,   199,   151,   151,   151,   151,    42,    47,    48,
+     133,    12,    13,    14,   201,   151,   151,   133,    67,    68,
+     239,   151,   121,   178,   138,   236,   138,   160,    92,   165,
+     239,    94,   129,   141,   243,   134,   138,   138,   149,     1,
+     135,   138,   198,   138,   211,   239,   240,    91,   133,   134,
+     134,   134,   137,   181,   218,   133,   133,   133,   238,   134,
+     134,    28,   180,   229,   229,   220,   221,   228,    53,    93,
+     126,   136,   137,   149,   224,   242,   133,   135,   151,   133,
+     133,   133,   135,   134,   199,   151,   133,   151,    52,   235,
+     150,   150,   232,   120,   134,   149,   134,   135,   135,   138,
+     214,   133,   133,   137,   216,   217,   218,   229,   229,   135,
+     138,   240,   133,   137,   222,   223,   224,   243,   149,   133,
+     133,    49,   194,   239,   134,   165,   217,   138,   240,   239,
+     221,   223,   138,   240,   149,   134,   132,   195,   138,   133,
+     138,   218,   138,   224,   134,   133,   216,   222,   133,   204,
+     133
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_uint8 yyr1[] =
 {
-       0,   142,   143,   143,   143,   143,   143,   143,   143,   143,
-     143,   143,   143,   143,   143,   143,   143,   143,   144,   145,
-     145,   146,   146,   147,   147,   148,   149,   150,   152,   151,
-     151,   153,   153,   155,   154,   154,   156,   156,   157,   159,
-     158,   158,   161,   160,   160,   162,   162,   163,   163,   164,
-     165,   164,   166,   166,   167,   167,   167,   168,   168,   168,
-     168,   168,   168,   168,   168,   168,   168,   168,   168,   168,
-     168,   168,   168,   168,   168,   168,   168,   168,   168,   168,
-     168,   170,   169,   171,   171,   171,   172,   172,   173,   174,
-     174,   174,   174,   174,   175,   175,   176,   176,   177,   178,
-     178,   179,   179,   180,   180,   182,   181,   183,   183,   183,
-     183,   184,   184,   184,   184,   184,   186,   187,   185,   189,
-     188,   190,   190,   190,   190,   190,   191,   191,   191,   192,
-     192,   192,   192,   193,   193,   193,   193,   193,   193,   193,
-     193,   193,   193,   193,   193,   193,   193,   193,   193,   193,
-     193,   193,   193,   193,   193,   193,   193,   193,   193,   193,
-     193,   193,   193,   193,   193,   193,   193,   193,   193,   193,
-     193,   193,   193,   193,   193,   193,   193,   194,   194,   195,
-     195,   196,   196,   196,   197,   197,   198,   198,   199,   199,
-     200,   201,   201,   201,   202,   202,   203,   203,   204,   204,
-     204,   205,   205,   206,   207,   207,   208,   208,   209,   209,
-     209,   209,   209,   209,   210,   210,   210,   210,   211,   211,
-     211,   212,   212,   213,   214,   214,   215,   215,   216,   216,
-     216,   217,   217,   217,   218,   218,   219,   219,   219,   219,
-     220,   221,   220,   222,   222,   223,   223,   223,   223,   223,
-     223,   223,   223,   223,   223,   223,   223,   223,   223,   223,
-     224,   224,   224,   224,   224,   225,   225,   225,   225,   226,
-     226,   226,   227,   227,   228,   228,   229,   229,   230,   230,
-     230,   230,   230,   230,   230,   230,   230,   230,   230,   230,
-     230,   230,   230,   230,   230,   230,   230,   230,   230,   230,
-     230,   230,   230,   230,   231,   232,   233,   233,   234,   234,
-     234,   234,   235,   235,   235,   235,   235,   235,   236,   236,
-     237,   237
+       0,   145,   146,   146,   146,   146,   146,   146,   146,   146,
+     146,   146,   146,   146,   146,   146,   146,   146,   147,   148,
+     148,   149,   149,   150,   150,   151,   152,   153,   155,   154,
+     154,   156,   156,   158,   157,   157,   159,   159,   160,   162,
+     161,   161,   164,   163,   163,   165,   165,   166,   166,   167,
+     168,   167,   169,   169,   170,   170,   170,   171,   171,   171,
+     171,   171,   171,   171,   171,   171,   171,   171,   171,   171,
+     171,   171,   171,   171,   171,   171,   171,   171,   171,   171,
+     171,   173,   172,   174,   174,   174,   175,   175,   176,   177,
+     177,   177,   177,   177,   178,   178,   179,   179,   180,   181,
+     181,   182,   182,   183,   183,   185,   184,   186,   186,   186,
+     186,   187,   187,   187,   187,   187,   189,   190,   188,   192,
+     191,   193,   193,   193,   193,   193,   194,   194,   195,   195,
+     196,   196,   196,   197,   197,   197,   197,   198,   198,   198,
+     198,   198,   198,   198,   198,   198,   198,   198,   198,   198,
+     198,   198,   198,   198,   198,   198,   198,   198,   198,   198,
+     198,   198,   198,   198,   198,   198,   198,   198,   198,   198,
+     198,   198,   198,   198,   198,   198,   198,   198,   198,   198,
+     198,   198,   198,   199,   199,   200,   200,   201,   201,   201,
+     202,   202,   203,   203,   204,   204,   205,   206,   206,   206,
+     207,   207,   208,   208,   209,   209,   209,   210,   210,   211,
+     212,   212,   213,   213,   214,   214,   214,   214,   214,   214,
+     215,   215,   215,   215,   216,   216,   216,   217,   217,   218,
+     219,   219,   220,   220,   221,   221,   221,   222,   222,   222,
+     223,   223,   224,   224,   224,   224,   225,   226,   225,   227,
+     227,   228,   228,   228,   228,   228,   228,   228,   228,   228,
+     228,   228,   228,   228,   228,   228,   229,   229,   229,   229,
+     229,   230,   230,   230,   230,   231,   231,   231,   232,   232,
+     233,   233,   234,   234,   235,   235,   236,   236,   236,   236,
+     236,   236,   236,   236,   236,   236,   236,   236,   236,   236,
+     236,   236,   236,   236,   236,   236,   236,   236,   236,   236,
+     236,   236,   237,   238,   239,   239,   240,   240,   240,   240,
+     241,   241,   241,   241,   241,   241,   242,   242,   243,   243
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -1768,27 +1787,27 @@ static const yytype_int8 yyr2[] =
        4,     5,     5,     4,     1,     1,     1,     0,     1,     3,
        3,     1,     1,     0,     1,     0,     8,     0,     2,     3,
        3,     2,     3,     3,     2,     1,     0,     0,     5,     0,
-       6,     0,     2,     3,     3,     3,     4,     3,     0,     0,
-       2,     3,     3,     2,     2,     3,     2,     2,     2,     2,
-       1,     1,     2,     2,     2,     3,     3,     3,     3,     4,
-       3,     3,     4,     2,     2,     3,     3,     2,     3,     4,
-       4,     4,     3,     8,     2,     2,     6,     1,     1,     2,
-       3,     2,     2,     2,     3,     2,     3,     0,     2,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     0,     2,
-       7,     1,     1,     1,     0,     1,     1,     1,     0,     2,
-       6,     1,     3,     1,     1,     5,     1,     3,     1,     1,
-       2,     2,     1,     1,     2,     2,     2,     4,     1,     3,
-       4,     1,     3,     2,     1,     3,     1,     3,     2,     4,
-       3,     1,     3,     4,     1,     3,     1,     1,     2,     3,
-       0,     0,     2,     1,     2,     1,     1,     2,     2,     2,
-       3,     3,     2,     2,     2,     2,     2,     3,     2,     2,
-       0,     1,     2,     3,     4,     1,     1,     1,     1,     0,
-       2,     6,     3,     1,     1,     1,     0,     1,     2,     3,
-       3,     2,     3,     3,     2,     3,     3,     2,     3,     3,
-       2,     2,     2,     2,     2,     2,     2,     1,     2,     2,
-       3,     4,     4,     2,     1,     1,     0,     2,     0,     1,
-       2,     3,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1
+       6,     0,     2,     3,     3,     3,     0,     2,     0,     2,
+       4,     3,     0,     0,     2,     3,     3,     2,     2,     3,
+       2,     2,     2,     2,     1,     1,     2,     2,     2,     3,
+       3,     3,     3,     4,     3,     3,     4,     6,     4,     2,
+       2,     3,     3,     2,     3,     4,     4,     4,     3,     8,
+       2,     2,     6,     1,     1,     2,     3,     2,     2,     2,
+       3,     2,     3,     0,     2,     1,     1,     1,     1,     1,
+       1,     1,     1,     1,     0,     2,     7,     1,     1,     1,
+       0,     1,     1,     1,     0,     2,     6,     1,     3,     1,
+       1,     5,     1,     3,     1,     1,     2,     2,     1,     1,
+       2,     2,     2,     4,     1,     3,     4,     1,     3,     2,
+       1,     3,     1,     3,     2,     4,     3,     1,     3,     4,
+       1,     3,     1,     1,     2,     3,     0,     0,     2,     1,
+       2,     1,     1,     2,     2,     2,     3,     3,     2,     2,
+       2,     2,     2,     3,     2,     2,     0,     1,     2,     3,
+       4,     1,     1,     1,     1,     0,     2,     6,     3,     1,
+       1,     1,     0,     1,     0,     1,     2,     3,     3,     2,
+       3,     3,     2,     3,     3,     2,     3,     3,     2,     2,
+       2,     2,     2,     2,     2,     1,     2,     2,     3,     4,
+       4,     2,     1,     1,     0,     2,     0,     1,     2,     3,
+       1,     1,     1,     1,     1,     1,     1,     1,     1,     1
 };
 
 
@@ -2256,13 +2275,13 @@ yyreduce:
   switch (yyn)
     {
   case 17: /* grammar: grammar error '\n'  */
-#line 273 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 274 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { file->errors++; }
-#line 2262 "parse.c"
+#line 2281 "parse.c"
     break;
 
   case 18: /* asnumber: NUMBER  */
-#line 276 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 277 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			/*
 			 * According to iana 65535 and 4294967295 are reserved
@@ -2273,11 +2292,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 2277 "parse.c"
+#line 2296 "parse.c"
     break;
 
   case 19: /* as4number: STRING  */
-#line 287 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 288 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			const char	*errstr;
 			char		*dot;
@@ -2310,11 +2329,11 @@ yyreduce:
 			}
 			(yyval.v.number) = uval | (uvalh << 16);
 		}
-#line 2314 "parse.c"
+#line 2333 "parse.c"
     break;
 
   case 20: /* as4number: asnumber  */
-#line 319 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 320 "../../../openbgpd-portable/src/bgpd/parse.y"
                            {
 			if ((yyvsp[0].v.number) == AS_TRANS || (yyvsp[0].v.number) == 0) {
 				yyerror("AS %u is reserved and may not be used",
@@ -2323,11 +2342,11 @@ yyreduce:
 			}
 			(yyval.v.number) = (yyvsp[0].v.number);
 		}
-#line 2327 "parse.c"
+#line 2346 "parse.c"
     break;
 
   case 21: /* as4number_any: STRING  */
-#line 329 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 330 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			const char	*errstr;
 			char		*dot;
@@ -2355,30 +2374,30 @@ yyreduce:
 			}
 			(yyval.v.number) = uval | (uvalh << 16);
 		}
-#line 2359 "parse.c"
+#line 2378 "parse.c"
     break;
 
   case 22: /* as4number_any: asnumber  */
-#line 356 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 357 "../../../openbgpd-portable/src/bgpd/parse.y"
                            {
 			(yyval.v.number) = (yyvsp[0].v.number);
 		}
-#line 2367 "parse.c"
+#line 2386 "parse.c"
     break;
 
   case 23: /* string: string STRING  */
-#line 361 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 362 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (asprintf(&(yyval.v.string), "%s %s", (yyvsp[-1].v.string), (yyvsp[0].v.string)) == -1)
 				fatal("string: asprintf");
 			free((yyvsp[-1].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 2378 "parse.c"
+#line 2397 "parse.c"
     break;
 
   case 25: /* yesno: STRING  */
-#line 370 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 371 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (!strcmp((yyvsp[0].v.string), "yes"))
 				(yyval.v.number) = 1;
@@ -2392,11 +2411,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2396 "parse.c"
+#line 2415 "parse.c"
     break;
 
   case 26: /* varset: STRING '=' string  */
-#line 385 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 386 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			char *s = (yyvsp[-2].v.string);
 			if (strlen((yyvsp[-2].v.string)) >= MACRO_NAME_LEN) {
@@ -2423,11 +2442,11 @@ yyreduce:
 			free((yyvsp[-2].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 2427 "parse.c"
+#line 2446 "parse.c"
     break;
 
   case 27: /* include: INCLUDE STRING  */
-#line 413 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 414 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			struct file	*nfile;
 
@@ -2441,11 +2460,11 @@ yyreduce:
 			file = nfile;
 			lungetc('\n');
 		}
-#line 2445 "parse.c"
+#line 2464 "parse.c"
     break;
 
   case 28: /* $@1: %empty  */
-#line 428 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 429 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (strlen((yyvsp[-2].v.string)) >= SET_NAME_LEN) {
 				yyerror("as-set name %s too long", (yyvsp[-2].v.string));
@@ -2458,19 +2477,19 @@ yyreduce:
 			}
 			free((yyvsp[-2].v.string));
 		}
-#line 2462 "parse.c"
+#line 2481 "parse.c"
     break;
 
   case 29: /* as_set: ASSET STRING '{' optnl $@1 as_set_l optnl '}'  */
-#line 439 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 440 "../../../openbgpd-portable/src/bgpd/parse.y"
                                      {
 			done_as_set();
 		}
-#line 2470 "parse.c"
+#line 2489 "parse.c"
     break;
 
   case 30: /* as_set: ASSET STRING '{' optnl '}'  */
-#line 442 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 443 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (new_as_set((yyvsp[-3].v.string)) != 0) {
 				free((yyvsp[-3].v.string));
@@ -2478,23 +2497,23 @@ yyreduce:
 			}
 			free((yyvsp[-3].v.string));
 		}
-#line 2482 "parse.c"
+#line 2501 "parse.c"
     break;
 
   case 31: /* as_set_l: as4number_any  */
-#line 450 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 451 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { add_as_set((yyvsp[0].v.number)); }
-#line 2488 "parse.c"
+#line 2507 "parse.c"
     break;
 
   case 32: /* as_set_l: as_set_l comma as4number_any  */
-#line 451 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 452 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { add_as_set((yyvsp[0].v.number)); }
-#line 2494 "parse.c"
+#line 2513 "parse.c"
     break;
 
   case 33: /* $@2: %empty  */
-#line 453 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 454 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((curpset = new_prefix_set((yyvsp[-2].v.string), 0)) == NULL) {
 				free((yyvsp[-2].v.string));
@@ -2502,20 +2521,20 @@ yyreduce:
 			}
 			free((yyvsp[-2].v.string));
 		}
-#line 2506 "parse.c"
+#line 2525 "parse.c"
     break;
 
   case 34: /* prefixset: PREFIXSET STRING '{' optnl $@2 prefixset_l optnl '}'  */
-#line 459 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 460 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			SIMPLEQ_INSERT_TAIL(&conf->prefixsets, curpset, entry);
 			curpset = NULL;
 		}
-#line 2515 "parse.c"
+#line 2534 "parse.c"
     break;
 
   case 35: /* prefixset: PREFIXSET STRING '{' optnl '}'  */
-#line 463 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 464 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((curpset = new_prefix_set((yyvsp[-3].v.string), 0)) == NULL) {
 				free((yyvsp[-3].v.string));
@@ -2525,30 +2544,11 @@ yyreduce:
 			SIMPLEQ_INSERT_TAIL(&conf->prefixsets, curpset, entry);
 			curpset = NULL;
 		}
-#line 2529 "parse.c"
-    break;
-
-  case 36: /* prefixset_l: prefixset_item  */
-#line 473 "../../../openbgpd-portable/src/bgpd/parse.y"
-                                                        {
-			struct prefixset_item	*psi;
-			if ((yyvsp[0].v.prefixset_item)->p.op != OP_NONE)
-				curpset->sflags |= PREFIXSET_FLAG_OPS;
-			psi = RB_INSERT(prefixset_tree, &curpset->psitems, (yyvsp[0].v.prefixset_item));
-			if (psi != NULL) {
-				if (cmd_opts & BGPD_OPT_VERBOSE2)
-					log_warnx("warning: duplicate entry in "
-					    "prefixset \"%s\" for %s/%u",
-					    curpset->name,
-					    log_addr(&(yyvsp[0].v.prefixset_item)->p.addr), (yyvsp[0].v.prefixset_item)->p.len);
-				free((yyvsp[0].v.prefixset_item));
-			}
-		}
 #line 2548 "parse.c"
     break;
 
-  case 37: /* prefixset_l: prefixset_l comma prefixset_item  */
-#line 487 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 36: /* prefixset_l: prefixset_item  */
+#line 474 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			struct prefixset_item	*psi;
 			if ((yyvsp[0].v.prefixset_item)->p.op != OP_NONE)
@@ -2566,8 +2566,27 @@ yyreduce:
 #line 2567 "parse.c"
     break;
 
+  case 37: /* prefixset_l: prefixset_l comma prefixset_item  */
+#line 488 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                        {
+			struct prefixset_item	*psi;
+			if ((yyvsp[0].v.prefixset_item)->p.op != OP_NONE)
+				curpset->sflags |= PREFIXSET_FLAG_OPS;
+			psi = RB_INSERT(prefixset_tree, &curpset->psitems, (yyvsp[0].v.prefixset_item));
+			if (psi != NULL) {
+				if (cmd_opts & BGPD_OPT_VERBOSE2)
+					log_warnx("warning: duplicate entry in "
+					    "prefixset \"%s\" for %s/%u",
+					    curpset->name,
+					    log_addr(&(yyvsp[0].v.prefixset_item)->p.addr), (yyvsp[0].v.prefixset_item)->p.len);
+				free((yyvsp[0].v.prefixset_item));
+			}
+		}
+#line 2586 "parse.c"
+    break;
+
   case 38: /* prefixset_item: prefix prefixlenop  */
-#line 503 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 504 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.prefixlen).op != OP_NONE && (yyvsp[0].v.prefixlen).op != OP_RANGE) {
 				yyerror("unsupported prefixlen operation in "
@@ -2583,29 +2602,29 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 2587 "parse.c"
+#line 2606 "parse.c"
     break;
 
   case 39: /* $@3: %empty  */
-#line 520 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 521 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			curroatree = &conf->roa;
 			noexpires = 0;
 		}
-#line 2596 "parse.c"
+#line 2615 "parse.c"
     break;
 
   case 40: /* roa_set: ROASET '{' optnl $@3 roa_set_l optnl '}'  */
-#line 523 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 524 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			curroatree = NULL;
 			noexpires = 1;
 		}
-#line 2605 "parse.c"
+#line 2624 "parse.c"
     break;
 
   case 42: /* $@4: %empty  */
-#line 530 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 531 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((curoset = new_prefix_set((yyvsp[-2].v.string), 1)) == NULL) {
 				free((yyvsp[-2].v.string));
@@ -2615,21 +2634,21 @@ yyreduce:
 			noexpires = 1;
 			free((yyvsp[-2].v.string));
 		}
-#line 2619 "parse.c"
+#line 2638 "parse.c"
     break;
 
   case 43: /* origin_set: ORIGINSET STRING '{' optnl $@4 roa_set_l optnl '}'  */
-#line 538 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 539 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			SIMPLEQ_INSERT_TAIL(&conf->originsets, curoset, entry);
 			curoset = NULL;
 			curroatree = NULL;
 		}
-#line 2629 "parse.c"
+#line 2648 "parse.c"
     break;
 
   case 44: /* origin_set: ORIGINSET STRING '{' optnl '}'  */
-#line 543 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 544 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                 {
 			if ((curoset = new_prefix_set((yyvsp[-3].v.string), 1)) == NULL) {
 				free((yyvsp[-3].v.string));
@@ -2640,19 +2659,19 @@ yyreduce:
 			curoset = NULL;
 			curroatree = NULL;
 		}
-#line 2644 "parse.c"
+#line 2663 "parse.c"
     break;
 
   case 45: /* expires: %empty  */
-#line 555 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 556 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			(yyval.v.number) = 0;
 		}
-#line 2652 "parse.c"
+#line 2671 "parse.c"
     break;
 
   case 46: /* expires: EXPIRES NUMBER  */
-#line 558 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 559 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (noexpires) {
 				yyerror("syntax error, expires not allowed");
@@ -2660,11 +2679,11 @@ yyreduce:
 			}
 			(yyval.v.number) = (yyvsp[0].v.number);
 		}
-#line 2664 "parse.c"
+#line 2683 "parse.c"
     break;
 
   case 47: /* roa_set_l: prefixset_item SOURCEAS as4number_any expires  */
-#line 566 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 567 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                         {
 			if ((yyvsp[-3].v.prefixset_item)->p.len_min != (yyvsp[-3].v.prefixset_item)->p.len) {
 				yyerror("unsupported prefixlen operation in "
@@ -2675,11 +2694,11 @@ yyreduce:
 			add_roa_set((yyvsp[-3].v.prefixset_item), (yyvsp[-1].v.number), (yyvsp[-3].v.prefixset_item)->p.len_max, (yyvsp[0].v.number));
 			free((yyvsp[-3].v.prefixset_item));
 		}
-#line 2679 "parse.c"
+#line 2698 "parse.c"
     break;
 
   case 48: /* roa_set_l: roa_set_l comma prefixset_item SOURCEAS as4number_any expires  */
-#line 576 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 577 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                                 {
 			if ((yyvsp[-3].v.prefixset_item)->p.len_min != (yyvsp[-3].v.prefixset_item)->p.len) {
 				yyerror("unsupported prefixlen operation in "
@@ -2690,11 +2709,11 @@ yyreduce:
 			add_roa_set((yyvsp[-3].v.prefixset_item), (yyvsp[-1].v.number), (yyvsp[-3].v.prefixset_item)->p.len_max, (yyvsp[0].v.number));
 			free((yyvsp[-3].v.prefixset_item));
 		}
-#line 2694 "parse.c"
+#line 2713 "parse.c"
     break;
 
   case 49: /* rtr: RTR address  */
-#line 588 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 589 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			currtr = get_rtr(&(yyvsp[0].v.addr));
 			currtr->remote_port = RTR_PORT;
@@ -2704,20 +2723,20 @@ yyreduce:
 			}
 			currtr = NULL;
 		}
-#line 2708 "parse.c"
+#line 2727 "parse.c"
     break;
 
   case 50: /* $@5: %empty  */
-#line 597 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 598 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			currtr = get_rtr(&(yyvsp[0].v.addr));
 			currtr->remote_port = RTR_PORT;
 		}
-#line 2717 "parse.c"
+#line 2736 "parse.c"
     break;
 
   case 51: /* rtr: RTR address $@5 '{' optnl rtropt_l optnl '}'  */
-#line 600 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 601 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                {
 			if (insert_rtr(currtr) == -1) {
 				free(currtr);
@@ -2725,11 +2744,11 @@ yyreduce:
 			}
 			currtr = NULL;
 		}
-#line 2729 "parse.c"
+#line 2748 "parse.c"
     break;
 
   case 54: /* rtropt: DESCR STRING  */
-#line 612 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 613 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (strlcpy(currtr->descr, (yyvsp[0].v.string),
 			    sizeof(currtr->descr)) >=
@@ -2741,11 +2760,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2745 "parse.c"
+#line 2764 "parse.c"
     break;
 
   case 55: /* rtropt: LOCALADDR address  */
-#line 623 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 624 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.addr).aid != currtr->remote_addr.aid) {
 				yyerror("Bad address family %s for "
@@ -2754,11 +2773,11 @@ yyreduce:
 			}
 			currtr->local_addr = (yyvsp[0].v.addr);
 		}
-#line 2758 "parse.c"
+#line 2777 "parse.c"
     break;
 
   case 56: /* rtropt: PORT NUMBER  */
-#line 631 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 632 "../../../openbgpd-portable/src/bgpd/parse.y"
                               {
 			if ((yyvsp[0].v.number) < 1 || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("port must be between %u and %u",
@@ -2767,11 +2786,11 @@ yyreduce:
 			}
 			currtr->remote_port = (yyvsp[0].v.number);
 		}
-#line 2771 "parse.c"
+#line 2790 "parse.c"
     break;
 
   case 57: /* conf_main: AS as4number  */
-#line 641 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 642 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			conf->as = (yyvsp[0].v.number);
 			if ((yyvsp[0].v.number) > USHRT_MAX)
@@ -2779,20 +2798,20 @@ yyreduce:
 			else
 				conf->short_as = (yyvsp[0].v.number);
 		}
-#line 2783 "parse.c"
+#line 2802 "parse.c"
     break;
 
   case 58: /* conf_main: AS as4number asnumber  */
-#line 648 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 649 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			conf->as = (yyvsp[-1].v.number);
 			conf->short_as = (yyvsp[0].v.number);
 		}
-#line 2792 "parse.c"
+#line 2811 "parse.c"
     break;
 
   case 59: /* conf_main: ROUTERID address  */
-#line 652 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 653 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.addr).aid != AID_INET) {
 				yyerror("router-id must be an IPv4 address");
@@ -2800,11 +2819,11 @@ yyreduce:
 			}
 			conf->bgpid = (yyvsp[0].v.addr).v4.s_addr;
 		}
-#line 2804 "parse.c"
+#line 2823 "parse.c"
     break;
 
   case 60: /* conf_main: HOLDTIME NUMBER  */
-#line 659 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 660 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) < MIN_HOLDTIME || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("holdtime must be between %u and %u",
@@ -2813,11 +2832,11 @@ yyreduce:
 			}
 			conf->holdtime = (yyvsp[0].v.number);
 		}
-#line 2817 "parse.c"
+#line 2836 "parse.c"
     break;
 
   case 61: /* conf_main: HOLDTIME YMIN NUMBER  */
-#line 667 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 668 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) < MIN_HOLDTIME || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("holdtime must be between %u and %u",
@@ -2826,11 +2845,11 @@ yyreduce:
 			}
 			conf->min_holdtime = (yyvsp[0].v.number);
 		}
-#line 2830 "parse.c"
+#line 2849 "parse.c"
     break;
 
   case 62: /* conf_main: LISTEN ON address  */
-#line 675 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 676 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			struct listen_addr	*la;
 			struct sockaddr		*sa;
@@ -2845,11 +2864,11 @@ yyreduce:
 			memcpy(&la->sa, sa, la->sa_len);
 			TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
 		}
-#line 2849 "parse.c"
+#line 2868 "parse.c"
     break;
 
   case 63: /* conf_main: LISTEN ON address PORT NUMBER  */
-#line 689 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 690 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			struct listen_addr	*la;
 			struct sockaddr		*sa;
@@ -2870,11 +2889,11 @@ yyreduce:
 			memcpy(&la->sa, sa, la->sa_len);
 			TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
 		}
-#line 2874 "parse.c"
+#line 2893 "parse.c"
     break;
 
   case 64: /* conf_main: FIBPRIORITY NUMBER  */
-#line 709 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 710 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.number) <= RTP_LOCAL || (yyvsp[0].v.number) > RTP_MAX) {
 				yyerror("fib-priority %lld must be between "
@@ -2883,49 +2902,49 @@ yyreduce:
 			}
 			conf->fib_priority = (yyvsp[0].v.number);
 		}
-#line 2887 "parse.c"
+#line 2906 "parse.c"
     break;
 
   case 65: /* conf_main: FIBUPDATE yesno  */
-#line 717 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 718 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			struct rde_rib *rr;
 			rr = find_rib("Loc-RIB");
 			if (rr == NULL)
-				fatalx("RTABLE can not find the main RIB!");
+				fatalx("RTABLE cannot find the main RIB!");
 
 			if ((yyvsp[0].v.number) == 0)
 				rr->flags |= F_RIB_NOFIBSYNC;
 			else
 				rr->flags &= ~F_RIB_NOFIBSYNC;
 		}
-#line 2903 "parse.c"
+#line 2922 "parse.c"
     break;
 
   case 66: /* conf_main: TRANSPARENT yesno  */
-#line 728 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 729 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) == 1)
 				conf->flags |= BGPD_FLAG_DECISION_TRANS_AS;
 			else
 				conf->flags &= ~BGPD_FLAG_DECISION_TRANS_AS;
 		}
-#line 2914 "parse.c"
+#line 2933 "parse.c"
     break;
 
   case 67: /* conf_main: REJECT ASSET yesno  */
-#line 734 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 735 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) == 1)
 				conf->flags |= BGPD_FLAG_NO_AS_SET;
 			else
 				conf->flags &= ~BGPD_FLAG_NO_AS_SET;
 		}
-#line 2925 "parse.c"
+#line 2944 "parse.c"
     break;
 
   case 68: /* conf_main: LOG STRING  */
-#line 740 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 741 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (!strcmp((yyvsp[0].v.string), "updates"))
 				conf->log |= BGPD_LOG_UPDATES;
@@ -2935,11 +2954,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 2939 "parse.c"
+#line 2958 "parse.c"
     break;
 
   case 70: /* conf_main: DUMP STRING STRING optnumber  */
-#line 750 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 751 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			int action;
 
@@ -2968,11 +2987,11 @@ yyreduce:
 			}
 			free((yyvsp[-1].v.string));
 		}
-#line 2972 "parse.c"
+#line 2991 "parse.c"
     break;
 
   case 71: /* conf_main: DUMP RIB STRING STRING STRING optnumber  */
-#line 778 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 779 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                         {
 			int action;
 
@@ -3005,11 +3024,11 @@ yyreduce:
 			free((yyvsp[-3].v.string));
 			free((yyvsp[-1].v.string));
 		}
-#line 3009 "parse.c"
+#line 3028 "parse.c"
     break;
 
   case 73: /* conf_main: RDE STRING EVALUATE  */
-#line 811 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 812 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (!strcmp((yyvsp[-1].v.string), "route-age"))
 				conf->flags |= BGPD_FLAG_DECISION_ROUTEAGE;
@@ -3020,11 +3039,11 @@ yyreduce:
 			}
 			free((yyvsp[-1].v.string));
 		}
-#line 3024 "parse.c"
+#line 3043 "parse.c"
     break;
 
   case 74: /* conf_main: RDE STRING IGNORE  */
-#line 821 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 822 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (!strcmp((yyvsp[-1].v.string), "route-age"))
 				conf->flags &= ~BGPD_FLAG_DECISION_ROUTEAGE;
@@ -3035,11 +3054,11 @@ yyreduce:
 			}
 			free((yyvsp[-1].v.string));
 		}
-#line 3039 "parse.c"
+#line 3058 "parse.c"
     break;
 
   case 75: /* conf_main: RDE MED COMPARE STRING  */
-#line 831 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 832 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (!strcmp((yyvsp[0].v.string), "always"))
 				conf->flags |= BGPD_FLAG_DECISION_MED_ALWAYS;
@@ -3053,11 +3072,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3057 "parse.c"
+#line 3076 "parse.c"
     break;
 
   case 76: /* conf_main: RDE EVALUATE STRING  */
-#line 844 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 845 "../../../openbgpd-portable/src/bgpd/parse.y"
                                       {
 			if (!strcmp((yyvsp[0].v.string), "all"))
 				conf->flags |= BGPD_FLAG_DECISION_ALL_PATHS;
@@ -3071,11 +3090,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3075 "parse.c"
+#line 3094 "parse.c"
     break;
 
   case 77: /* conf_main: NEXTHOP QUALIFY VIA STRING  */
-#line 857 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 858 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (!strcmp((yyvsp[0].v.string), "bgp"))
 				conf->flags |= BGPD_FLAG_NEXTHOP_BGP;
@@ -3089,11 +3108,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3093 "parse.c"
+#line 3112 "parse.c"
     break;
 
   case 78: /* conf_main: RTABLE NUMBER  */
-#line 870 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 871 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			struct rde_rib *rr;
 			if ((yyvsp[0].v.number) > RT_TABLEID_MAX) {
@@ -3107,14 +3126,14 @@ yyreduce:
 			}
 			rr = find_rib("Loc-RIB");
 			if (rr == NULL)
-				fatalx("RTABLE can not find the main RIB!");
+				fatalx("RTABLE cannot find the main RIB!");
 			rr->rtableid = (yyvsp[0].v.number);
 		}
-#line 3114 "parse.c"
+#line 3133 "parse.c"
     break;
 
   case 79: /* conf_main: CONNECTRETRY NUMBER  */
-#line 886 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 887 "../../../openbgpd-portable/src/bgpd/parse.y"
                                       {
 			if ((yyvsp[0].v.number) > USHRT_MAX || (yyvsp[0].v.number) < 1) {
 				yyerror("invalid connect-retry");
@@ -3122,11 +3141,11 @@ yyreduce:
 			}
 			conf->connectretry = (yyvsp[0].v.number);
 		}
-#line 3126 "parse.c"
+#line 3145 "parse.c"
     break;
 
   case 80: /* conf_main: SOCKET STRING restricted  */
-#line 893 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 894 "../../../openbgpd-portable/src/bgpd/parse.y"
                                            {
 			if (strlen((yyvsp[-1].v.string)) >=
 			    sizeof(((struct sockaddr_un *)0)->sun_path)) {
@@ -3141,11 +3160,11 @@ yyreduce:
 				conf->csock = (yyvsp[-1].v.string);
 			}
 		}
-#line 3145 "parse.c"
+#line 3164 "parse.c"
     break;
 
   case 81: /* $@6: %empty  */
-#line 909 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 910 "../../../openbgpd-portable/src/bgpd/parse.y"
                                  {
 			if ((currib = add_rib((yyvsp[0].v.string))) == NULL) {
 				free((yyvsp[0].v.string));
@@ -3153,19 +3172,19 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3157 "parse.c"
+#line 3176 "parse.c"
     break;
 
   case 82: /* rib: RDE RIB STRING $@6 ribopts  */
-#line 915 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 916 "../../../openbgpd-portable/src/bgpd/parse.y"
                           {
 			currib = NULL;
 		}
-#line 3165 "parse.c"
+#line 3184 "parse.c"
     break;
 
   case 84: /* ribopts: RTABLE NUMBER fibupdate  */
-#line 920 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 921 "../../../openbgpd-portable/src/bgpd/parse.y"
                                           {
 			if ((yyvsp[-1].v.number) > RT_TABLEID_MAX) {
 				yyerror("rtable %llu too big: max %u", (yyvsp[-1].v.number),
@@ -3175,11 +3194,11 @@ yyreduce:
 			if (rib_add_fib(currib, (yyvsp[-1].v.number)) == -1)
 				YYERROR;
 		}
-#line 3179 "parse.c"
+#line 3198 "parse.c"
     break;
 
   case 85: /* ribopts: yesno EVALUATE  */
-#line 929 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 930 "../../../openbgpd-portable/src/bgpd/parse.y"
                                  {
 			if ((yyvsp[-1].v.number)) {
 				yyerror("bad rde rib definition");
@@ -3187,22 +3206,22 @@ yyreduce:
 			}
 			currib->flags |= F_RIB_NOEVALUATE;
 		}
-#line 3191 "parse.c"
+#line 3210 "parse.c"
     break;
 
   case 87: /* fibupdate: FIBUPDATE yesno  */
-#line 939 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 940 "../../../openbgpd-portable/src/bgpd/parse.y"
                                   {
 			if ((yyvsp[0].v.number) == 0)
 				currib->flags |= F_RIB_NOFIBSYNC;
 			else
 				currib->flags &= ~F_RIB_NOFIBSYNC;
 		}
-#line 3202 "parse.c"
+#line 3221 "parse.c"
     break;
 
   case 88: /* mrtdump: DUMP STRING inout STRING optnumber  */
-#line 947 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 948 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			int action;
 
@@ -3231,11 +3250,11 @@ yyreduce:
 			free((yyvsp[-3].v.string));
 			free((yyvsp[-1].v.string));
 		}
-#line 3235 "parse.c"
+#line 3254 "parse.c"
     break;
 
   case 89: /* network: NETWORK prefix filter_set  */
-#line 977 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 978 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			struct network	*n, *m;
 
@@ -3257,11 +3276,11 @@ yyreduce:
 
 			TAILQ_INSERT_TAIL(netconf, n, entry);
 		}
-#line 3261 "parse.c"
+#line 3280 "parse.c"
     break;
 
   case 90: /* network: NETWORK PREFIXSET STRING filter_set  */
-#line 998 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 999 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			struct prefixset *ps;
 			struct network	*n;
@@ -3291,11 +3310,11 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			free((yyvsp[0].v.filter_set_head));
 		}
-#line 3295 "parse.c"
+#line 3314 "parse.c"
     break;
 
   case 91: /* network: NETWORK family RTLABEL STRING filter_set  */
-#line 1027 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1028 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                 {
 			struct network	*n;
 
@@ -3315,11 +3334,11 @@ yyreduce:
 
 			TAILQ_INSERT_TAIL(netconf, n, entry);
 		}
-#line 3319 "parse.c"
+#line 3338 "parse.c"
     break;
 
   case 92: /* network: NETWORK family PRIORITY NUMBER filter_set  */
-#line 1046 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1047 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                 {
 			struct network	*n;
 			if ((yyvsp[-1].v.number) <= RTP_LOCAL && (yyvsp[-1].v.number) > RTP_MAX) {
@@ -3344,11 +3363,11 @@ yyreduce:
 
 			TAILQ_INSERT_TAIL(netconf, n, entry);
 		}
-#line 3348 "parse.c"
+#line 3367 "parse.c"
     break;
 
   case 93: /* network: NETWORK family nettype filter_set  */
-#line 1070 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1071 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			struct network	*n;
 
@@ -3367,35 +3386,35 @@ yyreduce:
 
 			TAILQ_INSERT_TAIL(netconf, n, entry);
 		}
-#line 3371 "parse.c"
+#line 3390 "parse.c"
     break;
 
   case 94: /* inout: IN  */
-#line 1090 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1091 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = 1; }
-#line 3377 "parse.c"
+#line 3396 "parse.c"
     break;
 
   case 95: /* inout: OUT  */
-#line 1091 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1092 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = 0; }
-#line 3383 "parse.c"
+#line 3402 "parse.c"
     break;
 
   case 96: /* restricted: RESTRICTED  */
-#line 1094 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1095 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = 1; }
-#line 3389 "parse.c"
+#line 3408 "parse.c"
     break;
 
   case 97: /* restricted: %empty  */
-#line 1095 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1096 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = 0; }
-#line 3395 "parse.c"
+#line 3414 "parse.c"
     break;
 
   case 98: /* address: STRING  */
-#line 1098 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1099 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			uint8_t	len;
 
@@ -3415,11 +3434,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3419 "parse.c"
+#line 3438 "parse.c"
     break;
 
   case 99: /* prefix: STRING '/' NUMBER  */
-#line 1119 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1120 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			char	*s;
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
@@ -3438,11 +3457,11 @@ yyreduce:
 			}
 			free(s);
 		}
-#line 3442 "parse.c"
+#line 3461 "parse.c"
     break;
 
   case 100: /* prefix: NUMBER '/' NUMBER  */
-#line 1137 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1138 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			char	*s;
 
@@ -3461,11 +3480,11 @@ yyreduce:
 			}
 			free(s);
 		}
-#line 3465 "parse.c"
+#line 3484 "parse.c"
     break;
 
   case 101: /* addrspec: address  */
-#line 1157 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1158 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			memcpy(&(yyval.v.prefix).prefix, &(yyvsp[0].v.addr), sizeof(struct bgpd_addr));
 			if ((yyval.v.prefix).prefix.aid == AID_INET)
@@ -3473,17 +3492,17 @@ yyreduce:
 			else
 				(yyval.v.prefix).len = 128;
 		}
-#line 3477 "parse.c"
+#line 3496 "parse.c"
     break;
 
   case 103: /* optnumber: %empty  */
-#line 1167 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1168 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         { (yyval.v.number) = 0; }
-#line 3483 "parse.c"
+#line 3502 "parse.c"
     break;
 
   case 105: /* $@7: %empty  */
-#line 1171 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1172 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			u_int rdomain, label;
 
@@ -3522,22 +3541,22 @@ yyreduce:
 			curvpn->rtableid = rdomain;
 			netconf = &curvpn->net_l;
 		}
-#line 3526 "parse.c"
+#line 3545 "parse.c"
     break;
 
   case 106: /* l3vpn: VPN STRING ON STRING $@7 '{' l3vpnopts_l '}'  */
-#line 1208 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1209 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			/* insert into list */
 			SIMPLEQ_INSERT_TAIL(&conf->l3vpns, curvpn, entry);
 			curvpn = NULL;
 			netconf = &conf->networks;
 		}
-#line 3537 "parse.c"
+#line 3556 "parse.c"
     break;
 
   case 111: /* l3vpnopts: RD STRING  */
-#line 1222 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1223 "../../../openbgpd-portable/src/bgpd/parse.y"
                             {
 			struct community	ext;
 
@@ -3556,11 +3575,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3560 "parse.c"
+#line 3579 "parse.c"
     break;
 
   case 112: /* l3vpnopts: EXPORTTRGT STRING STRING  */
-#line 1240 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1241 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			struct filter_set	*set;
 
@@ -3579,11 +3598,11 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			TAILQ_INSERT_TAIL(&curvpn->export, set, entry);
 		}
-#line 3583 "parse.c"
+#line 3602 "parse.c"
     break;
 
   case 113: /* l3vpnopts: IMPORTTRGT STRING STRING  */
-#line 1258 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1259 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			struct filter_set	*set;
 
@@ -3602,28 +3621,28 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			TAILQ_INSERT_TAIL(&curvpn->import, set, entry);
 		}
-#line 3606 "parse.c"
+#line 3625 "parse.c"
     break;
 
   case 114: /* l3vpnopts: FIBUPDATE yesno  */
-#line 1276 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1277 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.number) == 0)
 				curvpn->flags |= F_RIB_NOFIBSYNC;
 			else
 				curvpn->flags &= ~F_RIB_NOFIBSYNC;
 		}
-#line 3617 "parse.c"
+#line 3636 "parse.c"
     break;
 
   case 116: /* $@8: %empty  */
-#line 1285 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1286 "../../../openbgpd-portable/src/bgpd/parse.y"
                   {	curpeer = new_peer(); }
-#line 3623 "parse.c"
+#line 3642 "parse.c"
     break;
 
   case 117: /* $@9: %empty  */
-#line 1286 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1287 "../../../openbgpd-portable/src/bgpd/parse.y"
                                       {
 			memcpy(&curpeer->conf.remote_addr, &(yyvsp[0].v.prefix).prefix,
 			    sizeof(curpeer->conf.remote_addr));
@@ -3638,11 +3657,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3642 "parse.c"
+#line 3661 "parse.c"
     break;
 
   case 118: /* neighbor: $@8 NEIGHBOR addrspec $@9 peeropts_h  */
-#line 1300 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1301 "../../../openbgpd-portable/src/bgpd/parse.y"
                                {
 			if (curpeer_filter[0] != NULL)
 				TAILQ_INSERT_TAIL(peerfilter_l,
@@ -3661,11 +3680,11 @@ yyreduce:
 				fatalx("%s: peer tree is corrupt", __func__);
 			curpeer = curgroup;
 		}
-#line 3665 "parse.c"
+#line 3684 "parse.c"
     break;
 
   case 119: /* $@10: %empty  */
-#line 1320 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1321 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			curgroup = curpeer = new_group();
 			if (strlcpy(curgroup->conf.group, (yyvsp[0].v.string),
@@ -3684,11 +3703,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3688 "parse.c"
+#line 3707 "parse.c"
     break;
 
   case 120: /* group: GROUP string $@10 '{' groupopts_l '}'  */
-#line 1337 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 1338 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (curgroup_filter[0] != NULL)
 				TAILQ_INSERT_TAIL(groupfilter_l,
@@ -3702,19 +3721,57 @@ yyreduce:
 			free(curgroup);
 			curgroup = NULL;
 		}
-#line 3706 "parse.c"
+#line 3725 "parse.c"
     break;
 
-  case 133: /* peeropts: REMOTEAS as4number  */
-#line 1370 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 126: /* addpathextra: %empty  */
+#line 1360 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        { (yyval.v.number) = 0;	}
+#line 3731 "parse.c"
+    break;
+
+  case 127: /* addpathextra: PLUS NUMBER  */
+#line 1361 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
+			if ((yyvsp[0].v.number) < 1 || (yyvsp[0].v.number) > USHRT_MAX) {
+				yyerror("additional paths must be between "
+				    "%u and %u", 1, USHRT_MAX);
+				YYERROR;
+			}
+			(yyval.v.number) = (yyvsp[0].v.number);
+		}
+#line 3744 "parse.c"
+    break;
+
+  case 128: /* addpathmax: %empty  */
+#line 1371 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        { (yyval.v.number) = 0;	}
+#line 3750 "parse.c"
+    break;
+
+  case 129: /* addpathmax: MAX NUMBER  */
+#line 1372 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                        {
+			if ((yyvsp[0].v.number) < 1 || (yyvsp[0].v.number) > USHRT_MAX) {
+				yyerror("maximum additional paths must be "
+				    "between %u and %u", 1, USHRT_MAX);
+				YYERROR;
+			}
+			(yyval.v.number) = (yyvsp[0].v.number);
+		}
+#line 3763 "parse.c"
+    break;
+
+  case 137: /* peeropts: REMOTEAS as4number  */
+#line 1393 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			curpeer->conf.remote_as = (yyvsp[0].v.number);
 		}
-#line 3714 "parse.c"
+#line 3771 "parse.c"
     break;
 
-  case 134: /* peeropts: LOCALAS as4number  */
-#line 1373 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 138: /* peeropts: LOCALAS as4number  */
+#line 1396 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			curpeer->conf.local_as = (yyvsp[0].v.number);
 			if ((yyvsp[0].v.number) > USHRT_MAX)
@@ -3722,20 +3779,20 @@ yyreduce:
 			else
 				curpeer->conf.local_short_as = (yyvsp[0].v.number);
 		}
-#line 3726 "parse.c"
+#line 3783 "parse.c"
     break;
 
-  case 135: /* peeropts: LOCALAS as4number asnumber  */
-#line 1380 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 139: /* peeropts: LOCALAS as4number asnumber  */
+#line 1403 "../../../openbgpd-portable/src/bgpd/parse.y"
                                              {
 			curpeer->conf.local_as = (yyvsp[-1].v.number);
 			curpeer->conf.local_short_as = (yyvsp[0].v.number);
 		}
-#line 3735 "parse.c"
+#line 3792 "parse.c"
     break;
 
-  case 136: /* peeropts: DESCR string  */
-#line 1384 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 140: /* peeropts: DESCR string  */
+#line 1407 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (strlcpy(curpeer->conf.descr, (yyvsp[0].v.string),
 			    sizeof(curpeer->conf.descr)) >=
@@ -3747,11 +3804,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3751 "parse.c"
+#line 3808 "parse.c"
     break;
 
-  case 137: /* peeropts: LOCALADDR address  */
-#line 1395 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 141: /* peeropts: LOCALADDR address  */
+#line 1418 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.addr).aid == AID_INET)
 				memcpy(&curpeer->conf.local_addr_v4, &(yyvsp[0].v.addr),
@@ -3765,11 +3822,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 3769 "parse.c"
+#line 3826 "parse.c"
     break;
 
-  case 138: /* peeropts: yesno LOCALADDR  */
-#line 1408 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 142: /* peeropts: yesno LOCALADDR  */
+#line 1431 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[-1].v.number)) {
 				yyerror("bad local-address definition");
@@ -3780,11 +3837,11 @@ yyreduce:
 			memset(&curpeer->conf.local_addr_v6, 0,
 			    sizeof(curpeer->conf.local_addr_v6));
 		}
-#line 3784 "parse.c"
+#line 3841 "parse.c"
     break;
 
-  case 139: /* peeropts: MULTIHOP NUMBER  */
-#line 1418 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 143: /* peeropts: MULTIHOP NUMBER  */
+#line 1441 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) < 2 || (yyvsp[0].v.number) > 255) {
 				yyerror("invalid multihop distance %lld", (yyvsp[0].v.number));
@@ -3792,27 +3849,27 @@ yyreduce:
 			}
 			curpeer->conf.distance = (yyvsp[0].v.number);
 		}
-#line 3796 "parse.c"
+#line 3853 "parse.c"
     break;
 
-  case 140: /* peeropts: PASSIVE  */
-#line 1425 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 144: /* peeropts: PASSIVE  */
+#line 1448 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			curpeer->conf.passive = 1;
 		}
-#line 3804 "parse.c"
+#line 3861 "parse.c"
     break;
 
-  case 141: /* peeropts: DOWN  */
-#line 1428 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 145: /* peeropts: DOWN  */
+#line 1451 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			curpeer->conf.down = 1;
 		}
-#line 3812 "parse.c"
+#line 3869 "parse.c"
     break;
 
-  case 142: /* peeropts: DOWN STRING  */
-#line 1431 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 146: /* peeropts: DOWN STRING  */
+#line 1454 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			curpeer->conf.down = 1;
 			if (strlcpy(curpeer->conf.reason, (yyvsp[0].v.string),
@@ -3824,11 +3881,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3828 "parse.c"
+#line 3885 "parse.c"
     break;
 
-  case 143: /* peeropts: RIB STRING  */
-#line 1442 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 147: /* peeropts: RIB STRING  */
+#line 1465 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			if (!find_rib((yyvsp[0].v.string))) {
 				yyerror("rib \"%s\" does not exist.", (yyvsp[0].v.string));
@@ -3845,11 +3902,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 3849 "parse.c"
+#line 3906 "parse.c"
     break;
 
-  case 144: /* peeropts: HOLDTIME NUMBER  */
-#line 1458 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 148: /* peeropts: HOLDTIME NUMBER  */
+#line 1481 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) < MIN_HOLDTIME || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("holdtime must be between %u and %u",
@@ -3858,11 +3915,11 @@ yyreduce:
 			}
 			curpeer->conf.holdtime = (yyvsp[0].v.number);
 		}
-#line 3862 "parse.c"
+#line 3919 "parse.c"
     break;
 
-  case 145: /* peeropts: HOLDTIME YMIN NUMBER  */
-#line 1466 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 149: /* peeropts: HOLDTIME YMIN NUMBER  */
+#line 1489 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) < MIN_HOLDTIME || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("holdtime must be between %u and %u",
@@ -3871,11 +3928,11 @@ yyreduce:
 			}
 			curpeer->conf.min_holdtime = (yyvsp[0].v.number);
 		}
-#line 3875 "parse.c"
+#line 3932 "parse.c"
     break;
 
-  case 146: /* peeropts: ANNOUNCE family safi  */
-#line 1474 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 150: /* peeropts: ANNOUNCE family safi  */
+#line 1497 "../../../openbgpd-portable/src/bgpd/parse.y"
                                        {
 			uint8_t		aid, safi;
 			uint16_t	afi;
@@ -3895,51 +3952,51 @@ yyreduce:
 				curpeer->conf.capabilities.mp[aid] = 1;
 			}
 		}
-#line 3899 "parse.c"
+#line 3956 "parse.c"
     break;
 
-  case 147: /* peeropts: ANNOUNCE CAPABILITIES yesno  */
-#line 1493 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 151: /* peeropts: ANNOUNCE CAPABILITIES yesno  */
+#line 1516 "../../../openbgpd-portable/src/bgpd/parse.y"
                                               {
 			curpeer->conf.announce_capa = (yyvsp[0].v.number);
 		}
-#line 3907 "parse.c"
+#line 3964 "parse.c"
     break;
 
-  case 148: /* peeropts: ANNOUNCE REFRESH yesno  */
-#line 1496 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 152: /* peeropts: ANNOUNCE REFRESH yesno  */
+#line 1519 "../../../openbgpd-portable/src/bgpd/parse.y"
                                          {
 			curpeer->conf.capabilities.refresh = (yyvsp[0].v.number);
 		}
-#line 3915 "parse.c"
+#line 3972 "parse.c"
     break;
 
-  case 149: /* peeropts: ANNOUNCE ENHANCED REFRESH yesno  */
-#line 1499 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 153: /* peeropts: ANNOUNCE ENHANCED REFRESH yesno  */
+#line 1522 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                   {
 			curpeer->conf.capabilities.enhanced_rr = (yyvsp[0].v.number);
 		}
-#line 3923 "parse.c"
+#line 3980 "parse.c"
     break;
 
-  case 150: /* peeropts: ANNOUNCE RESTART yesno  */
-#line 1502 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 154: /* peeropts: ANNOUNCE RESTART yesno  */
+#line 1525 "../../../openbgpd-portable/src/bgpd/parse.y"
                                          {
 			curpeer->conf.capabilities.grestart.restart = (yyvsp[0].v.number);
 		}
-#line 3931 "parse.c"
+#line 3988 "parse.c"
     break;
 
-  case 151: /* peeropts: ANNOUNCE AS4BYTE yesno  */
-#line 1505 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 155: /* peeropts: ANNOUNCE AS4BYTE yesno  */
+#line 1528 "../../../openbgpd-portable/src/bgpd/parse.y"
                                          {
 			curpeer->conf.capabilities.as4byte = (yyvsp[0].v.number);
 		}
-#line 3939 "parse.c"
+#line 3996 "parse.c"
     break;
 
-  case 152: /* peeropts: ANNOUNCE ADDPATH RECV yesno  */
-#line 1508 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 156: /* peeropts: ANNOUNCE ADDPATH RECV yesno  */
+#line 1531 "../../../openbgpd-portable/src/bgpd/parse.y"
                                               {
 			int8_t *ap = curpeer->conf.capabilities.add_path;
 			uint8_t i;
@@ -3950,49 +4007,130 @@ yyreduce:
 				else
 					*ap++ &= ~CAPA_AP_RECV;
 		}
-#line 3954 "parse.c"
+#line 4011 "parse.c"
     break;
 
-  case 153: /* peeropts: EXPORT NONE  */
-#line 1518 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 157: /* peeropts: ANNOUNCE ADDPATH SEND STRING addpathextra addpathmax  */
+#line 1541 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                                       {
+			int8_t *ap = curpeer->conf.capabilities.add_path;
+			enum addpath_mode mode;
+			u_int8_t i;
+
+			if (!strcmp((yyvsp[-2].v.string), "no")) {
+				free((yyvsp[-2].v.string));
+				if ((yyvsp[-1].v.number) != 0 || (yyvsp[0].v.number) != 0) {
+					yyerror("no additional option allowed "
+					    "for 'add-path send no'");
+					YYERROR;
+				}
+				for (i = 0; i < AID_MAX; i++)
+					*ap++ &= ~CAPA_AP_SEND;
+				break;
+			} else if (!strcmp((yyvsp[-2].v.string), "all")) {
+				free((yyvsp[-2].v.string));
+				if ((yyvsp[-1].v.number) != 0 || (yyvsp[0].v.number) != 0) {
+					yyerror("no additional option allowed "
+					    "for 'add-path send all'");
+					YYERROR;
+				}
+				mode = ADDPATH_EVAL_ALL;
+			} else if (!strcmp((yyvsp[-2].v.string), "best")) {
+				free((yyvsp[-2].v.string));
+				mode = ADDPATH_EVAL_BEST;
+			} else if (!strcmp((yyvsp[-2].v.string), "ecmp")) {
+				free((yyvsp[-2].v.string));
+				mode = ADDPATH_EVAL_ECMP;
+			} else if (!strcmp((yyvsp[-2].v.string), "as-wide-best")) {
+				free((yyvsp[-2].v.string));
+				mode = ADDPATH_EVAL_AS_WIDE;
+			} else {
+				yyerror("announce add-path send: "
+				    "unknown mode \"%s\"", (yyvsp[-2].v.string));
+				free((yyvsp[-2].v.string));
+				YYERROR;
+			}
+			for (i = 0; i < AID_MAX; i++)
+				*ap++ |= CAPA_AP_SEND;
+			curpeer->conf.eval.mode = mode;
+			curpeer->conf.eval.extrapaths = (yyvsp[-1].v.number);
+			curpeer->conf.eval.maxpaths = (yyvsp[0].v.number);
+		}
+#line 4060 "parse.c"
+    break;
+
+  case 158: /* peeropts: ANNOUNCE POLICY STRING enforce  */
+#line 1585 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                                 {
+			curpeer->conf.capabilities.role_ena = (yyvsp[0].v.number);
+			if (strcmp((yyvsp[-1].v.string), "no") == 0) {
+				curpeer->conf.capabilities.role_ena = 0;
+			} else if (strcmp((yyvsp[-1].v.string), "provider") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_PROVIDER;
+			} else if (strcmp((yyvsp[-1].v.string), "rs") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_RS;
+			} else if (strcmp((yyvsp[-1].v.string), "rs-client") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_RS_CLIENT;
+			} else if (strcmp((yyvsp[-1].v.string), "customer") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_CUSTOMER;
+			} else if (strcmp((yyvsp[-1].v.string), "peer") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_PEER;
+			} else {
+				yyerror("syntax error, one of no, provider, "
+				    "rs, rs-client, customer, peer expected");
+				free((yyvsp[-1].v.string));
+				YYERROR;
+			}
+			free((yyvsp[-1].v.string));
+		}
+#line 4092 "parse.c"
+    break;
+
+  case 159: /* peeropts: EXPORT NONE  */
+#line 1612 "../../../openbgpd-portable/src/bgpd/parse.y"
                               {
 			curpeer->conf.export_type = EXPORT_NONE;
 		}
-#line 3962 "parse.c"
+#line 4100 "parse.c"
     break;
 
-  case 154: /* peeropts: EXPORT DEFAULTROUTE  */
-#line 1521 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 160: /* peeropts: EXPORT DEFAULTROUTE  */
+#line 1615 "../../../openbgpd-portable/src/bgpd/parse.y"
                                       {
 			curpeer->conf.export_type = EXPORT_DEFAULT_ROUTE;
 		}
-#line 3970 "parse.c"
+#line 4108 "parse.c"
     break;
 
-  case 155: /* peeropts: ENFORCE NEIGHBORAS yesno  */
-#line 1524 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 161: /* peeropts: ENFORCE NEIGHBORAS yesno  */
+#line 1618 "../../../openbgpd-portable/src/bgpd/parse.y"
                                            {
 			if ((yyvsp[0].v.number))
 				curpeer->conf.enforce_as = ENFORCE_AS_ON;
 			else
 				curpeer->conf.enforce_as = ENFORCE_AS_OFF;
 		}
-#line 3981 "parse.c"
+#line 4119 "parse.c"
     break;
 
-  case 156: /* peeropts: ENFORCE LOCALAS yesno  */
-#line 1530 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 162: /* peeropts: ENFORCE LOCALAS yesno  */
+#line 1624 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number))
 				curpeer->conf.enforce_local_as = ENFORCE_AS_ON;
 			else
 				curpeer->conf.enforce_local_as = ENFORCE_AS_OFF;
 		}
-#line 3992 "parse.c"
+#line 4130 "parse.c"
     break;
 
-  case 157: /* peeropts: ASOVERRIDE yesno  */
-#line 1536 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 163: /* peeropts: ASOVERRIDE yesno  */
+#line 1630 "../../../openbgpd-portable/src/bgpd/parse.y"
                                    {
 			if ((yyvsp[0].v.number)) {
 				struct filter_rule	*r;
@@ -4008,11 +4146,11 @@ yyreduce:
 					YYERROR;
 			}
 		}
-#line 4012 "parse.c"
+#line 4150 "parse.c"
     break;
 
-  case 158: /* peeropts: MAXPREFIX NUMBER restart  */
-#line 1551 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 164: /* peeropts: MAXPREFIX NUMBER restart  */
+#line 1645 "../../../openbgpd-portable/src/bgpd/parse.y"
                                            {
 			if ((yyvsp[-1].v.number) < 0 || (yyvsp[-1].v.number) > UINT_MAX) {
 				yyerror("bad maximum number of prefixes");
@@ -4021,11 +4159,11 @@ yyreduce:
 			curpeer->conf.max_prefix = (yyvsp[-1].v.number);
 			curpeer->conf.max_prefix_restart = (yyvsp[0].v.number);
 		}
-#line 4025 "parse.c"
+#line 4163 "parse.c"
     break;
 
-  case 159: /* peeropts: MAXPREFIX NUMBER OUT restart  */
-#line 1559 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 165: /* peeropts: MAXPREFIX NUMBER OUT restart  */
+#line 1653 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                {
 			if ((yyvsp[-2].v.number) < 0 || (yyvsp[-2].v.number) > UINT_MAX) {
 				yyerror("bad maximum number of prefixes");
@@ -4034,11 +4172,11 @@ yyreduce:
 			curpeer->conf.max_out_prefix = (yyvsp[-2].v.number);
 			curpeer->conf.max_out_prefix_restart = (yyvsp[0].v.number);
 		}
-#line 4038 "parse.c"
+#line 4176 "parse.c"
     break;
 
-  case 160: /* peeropts: TCP MD5SIG PASSWORD string  */
-#line 1567 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 166: /* peeropts: TCP MD5SIG PASSWORD string  */
+#line 1661 "../../../openbgpd-portable/src/bgpd/parse.y"
                                              {
 			if (curpeer->conf.auth.method) {
 				yyerror("auth method cannot be redefined");
@@ -4057,11 +4195,11 @@ yyreduce:
 			curpeer->conf.auth.md5key_len = strlen((yyvsp[0].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 4061 "parse.c"
+#line 4199 "parse.c"
     break;
 
-  case 161: /* peeropts: TCP MD5SIG KEY string  */
-#line 1585 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 167: /* peeropts: TCP MD5SIG KEY string  */
+#line 1679 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (curpeer->conf.auth.method) {
 				yyerror("auth method cannot be redefined");
@@ -4078,11 +4216,11 @@ yyreduce:
 			curpeer->conf.auth.md5key_len = strlen((yyvsp[0].v.string)) / 2;
 			free((yyvsp[0].v.string));
 		}
-#line 4082 "parse.c"
+#line 4220 "parse.c"
     break;
 
-  case 162: /* peeropts: IPSEC espah IKE  */
-#line 1601 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 168: /* peeropts: IPSEC espah IKE  */
+#line 1695 "../../../openbgpd-portable/src/bgpd/parse.y"
                                   {
 			if (curpeer->conf.auth.method) {
 				yyerror("auth method cannot be redefined");
@@ -4093,13 +4231,13 @@ yyreduce:
 			else
 				curpeer->conf.auth.method = AUTH_IPSEC_IKE_AH;
 		}
-#line 4097 "parse.c"
+#line 4235 "parse.c"
     break;
 
-  case 163: /* peeropts: IPSEC espah inout SPI NUMBER STRING STRING encspec  */
-#line 1611 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 169: /* peeropts: IPSEC espah inout SPI NUMBER STRING STRING encspec  */
+#line 1705 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                      {
-			uint32_t	auth_alg;
+			enum auth_alg	auth_alg;
 			uint8_t		keylen;
 
 			if (curpeer->conf.auth.method &&
@@ -4116,10 +4254,10 @@ yyreduce:
 			}
 
 			if (!strcmp((yyvsp[-2].v.string), "sha1")) {
-				auth_alg = SADB_AALG_SHA1HMAC;
+				auth_alg = AUTH_AALG_SHA1HMAC;
 				keylen = 20;
 			} else if (!strcmp((yyvsp[-2].v.string), "md5")) {
-				auth_alg = SADB_AALG_MD5HMAC;
+				auth_alg = AUTH_AALG_MD5HMAC;
 				keylen = 16;
 			} else {
 				yyerror("unknown auth algorithm \"%s\"", (yyvsp[-2].v.string));
@@ -4191,19 +4329,19 @@ yyreduce:
 			}
 			free((yyvsp[-1].v.string));
 		}
-#line 4195 "parse.c"
+#line 4333 "parse.c"
     break;
 
-  case 164: /* peeropts: TTLSECURITY yesno  */
-#line 1704 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 170: /* peeropts: TTLSECURITY yesno  */
+#line 1798 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			curpeer->conf.ttlsec = (yyvsp[0].v.number);
 		}
-#line 4203 "parse.c"
+#line 4341 "parse.c"
     break;
 
-  case 165: /* peeropts: SET filter_set_opt  */
-#line 1707 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 171: /* peeropts: SET filter_set_opt  */
+#line 1801 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			struct filter_rule	*r;
 
@@ -4211,11 +4349,11 @@ yyreduce:
 			if (merge_filterset(&r->set, (yyvsp[0].v.filter_set)) == -1)
 				YYERROR;
 		}
-#line 4215 "parse.c"
+#line 4353 "parse.c"
     break;
 
-  case 166: /* peeropts: SET '{' optnl filter_set_l optnl '}'  */
-#line 1714 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 172: /* peeropts: SET '{' optnl filter_set_l optnl '}'  */
+#line 1808 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			struct filter_rule	*r;
 			struct filter_set	*s;
@@ -4228,11 +4366,11 @@ yyreduce:
 			}
 			free((yyvsp[-2].v.filter_set_head));
 		}
-#line 4232 "parse.c"
+#line 4370 "parse.c"
     break;
 
-  case 168: /* peeropts: REFLECTOR  */
-#line 1727 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 174: /* peeropts: REFLECTOR  */
+#line 1821 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((conf->flags & BGPD_FLAG_REFLECTOR) &&
 			    conf->clusterid != 0) {
@@ -4243,11 +4381,11 @@ yyreduce:
 			conf->flags |= BGPD_FLAG_REFLECTOR;
 			curpeer->conf.reflector_client = 1;
 		}
-#line 4247 "parse.c"
+#line 4385 "parse.c"
     break;
 
-  case 169: /* peeropts: REFLECTOR address  */
-#line 1737 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 175: /* peeropts: REFLECTOR address  */
+#line 1831 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.addr).aid != AID_INET) {
 				yyerror("route reflector cluster-id must be "
@@ -4264,11 +4402,11 @@ yyreduce:
 			curpeer->conf.reflector_client = 1;
 			conf->clusterid = (yyvsp[0].v.addr).v4.s_addr;
 		}
-#line 4268 "parse.c"
+#line 4406 "parse.c"
     break;
 
-  case 170: /* peeropts: DEPEND ON STRING  */
-#line 1753 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 176: /* peeropts: DEPEND ON STRING  */
+#line 1847 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (strlcpy(curpeer->conf.if_depend, (yyvsp[0].v.string),
 			    sizeof(curpeer->conf.if_depend)) >=
@@ -4281,11 +4419,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4285 "parse.c"
+#line 4423 "parse.c"
     break;
 
-  case 171: /* peeropts: DEMOTE STRING  */
-#line 1765 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 177: /* peeropts: DEMOTE STRING  */
+#line 1859 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 #ifdef HAVE_CARP
 			if (strlcpy(curpeer->conf.demote_group, (yyvsp[0].v.string),
@@ -4310,22 +4448,22 @@ yyreduce:
 			YYERROR;
 #endif
 		}
-#line 4314 "parse.c"
+#line 4452 "parse.c"
     break;
 
-  case 172: /* peeropts: TRANSPARENT yesno  */
-#line 1789 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 178: /* peeropts: TRANSPARENT yesno  */
+#line 1883 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) == 1)
 				curpeer->conf.flags |= PEERFLAG_TRANS_AS;
 			else
 				curpeer->conf.flags &= ~PEERFLAG_TRANS_AS;
 		}
-#line 4325 "parse.c"
+#line 4463 "parse.c"
     break;
 
-  case 173: /* peeropts: LOG STRING  */
-#line 1795 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 179: /* peeropts: LOG STRING  */
+#line 1889 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (!strcmp((yyvsp[0].v.string), "updates"))
 				curpeer->conf.flags |= PEERFLAG_LOG_UPDATES;
@@ -4337,22 +4475,22 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4341 "parse.c"
+#line 4479 "parse.c"
     break;
 
-  case 174: /* peeropts: REJECT ASSET yesno  */
-#line 1806 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 180: /* peeropts: REJECT ASSET yesno  */
+#line 1900 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) == 1)
 				curpeer->conf.flags |= PEERFLAG_NO_AS_SET;
 			else
 				curpeer->conf.flags &= ~PEERFLAG_NO_AS_SET;
 		}
-#line 4352 "parse.c"
+#line 4490 "parse.c"
     break;
 
-  case 175: /* peeropts: PORT NUMBER  */
-#line 1812 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 181: /* peeropts: PORT NUMBER  */
+#line 1906 "../../../openbgpd-portable/src/bgpd/parse.y"
                               {
 			if ((yyvsp[0].v.number) < 1 || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("port must be between %u and %u",
@@ -4361,11 +4499,11 @@ yyreduce:
 			}
 			curpeer->conf.remote_port = (yyvsp[0].v.number);
 		}
-#line 4365 "parse.c"
+#line 4503 "parse.c"
     break;
 
-  case 176: /* peeropts: RDE EVALUATE STRING  */
-#line 1820 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 182: /* peeropts: RDE EVALUATE STRING  */
+#line 1914 "../../../openbgpd-portable/src/bgpd/parse.y"
                                       {
 			if (!strcmp((yyvsp[0].v.string), "all"))
 				curpeer->conf.flags |= PEERFLAG_EVALUATE_ALL;
@@ -4379,17 +4517,17 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4383 "parse.c"
+#line 4521 "parse.c"
     break;
 
-  case 177: /* restart: %empty  */
-#line 1835 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 183: /* restart: %empty  */
+#line 1929 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         { (yyval.v.number) = 0; }
-#line 4389 "parse.c"
+#line 4527 "parse.c"
     break;
 
-  case 178: /* restart: RESTART NUMBER  */
-#line 1836 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 184: /* restart: RESTART NUMBER  */
+#line 1930 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) < 1 || (yyvsp[0].v.number) > USHRT_MAX) {
 				yyerror("restart out of range. 1 to %u minutes",
@@ -4398,81 +4536,81 @@ yyreduce:
 			}
 			(yyval.v.number) = (yyvsp[0].v.number);
 		}
-#line 4402 "parse.c"
+#line 4540 "parse.c"
     break;
 
-  case 179: /* family: IPV4  */
-#line 1846 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 185: /* family: IPV4  */
+#line 1940 "../../../openbgpd-portable/src/bgpd/parse.y"
                         { (yyval.v.number) = AFI_IPv4; }
-#line 4408 "parse.c"
+#line 4546 "parse.c"
     break;
 
-  case 180: /* family: IPV6  */
-#line 1847 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 186: /* family: IPV6  */
+#line 1941 "../../../openbgpd-portable/src/bgpd/parse.y"
                         { (yyval.v.number) = AFI_IPv6; }
-#line 4414 "parse.c"
+#line 4552 "parse.c"
     break;
 
-  case 181: /* safi: NONE  */
-#line 1850 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 187: /* safi: NONE  */
+#line 1944 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = SAFI_NONE; }
-#line 4420 "parse.c"
+#line 4558 "parse.c"
     break;
 
-  case 182: /* safi: UNICAST  */
-#line 1851 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 188: /* safi: UNICAST  */
+#line 1945 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = SAFI_UNICAST; }
-#line 4426 "parse.c"
+#line 4564 "parse.c"
     break;
 
-  case 183: /* safi: VPN  */
-#line 1852 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 189: /* safi: VPN  */
+#line 1946 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = SAFI_MPLSVPN; }
-#line 4432 "parse.c"
+#line 4570 "parse.c"
     break;
 
-  case 184: /* nettype: STATIC  */
-#line 1855 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 190: /* nettype: STATIC  */
+#line 1949 "../../../openbgpd-portable/src/bgpd/parse.y"
                          { (yyval.v.number) = 1; }
-#line 4438 "parse.c"
+#line 4576 "parse.c"
     break;
 
-  case 185: /* nettype: CONNECTED  */
-#line 1856 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 191: /* nettype: CONNECTED  */
+#line 1950 "../../../openbgpd-portable/src/bgpd/parse.y"
                             { (yyval.v.number) = 0; }
-#line 4444 "parse.c"
+#line 4582 "parse.c"
     break;
 
-  case 186: /* espah: ESP  */
-#line 1859 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 192: /* espah: ESP  */
+#line 1953 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = 1; }
-#line 4450 "parse.c"
+#line 4588 "parse.c"
     break;
 
-  case 187: /* espah: AH  */
-#line 1860 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 193: /* espah: AH  */
+#line 1954 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.number) = 0; }
-#line 4456 "parse.c"
+#line 4594 "parse.c"
     break;
 
-  case 188: /* encspec: %empty  */
-#line 1863 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 194: /* encspec: %empty  */
+#line 1957 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			bzero(&(yyval.v.encspec), sizeof((yyval.v.encspec)));
 		}
-#line 4464 "parse.c"
+#line 4602 "parse.c"
     break;
 
-  case 189: /* encspec: STRING STRING  */
-#line 1866 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 195: /* encspec: STRING STRING  */
+#line 1960 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			bzero(&(yyval.v.encspec), sizeof((yyval.v.encspec)));
 			if (!strcmp((yyvsp[-1].v.string), "3des") || !strcmp((yyvsp[-1].v.string), "3des-cbc")) {
-				(yyval.v.encspec).enc_alg = SADB_EALG_3DESCBC;
+				(yyval.v.encspec).enc_alg = AUTH_EALG_3DESCBC;
 				(yyval.v.encspec).enc_key_len = 21; /* XXX verify */
 			} else if (!strcmp((yyvsp[-1].v.string), "aes") ||
 			    !strcmp((yyvsp[-1].v.string), "aes-128-cbc")) {
-				(yyval.v.encspec).enc_alg = SADB_X_EALG_AES;
+				(yyval.v.encspec).enc_alg = AUTH_EALG_AES;
 				(yyval.v.encspec).enc_key_len = 16;
 			} else {
 				yyerror("unknown enc algorithm \"%s\"", (yyvsp[-1].v.string));
@@ -4496,11 +4634,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4500 "parse.c"
+#line 4638 "parse.c"
     break;
 
-  case 190: /* filterrule: action quick filter_rib_h direction filter_peer_h filter_match_h filter_set  */
-#line 1901 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 196: /* filterrule: action quick filter_rib_h direction filter_peer_h filter_match_h filter_set  */
+#line 1995 "../../../openbgpd-portable/src/bgpd/parse.y"
                 {
 			struct filter_rule	 r;
 			struct filter_rib_l	 *rb, *rbnext;
@@ -4524,86 +4662,86 @@ yyreduce:
 			if (expand_rule(&r, (yyvsp[-4].v.filter_rib), (yyvsp[-2].v.filter_peers), &(yyvsp[-1].v.filter_match), (yyvsp[0].v.filter_set_head)) == -1)
 				YYERROR;
 		}
-#line 4528 "parse.c"
+#line 4666 "parse.c"
     break;
 
-  case 191: /* action: ALLOW  */
-#line 1926 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 197: /* action: ALLOW  */
+#line 2020 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = ACTION_ALLOW; }
-#line 4534 "parse.c"
+#line 4672 "parse.c"
     break;
 
-  case 192: /* action: DENY  */
-#line 1927 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 198: /* action: DENY  */
+#line 2021 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = ACTION_DENY; }
-#line 4540 "parse.c"
+#line 4678 "parse.c"
     break;
 
-  case 193: /* action: MATCH  */
-#line 1928 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 199: /* action: MATCH  */
+#line 2022 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = ACTION_NONE; }
-#line 4546 "parse.c"
+#line 4684 "parse.c"
     break;
 
-  case 194: /* quick: %empty  */
-#line 1931 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 200: /* quick: %empty  */
+#line 2025 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = 0; }
-#line 4552 "parse.c"
+#line 4690 "parse.c"
     break;
 
-  case 195: /* quick: QUICK  */
-#line 1932 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 201: /* quick: QUICK  */
+#line 2026 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = 1; }
-#line 4558 "parse.c"
+#line 4696 "parse.c"
     break;
 
-  case 196: /* direction: FROM  */
-#line 1935 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 202: /* direction: FROM  */
+#line 2029 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = DIR_IN; }
-#line 4564 "parse.c"
+#line 4702 "parse.c"
     break;
 
-  case 197: /* direction: TO  */
-#line 1936 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 203: /* direction: TO  */
+#line 2030 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = DIR_OUT; }
-#line 4570 "parse.c"
+#line 4708 "parse.c"
     break;
 
-  case 198: /* filter_rib_h: %empty  */
-#line 1939 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 204: /* filter_rib_h: %empty  */
+#line 2033 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { (yyval.v.filter_rib) = NULL; }
-#line 4576 "parse.c"
+#line 4714 "parse.c"
     break;
 
-  case 199: /* filter_rib_h: RIB filter_rib  */
-#line 1940 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 205: /* filter_rib_h: RIB filter_rib  */
+#line 2034 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { (yyval.v.filter_rib) = (yyvsp[0].v.filter_rib); }
-#line 4582 "parse.c"
+#line 4720 "parse.c"
     break;
 
-  case 200: /* filter_rib_h: RIB '{' optnl filter_rib_l optnl '}'  */
-#line 1941 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 206: /* filter_rib_h: RIB '{' optnl filter_rib_l optnl '}'  */
+#line 2035 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         { (yyval.v.filter_rib) = (yyvsp[-2].v.filter_rib); }
-#line 4588 "parse.c"
+#line 4726 "parse.c"
     break;
 
-  case 201: /* filter_rib_l: filter_rib  */
-#line 1943 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 207: /* filter_rib_l: filter_rib  */
+#line 2037 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { (yyval.v.filter_rib) = (yyvsp[0].v.filter_rib); }
-#line 4594 "parse.c"
+#line 4732 "parse.c"
     break;
 
-  case 202: /* filter_rib_l: filter_rib_l comma filter_rib  */
-#line 1944 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 208: /* filter_rib_l: filter_rib_l comma filter_rib  */
+#line 2038 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			(yyvsp[0].v.filter_rib)->next = (yyvsp[-2].v.filter_rib);
 			(yyval.v.filter_rib) = (yyvsp[0].v.filter_rib);
 		}
-#line 4603 "parse.c"
+#line 4741 "parse.c"
     break;
 
-  case 203: /* filter_rib: STRING  */
-#line 1950 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 209: /* filter_rib: STRING  */
+#line 2044 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			if (!find_rib((yyvsp[0].v.string))) {
 				yyerror("rib \"%s\" does not exist.", (yyvsp[0].v.string));
@@ -4624,32 +4762,32 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4628 "parse.c"
+#line 4766 "parse.c"
     break;
 
-  case 205: /* filter_peer_h: '{' optnl filter_peer_l optnl '}'  */
-#line 1973 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 211: /* filter_peer_h: '{' optnl filter_peer_l optnl '}'  */
+#line 2067 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         { (yyval.v.filter_peers) = (yyvsp[-2].v.filter_peers); }
-#line 4634 "parse.c"
+#line 4772 "parse.c"
     break;
 
-  case 206: /* filter_peer_l: filter_peer  */
-#line 1976 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 212: /* filter_peer_l: filter_peer  */
+#line 2070 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         { (yyval.v.filter_peers) = (yyvsp[0].v.filter_peers); }
-#line 4640 "parse.c"
+#line 4778 "parse.c"
     break;
 
-  case 207: /* filter_peer_l: filter_peer_l comma filter_peer  */
-#line 1977 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 213: /* filter_peer_l: filter_peer_l comma filter_peer  */
+#line 2071 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			(yyvsp[0].v.filter_peers)->next = (yyvsp[-2].v.filter_peers);
 			(yyval.v.filter_peers) = (yyvsp[0].v.filter_peers);
 		}
-#line 4649 "parse.c"
+#line 4787 "parse.c"
     break;
 
-  case 208: /* filter_peer: ANY  */
-#line 1983 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 214: /* filter_peer: ANY  */
+#line 2077 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
 			    NULL)
@@ -4657,11 +4795,11 @@ yyreduce:
 			(yyval.v.filter_peers)->p.peerid = (yyval.v.filter_peers)->p.groupid = 0;
 			(yyval.v.filter_peers)->next = NULL;
 		}
-#line 4661 "parse.c"
+#line 4799 "parse.c"
     break;
 
-  case 209: /* filter_peer: address  */
-#line 1990 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 215: /* filter_peer: address  */
+#line 2084 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			struct peer *p;
 
@@ -4682,11 +4820,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 4686 "parse.c"
+#line 4824 "parse.c"
     break;
 
-  case 210: /* filter_peer: AS as4number  */
-#line 2010 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 216: /* filter_peer: AS as4number  */
+#line 2104 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
 			    NULL)
@@ -4694,11 +4832,11 @@ yyreduce:
 			(yyval.v.filter_peers)->p.groupid = (yyval.v.filter_peers)->p.peerid = 0;
 			(yyval.v.filter_peers)->p.remote_as = (yyvsp[0].v.number);
 		}
-#line 4698 "parse.c"
+#line 4836 "parse.c"
     break;
 
-  case 211: /* filter_peer: GROUP STRING  */
-#line 2017 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 217: /* filter_peer: GROUP STRING  */
+#line 2111 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			struct peer *p;
 
@@ -4720,33 +4858,33 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4724 "parse.c"
+#line 4862 "parse.c"
     break;
 
-  case 212: /* filter_peer: EBGP  */
-#line 2038 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 218: /* filter_peer: EBGP  */
+#line 2132 "../../../openbgpd-portable/src/bgpd/parse.y"
                        {
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
 			    NULL)
 				fatal(NULL);
 			(yyval.v.filter_peers)->p.ebgp = 1;
 		}
-#line 4735 "parse.c"
+#line 4873 "parse.c"
     break;
 
-  case 213: /* filter_peer: IBGP  */
-#line 2044 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 219: /* filter_peer: IBGP  */
+#line 2138 "../../../openbgpd-portable/src/bgpd/parse.y"
                        {
 			if (((yyval.v.filter_peers) = calloc(1, sizeof(struct filter_peers_l))) ==
 			    NULL)
 				fatal(NULL);
 			(yyval.v.filter_peers)->p.ibgp = 1;
 		}
-#line 4746 "parse.c"
+#line 4884 "parse.c"
     break;
 
-  case 214: /* filter_prefix_h: IPV4 prefixlenop  */
-#line 2052 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 220: /* filter_prefix_h: IPV4 prefixlenop  */
+#line 2146 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                          {
 			if ((yyvsp[0].v.prefixlen).op == OP_NONE) {
 				(yyvsp[0].v.prefixlen).op = OP_RANGE;
@@ -4762,11 +4900,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 4766 "parse.c"
+#line 4904 "parse.c"
     break;
 
-  case 215: /* filter_prefix_h: IPV6 prefixlenop  */
-#line 2067 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 221: /* filter_prefix_h: IPV6 prefixlenop  */
+#line 2161 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.prefixlen).op == OP_NONE) {
 				(yyvsp[0].v.prefixlen).op = OP_RANGE;
@@ -4782,29 +4920,29 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 4786 "parse.c"
+#line 4924 "parse.c"
     break;
 
-  case 216: /* filter_prefix_h: PREFIX filter_prefix  */
-#line 2082 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 222: /* filter_prefix_h: PREFIX filter_prefix  */
+#line 2176 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         { (yyval.v.filter_prefix) = (yyvsp[0].v.filter_prefix); }
-#line 4792 "parse.c"
+#line 4930 "parse.c"
     break;
 
-  case 217: /* filter_prefix_h: PREFIX '{' filter_prefix_m '}'  */
-#line 2083 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 223: /* filter_prefix_h: PREFIX '{' filter_prefix_m '}'  */
+#line 2177 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         { (yyval.v.filter_prefix) = (yyvsp[-1].v.filter_prefix); }
-#line 4798 "parse.c"
+#line 4936 "parse.c"
     break;
 
-  case 219: /* filter_prefix_m: '{' filter_prefix_l '}'  */
-#line 2087 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 225: /* filter_prefix_m: '{' filter_prefix_l '}'  */
+#line 2181 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         { (yyval.v.filter_prefix) = (yyvsp[-1].v.filter_prefix); }
-#line 4804 "parse.c"
+#line 4942 "parse.c"
     break;
 
-  case 220: /* filter_prefix_m: '{' filter_prefix_l '}' filter_prefix_m  */
-#line 2089 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 226: /* filter_prefix_m: '{' filter_prefix_l '}' filter_prefix_m  */
+#line 2183 "../../../openbgpd-portable/src/bgpd/parse.y"
                 {
 			struct filter_prefix_l  *p;
 
@@ -4815,26 +4953,26 @@ yyreduce:
 				p->next = (yyvsp[0].v.filter_prefix);
 			(yyval.v.filter_prefix) = (yyvsp[-2].v.filter_prefix);
 		}
-#line 4819 "parse.c"
+#line 4957 "parse.c"
     break;
 
-  case 221: /* filter_prefix_l: filter_prefix  */
-#line 2100 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 227: /* filter_prefix_l: filter_prefix  */
+#line 2194 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { (yyval.v.filter_prefix) = (yyvsp[0].v.filter_prefix); }
-#line 4825 "parse.c"
+#line 4963 "parse.c"
     break;
 
-  case 222: /* filter_prefix_l: filter_prefix_l comma filter_prefix  */
-#line 2101 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 228: /* filter_prefix_l: filter_prefix_l comma filter_prefix  */
+#line 2195 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			(yyvsp[0].v.filter_prefix)->next = (yyvsp[-2].v.filter_prefix);
 			(yyval.v.filter_prefix) = (yyvsp[0].v.filter_prefix);
 		}
-#line 4834 "parse.c"
+#line 4972 "parse.c"
     break;
 
-  case 223: /* filter_prefix: prefix prefixlenop  */
-#line 2107 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 229: /* filter_prefix: prefix prefixlenop  */
+#line 2201 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if (((yyval.v.filter_prefix) = calloc(1, sizeof(struct filter_prefix_l))) ==
 			    NULL)
@@ -4848,17 +4986,17 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 4852 "parse.c"
+#line 4990 "parse.c"
     break;
 
-  case 225: /* filter_as_h: '{' filter_as_t_l '}'  */
-#line 2123 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 231: /* filter_as_h: '{' filter_as_t_l '}'  */
+#line 2217 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { (yyval.v.filter_as) = (yyvsp[-1].v.filter_as); }
-#line 4858 "parse.c"
+#line 4996 "parse.c"
     break;
 
-  case 227: /* filter_as_t_l: filter_as_t_l comma filter_as_t  */
-#line 2127 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 233: /* filter_as_t_l: filter_as_t_l comma filter_as_t  */
+#line 2221 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                 {
 			struct filter_as_l	*a;
 
@@ -4869,20 +5007,20 @@ yyreduce:
 				a->next = (yyvsp[0].v.filter_as);
 			(yyval.v.filter_as) = (yyvsp[-2].v.filter_as);
 		}
-#line 4873 "parse.c"
+#line 5011 "parse.c"
     break;
 
-  case 228: /* filter_as_t: filter_as_type filter_as  */
-#line 2139 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 234: /* filter_as_t: filter_as_type filter_as  */
+#line 2233 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                 {
 			(yyval.v.filter_as) = (yyvsp[0].v.filter_as);
 			(yyval.v.filter_as)->a.type = (yyvsp[-1].v.u8);
 		}
-#line 4882 "parse.c"
+#line 5020 "parse.c"
     break;
 
-  case 229: /* filter_as_t: filter_as_type '{' filter_as_l_h '}'  */
-#line 2143 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 235: /* filter_as_t: filter_as_type '{' filter_as_l_h '}'  */
+#line 2237 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			struct filter_as_l	*a;
 
@@ -4890,11 +5028,11 @@ yyreduce:
 			for (a = (yyval.v.filter_as); a != NULL; a = a->next)
 				a->a.type = (yyvsp[-3].v.u8);
 		}
-#line 4894 "parse.c"
+#line 5032 "parse.c"
     break;
 
-  case 230: /* filter_as_t: filter_as_type ASSET STRING  */
-#line 2150 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 236: /* filter_as_t: filter_as_type ASSET STRING  */
+#line 2244 "../../../openbgpd-portable/src/bgpd/parse.y"
                                               {
 			if (as_sets_lookup(&conf->as_sets, (yyvsp[0].v.string)) == NULL) {
 				yyerror("as-set \"%s\" not defined", (yyvsp[0].v.string));
@@ -4916,17 +5054,17 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 4920 "parse.c"
+#line 5058 "parse.c"
     break;
 
-  case 232: /* filter_as_l_h: '{' filter_as_l '}'  */
-#line 2174 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 238: /* filter_as_l_h: '{' filter_as_l '}'  */
+#line 2268 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         { (yyval.v.filter_as) = (yyvsp[-1].v.filter_as); }
-#line 4926 "parse.c"
+#line 5064 "parse.c"
     break;
 
-  case 233: /* filter_as_l_h: '{' filter_as_l '}' filter_as_l_h  */
-#line 2176 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 239: /* filter_as_l_h: '{' filter_as_l '}' filter_as_l_h  */
+#line 2270 "../../../openbgpd-portable/src/bgpd/parse.y"
                 {
 			struct filter_as_l	*a;
 
@@ -4937,20 +5075,20 @@ yyreduce:
 				a->next = (yyvsp[0].v.filter_as);
 			(yyval.v.filter_as) = (yyvsp[-2].v.filter_as);
 		}
-#line 4941 "parse.c"
+#line 5079 "parse.c"
     break;
 
-  case 235: /* filter_as_l: filter_as_l comma filter_as  */
-#line 2189 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 241: /* filter_as_l: filter_as_l comma filter_as  */
+#line 2283 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			(yyvsp[0].v.filter_as)->next = (yyvsp[-2].v.filter_as);
 			(yyval.v.filter_as) = (yyvsp[0].v.filter_as);
 		}
-#line 4950 "parse.c"
+#line 5088 "parse.c"
     break;
 
-  case 236: /* filter_as: as4number_any  */
-#line 2195 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 242: /* filter_as: as4number_any  */
+#line 2289 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (((yyval.v.filter_as) = calloc(1, sizeof(struct filter_as_l))) ==
 			    NULL)
@@ -4959,22 +5097,22 @@ yyreduce:
 			(yyval.v.filter_as)->a.as_max = (yyvsp[0].v.number);
 			(yyval.v.filter_as)->a.op = OP_EQ;
 		}
-#line 4963 "parse.c"
+#line 5101 "parse.c"
     break;
 
-  case 237: /* filter_as: NEIGHBORAS  */
-#line 2203 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 243: /* filter_as: NEIGHBORAS  */
+#line 2297 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (((yyval.v.filter_as) = calloc(1, sizeof(struct filter_as_l))) ==
 			    NULL)
 				fatal(NULL);
 			(yyval.v.filter_as)->a.flags = AS_FLAG_NEIGHBORAS;
 		}
-#line 4974 "parse.c"
+#line 5112 "parse.c"
     break;
 
-  case 238: /* filter_as: equalityop as4number_any  */
-#line 2209 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 244: /* filter_as: equalityop as4number_any  */
+#line 2303 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (((yyval.v.filter_as) = calloc(1, sizeof(struct filter_as_l))) ==
 			    NULL)
@@ -4983,11 +5121,11 @@ yyreduce:
 			(yyval.v.filter_as)->a.as_min = (yyvsp[0].v.number);
 			(yyval.v.filter_as)->a.as_max = (yyvsp[0].v.number);
 		}
-#line 4987 "parse.c"
+#line 5125 "parse.c"
     break;
 
-  case 239: /* filter_as: as4number_any binaryop as4number_any  */
-#line 2217 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 245: /* filter_as: as4number_any binaryop as4number_any  */
+#line 2311 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                        {
 			if (((yyval.v.filter_as) = calloc(1, sizeof(struct filter_as_l))) ==
 			    NULL)
@@ -5000,35 +5138,35 @@ yyreduce:
 			(yyval.v.filter_as)->a.as_min = (yyvsp[-2].v.number);
 			(yyval.v.filter_as)->a.as_max = (yyvsp[0].v.number);
 		}
-#line 5004 "parse.c"
+#line 5142 "parse.c"
     break;
 
-  case 240: /* filter_match_h: %empty  */
-#line 2231 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 246: /* filter_match_h: %empty  */
+#line 2325 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			bzero(&(yyval.v.filter_match), sizeof((yyval.v.filter_match)));
 		}
-#line 5012 "parse.c"
+#line 5150 "parse.c"
     break;
 
-  case 241: /* $@11: %empty  */
-#line 2234 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 247: /* $@11: %empty  */
+#line 2328 "../../../openbgpd-portable/src/bgpd/parse.y"
                   {
 			bzero(&fmopts, sizeof(fmopts));
 		}
-#line 5020 "parse.c"
+#line 5158 "parse.c"
     break;
 
-  case 242: /* filter_match_h: $@11 filter_match  */
-#line 2237 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 248: /* filter_match_h: $@11 filter_match  */
+#line 2331 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			memcpy(&(yyval.v.filter_match), &fmopts, sizeof((yyval.v.filter_match)));
 		}
-#line 5028 "parse.c"
+#line 5166 "parse.c"
     break;
 
-  case 245: /* filter_elm: filter_prefix_h  */
-#line 2246 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 251: /* filter_elm: filter_prefix_h  */
+#line 2340 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (fmopts.prefix_l != NULL) {
 				yyerror("\"prefix\" already specified");
@@ -5042,11 +5180,11 @@ yyreduce:
 			}
 			fmopts.prefix_l = (yyvsp[0].v.filter_prefix);
 		}
-#line 5046 "parse.c"
+#line 5184 "parse.c"
     break;
 
-  case 246: /* filter_elm: filter_as_h  */
-#line 2259 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 252: /* filter_elm: filter_as_h  */
+#line 2353 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (fmopts.as_l != NULL) {
 				yyerror("AS filters already specified");
@@ -5054,11 +5192,11 @@ yyreduce:
 			}
 			fmopts.as_l = (yyvsp[0].v.filter_as);
 		}
-#line 5058 "parse.c"
+#line 5196 "parse.c"
     break;
 
-  case 247: /* filter_elm: MAXASLEN NUMBER  */
-#line 2266 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 253: /* filter_elm: MAXASLEN NUMBER  */
+#line 2360 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (fmopts.m.aslen.type != ASLEN_NONE) {
 				yyerror("AS length filters already specified");
@@ -5071,11 +5209,11 @@ yyreduce:
 			fmopts.m.aslen.type = ASLEN_MAX;
 			fmopts.m.aslen.aslen = (yyvsp[0].v.number);
 		}
-#line 5075 "parse.c"
+#line 5213 "parse.c"
     break;
 
-  case 248: /* filter_elm: MAXASSEQ NUMBER  */
-#line 2278 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 254: /* filter_elm: MAXASSEQ NUMBER  */
+#line 2372 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (fmopts.m.aslen.type != ASLEN_NONE) {
 				yyerror("AS length filters already specified");
@@ -5088,11 +5226,11 @@ yyreduce:
 			fmopts.m.aslen.type = ASLEN_SEQ;
 			fmopts.m.aslen.aslen = (yyvsp[0].v.number);
 		}
-#line 5092 "parse.c"
+#line 5230 "parse.c"
     break;
 
-  case 249: /* filter_elm: community STRING  */
-#line 2290 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 255: /* filter_elm: community STRING  */
+#line 2384 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			int i;
 			for (i = 0; i < MAX_COMM_MATCH; i++) {
@@ -5111,11 +5249,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5115 "parse.c"
+#line 5253 "parse.c"
     break;
 
-  case 250: /* filter_elm: EXTCOMMUNITY STRING STRING  */
-#line 2308 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 256: /* filter_elm: EXTCOMMUNITY STRING STRING  */
+#line 2402 "../../../openbgpd-portable/src/bgpd/parse.y"
                                              {
 			int i;
 			for (i = 0; i < MAX_COMM_MATCH; i++) {
@@ -5138,11 +5276,11 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 5142 "parse.c"
+#line 5280 "parse.c"
     break;
 
-  case 251: /* filter_elm: EXTCOMMUNITY OVS STRING  */
-#line 2330 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 257: /* filter_elm: EXTCOMMUNITY OVS STRING  */
+#line 2424 "../../../openbgpd-portable/src/bgpd/parse.y"
                                           {
 			int i;
 			for (i = 0; i < MAX_COMM_MATCH; i++) {
@@ -5162,11 +5300,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5166 "parse.c"
+#line 5304 "parse.c"
     break;
 
-  case 252: /* filter_elm: MAXCOMMUNITIES NUMBER  */
-#line 2349 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 258: /* filter_elm: MAXCOMMUNITIES NUMBER  */
+#line 2443 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT16_MAX) {
 				yyerror("bad max-comunities %lld", (yyvsp[0].v.number));
@@ -5183,11 +5321,11 @@ yyreduce:
 			 */
 			fmopts.m.maxcomm = (yyvsp[0].v.number) + 1;
 		}
-#line 5187 "parse.c"
+#line 5325 "parse.c"
     break;
 
-  case 253: /* filter_elm: MAXEXTCOMMUNITIES NUMBER  */
-#line 2365 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 259: /* filter_elm: MAXEXTCOMMUNITIES NUMBER  */
+#line 2459 "../../../openbgpd-portable/src/bgpd/parse.y"
                                            {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT16_MAX) {
 				yyerror("bad max-ext-communities %lld", (yyvsp[0].v.number));
@@ -5200,11 +5338,11 @@ yyreduce:
 			}
 			fmopts.m.maxextcomm = (yyvsp[0].v.number) + 1;
 		}
-#line 5204 "parse.c"
+#line 5342 "parse.c"
     break;
 
-  case 254: /* filter_elm: MAXLARGECOMMUNITIES NUMBER  */
-#line 2377 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 260: /* filter_elm: MAXLARGECOMMUNITIES NUMBER  */
+#line 2471 "../../../openbgpd-portable/src/bgpd/parse.y"
                                              {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT16_MAX) {
 				yyerror("bad max-large-communities %lld", (yyvsp[0].v.number));
@@ -5217,11 +5355,11 @@ yyreduce:
 			}
 			fmopts.m.maxlargecomm = (yyvsp[0].v.number) + 1;
 		}
-#line 5221 "parse.c"
+#line 5359 "parse.c"
     break;
 
-  case 255: /* filter_elm: NEXTHOP address  */
-#line 2389 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 261: /* filter_elm: NEXTHOP address  */
+#line 2483 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (fmopts.m.nexthop.flags) {
 				yyerror("nexthop already specified");
@@ -5230,11 +5368,11 @@ yyreduce:
 			fmopts.m.nexthop.addr = (yyvsp[0].v.addr);
 			fmopts.m.nexthop.flags = FILTER_NEXTHOP_ADDR;
 		}
-#line 5234 "parse.c"
+#line 5372 "parse.c"
     break;
 
-  case 256: /* filter_elm: NEXTHOP NEIGHBOR  */
-#line 2397 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 262: /* filter_elm: NEXTHOP NEIGHBOR  */
+#line 2491 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (fmopts.m.nexthop.flags) {
 				yyerror("nexthop already specified");
@@ -5242,11 +5380,11 @@ yyreduce:
 			}
 			fmopts.m.nexthop.flags = FILTER_NEXTHOP_NEIGHBOR;
 		}
-#line 5246 "parse.c"
+#line 5384 "parse.c"
     break;
 
-  case 257: /* filter_elm: PREFIXSET STRING prefixlenop  */
-#line 2404 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 263: /* filter_elm: PREFIXSET STRING prefixlenop  */
+#line 2498 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                {
 			struct prefixset *ps;
 			if (fmopts.prefix_l != NULL) {
@@ -5296,11 +5434,11 @@ yyreduce:
 			fmopts.m.prefixset.flags |= PREFIXSET_FLAG_FILTER;
 			free((yyvsp[-1].v.string));
 		}
-#line 5300 "parse.c"
+#line 5438 "parse.c"
     break;
 
-  case 258: /* filter_elm: ORIGINSET STRING  */
-#line 2453 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 264: /* filter_elm: ORIGINSET STRING  */
+#line 2547 "../../../openbgpd-portable/src/bgpd/parse.y"
                                    {
 			if (fmopts.m.originset.name[0] != '\0') {
 				yyerror("origin-set filter already specified");
@@ -5321,11 +5459,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5325 "parse.c"
+#line 5463 "parse.c"
     break;
 
-  case 259: /* filter_elm: OVS validity  */
-#line 2473 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 265: /* filter_elm: OVS validity  */
+#line 2567 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (fmopts.m.ovs.is_set) {
 				yyerror("ovs filter already specified");
@@ -5334,28 +5472,28 @@ yyreduce:
 			fmopts.m.ovs.validity = (yyvsp[0].v.number);
 			fmopts.m.ovs.is_set = 1;
 		}
-#line 5338 "parse.c"
+#line 5476 "parse.c"
     break;
 
-  case 260: /* prefixlenop: %empty  */
-#line 2483 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 266: /* prefixlenop: %empty  */
+#line 2577 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 { bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen))); }
-#line 5344 "parse.c"
+#line 5482 "parse.c"
     break;
 
-  case 261: /* prefixlenop: LONGER  */
-#line 2484 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 267: /* prefixlenop: LONGER  */
+#line 2578 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen)));
 			(yyval.v.prefixlen).op = OP_RANGE;
 			(yyval.v.prefixlen).len_min = -1;
 			(yyval.v.prefixlen).len_max = -1;
 		}
-#line 5355 "parse.c"
+#line 5493 "parse.c"
     break;
 
-  case 262: /* prefixlenop: MAXLEN NUMBER  */
-#line 2490 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 268: /* prefixlenop: MAXLEN NUMBER  */
+#line 2584 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen)));
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
@@ -5367,11 +5505,11 @@ yyreduce:
 			(yyval.v.prefixlen).len_min = -1;
 			(yyval.v.prefixlen).len_max = (yyvsp[0].v.number);
 		}
-#line 5371 "parse.c"
+#line 5509 "parse.c"
     break;
 
-  case 263: /* prefixlenop: PREFIXLEN unaryop NUMBER  */
-#line 2501 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 269: /* prefixlenop: PREFIXLEN unaryop NUMBER  */
+#line 2595 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			int min, max;
 
@@ -5415,11 +5553,11 @@ yyreduce:
 			(yyval.v.prefixlen).len_min = min;
 			(yyval.v.prefixlen).len_max = max;
 		}
-#line 5419 "parse.c"
+#line 5557 "parse.c"
     break;
 
-  case 264: /* prefixlenop: PREFIXLEN NUMBER binaryop NUMBER  */
-#line 2544 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 270: /* prefixlenop: PREFIXLEN NUMBER binaryop NUMBER  */
+#line 2638 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			bzero(&(yyval.v.prefixlen), sizeof((yyval.v.prefixlen)));
 			if ((yyvsp[-2].v.number) < 0 || (yyvsp[-2].v.number) > 128 || (yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
@@ -5434,41 +5572,41 @@ yyreduce:
 			(yyval.v.prefixlen).len_min = (yyvsp[-2].v.number);
 			(yyval.v.prefixlen).len_max = (yyvsp[0].v.number);
 		}
-#line 5438 "parse.c"
+#line 5576 "parse.c"
     break;
 
-  case 265: /* filter_as_type: AS  */
-#line 2560 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 271: /* filter_as_type: AS  */
+#line 2654 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = AS_ALL; }
-#line 5444 "parse.c"
+#line 5582 "parse.c"
     break;
 
-  case 266: /* filter_as_type: SOURCEAS  */
-#line 2561 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 272: /* filter_as_type: SOURCEAS  */
+#line 2655 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = AS_SOURCE; }
-#line 5450 "parse.c"
+#line 5588 "parse.c"
     break;
 
-  case 267: /* filter_as_type: TRANSITAS  */
-#line 2562 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 273: /* filter_as_type: TRANSITAS  */
+#line 2656 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = AS_TRANSIT; }
-#line 5456 "parse.c"
+#line 5594 "parse.c"
     break;
 
-  case 268: /* filter_as_type: PEERAS  */
-#line 2563 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 274: /* filter_as_type: PEERAS  */
+#line 2657 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = AS_PEER; }
-#line 5462 "parse.c"
+#line 5600 "parse.c"
     break;
 
-  case 269: /* filter_set: %empty  */
-#line 2566 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 275: /* filter_set: %empty  */
+#line 2660 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                 { (yyval.v.filter_set_head) = NULL; }
-#line 5468 "parse.c"
+#line 5606 "parse.c"
     break;
 
-  case 270: /* filter_set: SET filter_set_opt  */
-#line 2567 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 276: /* filter_set: SET filter_set_opt  */
+#line 2661 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                                 {
 			if (((yyval.v.filter_set_head) = calloc(1, sizeof(struct filter_set_head))) ==
 			    NULL)
@@ -5476,27 +5614,27 @@ yyreduce:
 			TAILQ_INIT((yyval.v.filter_set_head));
 			TAILQ_INSERT_TAIL((yyval.v.filter_set_head), (yyvsp[0].v.filter_set), entry);
 		}
-#line 5480 "parse.c"
+#line 5618 "parse.c"
     break;
 
-  case 271: /* filter_set: SET '{' optnl filter_set_l optnl '}'  */
-#line 2574 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 277: /* filter_set: SET '{' optnl filter_set_l optnl '}'  */
+#line 2668 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         { (yyval.v.filter_set_head) = (yyvsp[-2].v.filter_set_head); }
-#line 5486 "parse.c"
+#line 5624 "parse.c"
     break;
 
-  case 272: /* filter_set_l: filter_set_l comma filter_set_opt  */
-#line 2577 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 278: /* filter_set_l: filter_set_l comma filter_set_opt  */
+#line 2671 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			(yyval.v.filter_set_head) = (yyvsp[-2].v.filter_set_head);
 			if (merge_filterset((yyval.v.filter_set_head), (yyvsp[0].v.filter_set)) == 1)
 				YYERROR;
 		}
-#line 5496 "parse.c"
+#line 5634 "parse.c"
     break;
 
-  case 273: /* filter_set_l: filter_set_opt  */
-#line 2582 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 279: /* filter_set_l: filter_set_opt  */
+#line 2676 "../../../openbgpd-portable/src/bgpd/parse.y"
                                  {
 			if (((yyval.v.filter_set_head) = calloc(1, sizeof(struct filter_set_head))) ==
 			    NULL)
@@ -5504,35 +5642,47 @@ yyreduce:
 			TAILQ_INIT((yyval.v.filter_set_head));
 			TAILQ_INSERT_TAIL((yyval.v.filter_set_head), (yyvsp[0].v.filter_set), entry);
 		}
-#line 5508 "parse.c"
+#line 5646 "parse.c"
     break;
 
-  case 274: /* community: COMMUNITY  */
-#line 2591 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 280: /* community: COMMUNITY  */
+#line 2685 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         { (yyval.v.u8) = COMMUNITY_TYPE_BASIC; }
-#line 5514 "parse.c"
+#line 5652 "parse.c"
     break;
 
-  case 275: /* community: LARGECOMMUNITY  */
-#line 2592 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 281: /* community: LARGECOMMUNITY  */
+#line 2686 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         { (yyval.v.u8) = COMMUNITY_TYPE_LARGE; }
-#line 5520 "parse.c"
+#line 5658 "parse.c"
     break;
 
-  case 276: /* delete: %empty  */
-#line 2595 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 282: /* delete: %empty  */
+#line 2689 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = 0; }
-#line 5526 "parse.c"
+#line 5664 "parse.c"
     break;
 
-  case 277: /* delete: DELETE  */
-#line 2596 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 283: /* delete: DELETE  */
+#line 2690 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = 1; }
-#line 5532 "parse.c"
+#line 5670 "parse.c"
     break;
 
-  case 278: /* filter_set_opt: LOCALPREF NUMBER  */
-#line 2599 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 284: /* enforce: %empty  */
+#line 2693 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = 1; }
+#line 5676 "parse.c"
+    break;
+
+  case 285: /* enforce: ENFORCE  */
+#line 2694 "../../../openbgpd-portable/src/bgpd/parse.y"
+                                { (yyval.v.number) = 2; }
+#line 5682 "parse.c"
+    break;
+
+  case 286: /* filter_set_opt: LOCALPREF NUMBER  */
+#line 2697 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.number) < -INT_MAX || (yyvsp[0].v.number) > UINT_MAX) {
 				yyerror("bad localpref %lld", (yyvsp[0].v.number));
@@ -5548,11 +5698,11 @@ yyreduce:
 				(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 			}
 		}
-#line 5552 "parse.c"
+#line 5702 "parse.c"
     break;
 
-  case 279: /* filter_set_opt: LOCALPREF '+' NUMBER  */
-#line 2614 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 287: /* filter_set_opt: LOCALPREF '+' NUMBER  */
+#line 2712 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad localpref +%lld", (yyvsp[0].v.number));
@@ -5563,11 +5713,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_LOCALPREF;
 			(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 		}
-#line 5567 "parse.c"
+#line 5717 "parse.c"
     break;
 
-  case 280: /* filter_set_opt: LOCALPREF '-' NUMBER  */
-#line 2624 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 288: /* filter_set_opt: LOCALPREF '-' NUMBER  */
+#line 2722 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad localpref -%lld", (yyvsp[0].v.number));
@@ -5578,11 +5728,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_LOCALPREF;
 			(yyval.v.filter_set)->action.relative = -(yyvsp[0].v.number);
 		}
-#line 5582 "parse.c"
+#line 5732 "parse.c"
     break;
 
-  case 281: /* filter_set_opt: MED NUMBER  */
-#line 2634 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 289: /* filter_set_opt: MED NUMBER  */
+#line 2732 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.number) < -INT_MAX || (yyvsp[0].v.number) > UINT_MAX) {
 				yyerror("bad metric %lld", (yyvsp[0].v.number));
@@ -5598,11 +5748,11 @@ yyreduce:
 				(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 			}
 		}
-#line 5602 "parse.c"
+#line 5752 "parse.c"
     break;
 
-  case 282: /* filter_set_opt: MED '+' NUMBER  */
-#line 2649 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 290: /* filter_set_opt: MED '+' NUMBER  */
+#line 2747 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad metric +%lld", (yyvsp[0].v.number));
@@ -5613,11 +5763,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_MED;
 			(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 		}
-#line 5617 "parse.c"
+#line 5767 "parse.c"
     break;
 
-  case 283: /* filter_set_opt: MED '-' NUMBER  */
-#line 2659 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 291: /* filter_set_opt: MED '-' NUMBER  */
+#line 2757 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad metric -%lld", (yyvsp[0].v.number));
@@ -5628,11 +5778,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_MED;
 			(yyval.v.filter_set)->action.relative = -(yyvsp[0].v.number);
 		}
-#line 5632 "parse.c"
+#line 5782 "parse.c"
     break;
 
-  case 284: /* filter_set_opt: METRIC NUMBER  */
-#line 2669 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 292: /* filter_set_opt: METRIC NUMBER  */
+#line 2767 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {	/* alias for MED */
 			if ((yyvsp[0].v.number) < -INT_MAX || (yyvsp[0].v.number) > UINT_MAX) {
 				yyerror("bad metric %lld", (yyvsp[0].v.number));
@@ -5648,11 +5798,11 @@ yyreduce:
 				(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 			}
 		}
-#line 5652 "parse.c"
+#line 5802 "parse.c"
     break;
 
-  case 285: /* filter_set_opt: METRIC '+' NUMBER  */
-#line 2684 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 293: /* filter_set_opt: METRIC '+' NUMBER  */
+#line 2782 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad metric +%lld", (yyvsp[0].v.number));
@@ -5663,11 +5813,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_MED;
 			(yyval.v.filter_set)->action.metric = (yyvsp[0].v.number);
 		}
-#line 5667 "parse.c"
+#line 5817 "parse.c"
     break;
 
-  case 286: /* filter_set_opt: METRIC '-' NUMBER  */
-#line 2694 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 294: /* filter_set_opt: METRIC '-' NUMBER  */
+#line 2792 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad metric -%lld", (yyvsp[0].v.number));
@@ -5678,11 +5828,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_MED;
 			(yyval.v.filter_set)->action.relative = -(yyvsp[0].v.number);
 		}
-#line 5682 "parse.c"
+#line 5832 "parse.c"
     break;
 
-  case 287: /* filter_set_opt: WEIGHT NUMBER  */
-#line 2704 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 295: /* filter_set_opt: WEIGHT NUMBER  */
+#line 2802 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.number) < -INT_MAX || (yyvsp[0].v.number) > UINT_MAX) {
 				yyerror("bad weight %lld", (yyvsp[0].v.number));
@@ -5698,11 +5848,11 @@ yyreduce:
 				(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 			}
 		}
-#line 5702 "parse.c"
+#line 5852 "parse.c"
     break;
 
-  case 288: /* filter_set_opt: WEIGHT '+' NUMBER  */
-#line 2719 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 296: /* filter_set_opt: WEIGHT '+' NUMBER  */
+#line 2817 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad weight +%lld", (yyvsp[0].v.number));
@@ -5713,11 +5863,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_WEIGHT;
 			(yyval.v.filter_set)->action.relative = (yyvsp[0].v.number);
 		}
-#line 5717 "parse.c"
+#line 5867 "parse.c"
     break;
 
-  case 289: /* filter_set_opt: WEIGHT '-' NUMBER  */
-#line 2729 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 297: /* filter_set_opt: WEIGHT '-' NUMBER  */
+#line 2827 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                         {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > INT_MAX) {
 				yyerror("bad weight -%lld", (yyvsp[0].v.number));
@@ -5728,11 +5878,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_RELATIVE_WEIGHT;
 			(yyval.v.filter_set)->action.relative = -(yyvsp[0].v.number);
 		}
-#line 5732 "parse.c"
+#line 5882 "parse.c"
     break;
 
-  case 290: /* filter_set_opt: NEXTHOP address  */
-#line 2739 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 298: /* filter_set_opt: NEXTHOP address  */
+#line 2837 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
@@ -5740,51 +5890,51 @@ yyreduce:
 			memcpy(&(yyval.v.filter_set)->action.nexthop, &(yyvsp[0].v.addr),
 			    sizeof((yyval.v.filter_set)->action.nexthop));
 		}
-#line 5744 "parse.c"
+#line 5894 "parse.c"
     break;
 
-  case 291: /* filter_set_opt: NEXTHOP BLACKHOLE  */
-#line 2746 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 299: /* filter_set_opt: NEXTHOP BLACKHOLE  */
+#line 2844 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP_BLACKHOLE;
 		}
-#line 5754 "parse.c"
+#line 5904 "parse.c"
     break;
 
-  case 292: /* filter_set_opt: NEXTHOP REJECT  */
-#line 2751 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 300: /* filter_set_opt: NEXTHOP REJECT  */
+#line 2849 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP_REJECT;
 		}
-#line 5764 "parse.c"
+#line 5914 "parse.c"
     break;
 
-  case 293: /* filter_set_opt: NEXTHOP NOMODIFY  */
-#line 2756 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 301: /* filter_set_opt: NEXTHOP NOMODIFY  */
+#line 2854 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP_NOMODIFY;
 		}
-#line 5774 "parse.c"
+#line 5924 "parse.c"
     break;
 
-  case 294: /* filter_set_opt: NEXTHOP SELF  */
-#line 2761 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 302: /* filter_set_opt: NEXTHOP SELF  */
+#line 2859 "../../../openbgpd-portable/src/bgpd/parse.y"
                                         {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_NEXTHOP_SELF;
 		}
-#line 5784 "parse.c"
+#line 5934 "parse.c"
     break;
 
-  case 295: /* filter_set_opt: PREPEND_SELF NUMBER  */
-#line 2766 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 303: /* filter_set_opt: PREPEND_SELF NUMBER  */
+#line 2864 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
 				yyerror("bad number of prepends");
@@ -5795,11 +5945,11 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_PREPEND_SELF;
 			(yyval.v.filter_set)->action.prepend = (yyvsp[0].v.number);
 		}
-#line 5799 "parse.c"
+#line 5949 "parse.c"
     break;
 
-  case 296: /* filter_set_opt: PREPEND_PEER NUMBER  */
-#line 2776 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 304: /* filter_set_opt: PREPEND_PEER NUMBER  */
+#line 2874 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if ((yyvsp[0].v.number) < 0 || (yyvsp[0].v.number) > 128) {
 				yyerror("bad number of prepends");
@@ -5810,21 +5960,21 @@ yyreduce:
 			(yyval.v.filter_set)->type = ACTION_SET_PREPEND_PEER;
 			(yyval.v.filter_set)->action.prepend = (yyvsp[0].v.number);
 		}
-#line 5814 "parse.c"
+#line 5964 "parse.c"
     break;
 
-  case 297: /* filter_set_opt: ASOVERRIDE  */
-#line 2786 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 305: /* filter_set_opt: ASOVERRIDE  */
+#line 2884 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_AS_OVERRIDE;
 		}
-#line 5824 "parse.c"
+#line 5974 "parse.c"
     break;
 
-  case 298: /* filter_set_opt: PFTABLE STRING  */
-#line 2791 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 306: /* filter_set_opt: PFTABLE STRING  */
+#line 2889 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
@@ -5852,11 +6002,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5856 "parse.c"
+#line 6006 "parse.c"
     break;
 
-  case 299: /* filter_set_opt: RTLABEL STRING  */
-#line 2818 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 307: /* filter_set_opt: RTLABEL STRING  */
+#line 2916 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
@@ -5871,11 +6021,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5875 "parse.c"
+#line 6025 "parse.c"
     break;
 
-  case 300: /* filter_set_opt: community delete STRING  */
-#line 2832 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 308: /* filter_set_opt: community delete STRING  */
+#line 2930 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                 {
 			uint8_t f1, f2, f3;
 
@@ -5904,11 +6054,11 @@ yyreduce:
 				YYERROR;
 			}
 		}
-#line 5908 "parse.c"
+#line 6058 "parse.c"
     break;
 
-  case 301: /* filter_set_opt: EXTCOMMUNITY delete STRING STRING  */
-#line 2860 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 309: /* filter_set_opt: EXTCOMMUNITY delete STRING STRING  */
+#line 2958 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                     {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
@@ -5927,11 +6077,11 @@ yyreduce:
 			free((yyvsp[-1].v.string));
 			free((yyvsp[0].v.string));
 		}
-#line 5931 "parse.c"
+#line 6081 "parse.c"
     break;
 
-  case 302: /* filter_set_opt: EXTCOMMUNITY delete OVS STRING  */
-#line 2878 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 310: /* filter_set_opt: EXTCOMMUNITY delete OVS STRING  */
+#line 2976 "../../../openbgpd-portable/src/bgpd/parse.y"
                                                  {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
@@ -5948,22 +6098,22 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5952 "parse.c"
+#line 6102 "parse.c"
     break;
 
-  case 303: /* filter_set_opt: ORIGIN origincode  */
-#line 2894 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 311: /* filter_set_opt: ORIGIN origincode  */
+#line 2992 "../../../openbgpd-portable/src/bgpd/parse.y"
                                     {
 			if (((yyval.v.filter_set) = calloc(1, sizeof(struct filter_set))) == NULL)
 				fatal(NULL);
 			(yyval.v.filter_set)->type = ACTION_SET_ORIGIN;
 			(yyval.v.filter_set)->action.origin = (yyvsp[0].v.number);
 		}
-#line 5963 "parse.c"
+#line 6113 "parse.c"
     break;
 
-  case 304: /* origincode: STRING  */
-#line 2902 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 312: /* origincode: STRING  */
+#line 3000 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			if (!strcmp((yyvsp[0].v.string), "egp"))
 				(yyval.v.number) = ORIGIN_EGP;
@@ -5978,11 +6128,11 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 5982 "parse.c"
+#line 6132 "parse.c"
     break;
 
-  case 305: /* validity: STRING  */
-#line 2917 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 313: /* validity: STRING  */
+#line 3015 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 {
 			if (!strcmp((yyvsp[0].v.string), "not-found"))
 				(yyval.v.number) = ROA_NOTFOUND;
@@ -5997,71 +6147,71 @@ yyreduce:
 			}
 			free((yyvsp[0].v.string));
 		}
-#line 6001 "parse.c"
+#line 6151 "parse.c"
     break;
 
-  case 312: /* unaryop: '='  */
-#line 2942 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 320: /* unaryop: '='  */
+#line 3040 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_EQ; }
-#line 6007 "parse.c"
+#line 6157 "parse.c"
     break;
 
-  case 313: /* unaryop: NE  */
-#line 2943 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 321: /* unaryop: NE  */
+#line 3041 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_NE; }
-#line 6013 "parse.c"
+#line 6163 "parse.c"
     break;
 
-  case 314: /* unaryop: LE  */
-#line 2944 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 322: /* unaryop: LE  */
+#line 3042 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_LE; }
-#line 6019 "parse.c"
+#line 6169 "parse.c"
     break;
 
-  case 315: /* unaryop: '<'  */
-#line 2945 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 323: /* unaryop: '<'  */
+#line 3043 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_LT; }
-#line 6025 "parse.c"
+#line 6175 "parse.c"
     break;
 
-  case 316: /* unaryop: GE  */
-#line 2946 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 324: /* unaryop: GE  */
+#line 3044 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_GE; }
-#line 6031 "parse.c"
+#line 6181 "parse.c"
     break;
 
-  case 317: /* unaryop: '>'  */
-#line 2947 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 325: /* unaryop: '>'  */
+#line 3045 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_GT; }
-#line 6037 "parse.c"
+#line 6187 "parse.c"
     break;
 
-  case 318: /* equalityop: '='  */
-#line 2950 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 326: /* equalityop: '='  */
+#line 3048 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_EQ; }
-#line 6043 "parse.c"
+#line 6193 "parse.c"
     break;
 
-  case 319: /* equalityop: NE  */
-#line 2951 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 327: /* equalityop: NE  */
+#line 3049 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_NE; }
-#line 6049 "parse.c"
+#line 6199 "parse.c"
     break;
 
-  case 320: /* binaryop: '-'  */
-#line 2954 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 328: /* binaryop: '-'  */
+#line 3052 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_RANGE; }
-#line 6055 "parse.c"
+#line 6205 "parse.c"
     break;
 
-  case 321: /* binaryop: XRANGE  */
-#line 2955 "../../../openbgpd-portable/src/bgpd/parse.y"
+  case 329: /* binaryop: XRANGE  */
+#line 3053 "../../../openbgpd-portable/src/bgpd/parse.y"
                                 { (yyval.v.u8) = OP_XRANGE; }
-#line 6061 "parse.c"
+#line 6211 "parse.c"
     break;
 
 
-#line 6065 "parse.c"
+#line 6215 "parse.c"
 
       default: break;
     }
@@ -6255,7 +6405,7 @@ yyreturn:
   return yyresult;
 }
 
-#line 2958 "../../../openbgpd-portable/src/bgpd/parse.y"
+#line 3056 "../../../openbgpd-portable/src/bgpd/parse.y"
 
 
 struct keywords {
@@ -6346,6 +6496,7 @@ lookup(char *s)
 		{ "localpref",		LOCALPREF},
 		{ "log",		LOG},
 		{ "match",		MATCH},
+		{ "max",		MAX},
 		{ "max-as-len",		MAXASLEN},
 		{ "max-as-seq",		MAXASSEQ},
 		{ "max-communities",	MAXCOMMUNITIES},
@@ -6374,6 +6525,8 @@ lookup(char *s)
 		{ "password",		PASSWORD},
 		{ "peer-as",		PEERAS},
 		{ "pftable",		PFTABLE},
+		{ "plus",		PLUS},
+		{ "policy",		POLICY},
 		{ "port",		PORT},
 		{ "prefix",		PREFIX},
 		{ "prefix-set",		PREFIXSET},
@@ -7868,6 +8021,14 @@ neighbor_consistent(struct peer *p)
 		char *descr = log_fmt_peer(&p->conf);
 		yyerror("duplicate %s", descr);
 		free(descr);
+		return (-1);
+	}
+
+	/* bail if add-path send and rde evaluate all is used together */
+	if ((p->conf.flags & PEERFLAG_EVALUATE_ALL) &&
+	    (p->conf.capabilities.add_path[0] & CAPA_AP_SEND)) {
+		yyerror("neighbors with add-path send cannot use "
+		    "'rde evaluate all'");
 		return (-1);
 	}
 
