@@ -152,6 +152,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BGPD_USER = @BGPD_USER@
+BGPLGD_USER = @BGPLGD_USER@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -177,6 +179,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBEVENT_CFLAGS = @LIBEVENT_CFLAGS@
+LIBEVENT_LDFLAGS = @LIBEVENT_LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -200,7 +204,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
-PRIVSEP_USER = @PRIVSEP_USER@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -262,9 +265,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-noinst_HEADERS = linux/rtnetlink.h net/pfkeyv2.h net/route.h \
-	netinet/in.h netinet/ip_ipsp.h sys/_null.h sys/queue.h \
-	sys/socket.h sys/time.h sys/tree.h sys/types.h endian.h imsg.h \
+noinst_HEADERS = linux/rtnetlink.h net/route.h netinet/in.h \
+	netinet/ip_ipsp.h sys/_null.h sys/queue.h sys/socket.h \
+	sys/time.h sys/tree.h sys/types.h sys/wait.h endian.h imsg.h \
 	sha2.h sha2_openbsd.h siphash.h stdlib.h string.h unistd.h \
 	util.h vis.h
 all: all-am

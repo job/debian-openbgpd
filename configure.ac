@@ -41,6 +41,7 @@ case $host_os in
 		HOST_OS=openbsd
 		AC_DEFINE([HAVE_ATTRIBUTE__BOUNDED__], [1], [OpenBSD has __bounded__])
 		AC_DEFINE([HAVE_ATTRIBUTE__DEAD], [1], [OpenBSD has __dead])
+		AC_DEFINE([HAVE_ATTRIBUTE__PACKED], [1], [OpenBSD has __packed])
 		;;
 	*solaris*)
 		HOST_OS=solaris
@@ -62,6 +63,24 @@ AC_PROG_CC_STDC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_PROG_YACC
+
+AC_ARG_ENABLE(bgplgd,
+	AS_HELP_STRING([--disable-bgplgd],
+		[ build bgplgd [default=enabled]]),
+	[case $enableval in
+		yes) enable_bgplgd=yes;;
+		no) enable_bgplgd=no;;
+		*) enable_bgplgd=yes;; esac],
+	enable_bgplgd=yes)
+
+AC_ARG_ENABLE(netlink,
+	AS_HELP_STRING([--enable-netlink],
+		[ build with netlink support [default=disabled]]),
+	[case $enableval in
+		yes) enable_netlink=yes;;
+		no) enable_netlink=no;;
+		*) enable_netlink=no;; esac],
+	enable_netlink=no)
 
 AC_ARG_ENABLE(warnings,
 	AS_HELP_STRING([--disable-warnings],
@@ -102,8 +121,23 @@ AM_LDFLAGS="$LDFLAGS $CLANG_FLAGS"
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_LDFLAGS)
 
+# check for headers
+AC_CHECK_HEADERS([endian.h])
+AC_CHECK_HEADERS([netinet/ip_ipsp.h], [], [], [[#include <sys/socket.h>]])
+AC_CHECK_HEADERS([linux/in6.h])
+
+# check auxiliary libraries that might contain other functions
+AC_SEARCH_LIBS([arc4random], [crypto])
+AC_SEARCH_LIBS([clock_gettime],[rt posix4])
+AC_SEARCH_LIBS([ibuf_open], [util])
+AC_SEARCH_LIBS([SHA512Init], [md])
+AC_SEARCH_LIBS([inet_net_pton],[resolv])
+AC_SEARCH_LIBS([fmt_scaled], [util])
+
 # check functions that are expected to be in libc
-AC_CHECK_FUNCS([arc4random asprintf explicit_bzero])
+AC_CHECK_FUNCS([arc4random clock_gettime ibuf_open SHA512Init])
+AC_CHECK_FUNCS([inet_net_pton fmt_scaled])
+AC_CHECK_FUNCS([asprintf explicit_bzero])
 AC_CHECK_FUNCS([getentropy reallocarray recallocarray freezero])
 AC_CHECK_FUNCS([setproctitle setgroups])
 AC_CHECK_FUNCS([setregid setresgid setreuid setresuid])
@@ -149,24 +183,13 @@ static void sighandler(int sig) { _exit(1); }
  )
 fi
 
-
-AC_CHECK_HEADERS([endian.h])
-AC_CHECK_HEADERS([netinet/ip_ipsp.h], [], [], [[#include <sys/socket.h>]])
-AC_CHECK_HEADERS([linux/in6.h])
-
-# check auxiliary libraries that might contain other functions
-AC_SEARCH_LIBS([arc4random], [crypto])
-AC_SEARCH_LIBS([clock_gettime],[rt posix4])
-AC_SEARCH_LIBS([ibuf_open], [util])
-AC_SEARCH_LIBS([SHA512Init], [md])
-AC_SEARCH_LIBS([inet_net_pton],[resolv])
-AC_SEARCH_LIBS([fmt_scaled], [util])
-
-# check for libmnl
-AC_SEARCH_LIBS([mnl_socket_recvfrom], [mnl])
-
-AC_CHECK_FUNCS([arc4random clock_gettime ibuf_open SHA512Init])
-AC_CHECK_FUNCS([inet_net_pton fmt_scaled])
+if test "$enable_netlink" = yes; then
+	# check for libmnl
+	AC_CHECK_LIB([mnl], [mnl_socket_recvfrom], [],
+		[AC_MSG_ERROR([libmnl required])])
+	AC_CHECK_FUNCS([mnl_socket_recvfrom], [],
+		[AC_MSG_ERROR([libmnl required])])
+fi
 
 # Share test results with automake
 AM_CONDITIONAL([HAVE_ARC4RANDOM], [test "x$ac_cv_func_arc4random" = xyes])
@@ -201,7 +224,7 @@ AM_CONDITIONAL([HAVE_STRNVIS], [test "x$ac_cv_func_strnvis" = xyes])
 AM_CONDITIONAL([BROKEN_STRNVIS], [test "x$ac_cv_broken_strnvis" = xyes])
 AM_CONDITIONAL([HAVE_INET_NET_PTON], [test "x$ac_cv_func_inet_net_pton" = xyes])
 AM_CONDITIONAL([HAVE_FMT_SCALED], [test "x$ac_cv_func_fmt_scaled" = xyes])
-AM_CONDITIONAL([HAVE_MNL], [test "x$ac_cv_search_mnl_socket_recvfrom" = "x-lmnl"])
+AM_CONDITIONAL([HAVE_MNL], [test "x$ac_cv_func_mnl_socket_recvfrom" = "xyes"])
 
 # overrides for arc4random implementations with known issues
 AM_CONDITIONAL([HAVE_ARC4RANDOM],
@@ -223,16 +246,72 @@ AC_CHECK_MEMBERS([struct tcp_md5sig.tcpm_key], , ,
 	  #include <netinet/in.h>
 	  #include <netinet/tcp.h> ]
 )
-AM_CONDITIONAL([HAVE_LINUX_TCPMD5], [test "x$ac_cv_member_struct_tcp_md5sig_tcpm_key" = xyes])
+AM_CONDITIONAL([HAVE_LINUX_TCPMD5],
+	[test "x$ac_cv_member_struct_tcp_md5sig_tcpm_key" = xyes])
+
+AC_CHECK_FUNCS([setfib])
+AM_CONDITIONAL([HAVE_SETFIB], [test "x$HOST_OS" = xfreebsd \
+	    -a "x$ac_cv_func_setfib" = "xyes"])
+
+
+if test "$enable_bgplgd" = yes; then
+	AC_ARG_WITH([event],
+		AS_HELP_STRING([--with-event=pkg-name],
+			[Use pkg-config(1) pkg-name to find libevent]),
+		PKG_NAME="$withval"
+	)
+	if test X"$PKG_NAME" != X; then
+		LIBEVENT_CFLAGS=`pkg-config --cflags-only-I $PKG_NAME 2>/dev/null`
+		LIBEVENT_LDFLAGS=`pkg-config --libs-only-L $PKG_NAME 2>/dev/null`
+	fi
+
+	AC_ARG_WITH([event-cflags],
+		AS_HELP_STRING([--with-event-cflags=STRING],
+			[Extra compiler flags to build with libevent]),
+		LIBEVENT_CFLAGS="$withval"
+	)
+	AC_ARG_WITH([event-ldflags],
+		AS_HELP_STRING([--with-event-ldflags=STRING],
+			[Extra flags for linker to link with libevent]),
+		LIBEVENT_LDFLAGS="$withval"
+	)
+	AC_SUBST(LIBEVENT_CFLAGS)
+	AC_SUBST(LIBEVENT_LDFLAGS)
+
+	CFLAGS="$CFLAGS $LIBEVENT_CFLAGS"
+	CPPFLAGS="$CPPFLAGS $LIBEVENT_CFLAGS"
+	LDFLAGS="$LDFLAGS $LIBEVENT_LDFLAGS"
+
+	AC_CHECK_HEADERS([event.h], [],
+		[AC_MSG_ERROR([libevent headers required])])
+	AC_CHECK_LIB([event], [event_init], [],
+		[AC_MSG_ERROR([libevent required])])
+	AC_CHECK_FUNCS([event_init event_dispatch], [],
+		[AC_MSG_ERROR([libevent required])])
+fi
 
 AC_ARG_WITH([privsep-user],
 	AS_HELP_STRING([--with-privsep-user=user],
-		[Privilege separation user for bgpd to use]),
-	PRIVSEP_USER="$withval",
-	PRIVSEP_USER="_bgpd"
+		[Privilege separation user for bgpd]),
+	BGPD_USER="$withval",
+	BGPD_USER="_bgpd"
 )
-AC_DEFINE_UNQUOTED(BGPD_USER, "$PRIVSEP_USER", [Unprivileged user])
-AC_SUBST(PRIVSEP_USER)
+AC_DEFINE_UNQUOTED(BGPD_USER, "$BGPD_USER", [Unprivileged user])
+AC_SUBST(BGPD_USER)
+
+if test "$enable_bgplgd" = yes; then
+	AC_ARG_WITH([bgplgd-user],
+		AS_HELP_STRING([--with-bgplgd-user=user],
+			[Privilege drop user for bgplgd]),
+		BGPLGD_USER="$withval",
+		BGPLGD_USER="_bgplgd"
+	)
+	AC_DEFINE_UNQUOTED(BGPLGD_USER, "$BGPLGD_USER",
+		[bgplgd unprivileged user])
+	AC_SUBST(BGPLGD_USER)
+fi
+
+AM_CONDITIONAL([BUILD_BGPLGD], [test "$enable_bgplgd" = yes])
 
 # workaround the issue that there is no autoconf release supporting
 # runstatedir but many linux distros patched their versions instead
@@ -253,6 +332,7 @@ AC_CONFIG_FILES([
 	compat/Makefile
 	src/bgpctl/Makefile
 	src/bgpd/Makefile
+	src/bgplgd/Makefile
 ])
 
 AC_OUTPUT

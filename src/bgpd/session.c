@@ -1,4 +1,4 @@
-/*	$OpenBSD: session.c,v 1.427 2022/02/23 11:20:35 claudio Exp $ */
+/*	$OpenBSD: session.c,v 1.430 2022/06/27 13:26:51 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004, 2005 Henning Brauer <henning@openbsd.org>
@@ -87,7 +87,7 @@ int	parse_update(struct peer *);
 int	parse_rrefresh(struct peer *);
 int	parse_notification(struct peer *);
 int	parse_capabilities(struct peer *, u_char *, uint16_t, uint32_t *);
-int	capa_neg_calc(struct peer *);
+int	capa_neg_calc(struct peer *, uint8_t *);
 void	session_dispatch_imsg(struct imsgbuf *, int, u_int *);
 void	session_up(struct peer *);
 void	session_down(struct peer *);
@@ -569,7 +569,7 @@ init_peer(struct peer *p)
 	p->fd = p->wbuf.fd = -1;
 
 	if (p->conf.if_depend[0])
-		imsg_compose(ibuf_main, IMSG_IFINFO, 0, 0, -1,
+		imsg_compose(ibuf_main, IMSG_SESSION_DEPENDON, 0, 0, -1,
 		    p->conf.if_depend, sizeof(p->conf.if_depend));
 	else
 		p->depend_ok = 1;
@@ -1449,6 +1449,12 @@ session_open(struct peer *p)
 	if (p->capa.ann.refresh)	/* no data */
 		errs += session_capa_add(opb, CAPA_REFRESH, 0);
 
+	/* BGP open policy, RFC 9234 */
+	if (p->capa.ann.role_ena) {
+		errs += session_capa_add(opb, CAPA_ROLE, 1);
+		errs += ibuf_add(opb, &p->capa.ann.role, 1); 
+	}
+
 	/* graceful restart and End-of-RIB marker, RFC 4724 */
 	if (p->capa.ann.grestart.restart) {
 		int		rst = 0;
@@ -2080,7 +2086,7 @@ parse_open(struct peer *peer)
 	uint16_t	 holdtime, oholdtime, myholdtime;
 	uint32_t	 as, bgpid;
 	uint16_t	 optparamlen, extlen, plen, op_len;
-	uint8_t		 op_type;
+	uint8_t		 op_type, suberr = 0;
 
 	p = peer->rbuf->rptr;
 	p += MSGSIZE_HEADER_MARKER;
@@ -2268,10 +2274,8 @@ bad_len:
 		return (-1);
 	}
 
-	if (capa_neg_calc(peer) == -1) {
-		log_peer_warnx(&peer->conf,
-		    "capability negotiation calculation failed");
-		session_notification(peer, ERR_OPEN, 0, NULL, 0);
+	if (capa_neg_calc(peer, &suberr) == -1) {
+		session_notification(peer, ERR_OPEN, suberr, NULL, 0);
 		change_state(peer, STATE_IDLE, EVNT_RCVD_OPEN);
 		return (-1);
 	}
@@ -2617,6 +2621,16 @@ parse_capabilities(struct peer *peer, u_char *d, uint16_t dlen, uint32_t *as)
 		case CAPA_REFRESH:
 			peer->capa.peer.refresh = 1;
 			break;
+		case CAPA_ROLE:
+			if (capa_len != 1) {
+				log_peer_warnx(&peer->conf,
+				    "Bad open policy capability length: "
+				    "%u", capa_len);
+				break;
+			}
+			peer->capa.peer.role_ena = 1;
+			peer->capa.peer.role = *capa_val;
+			break;
 		case CAPA_RESTART:
 			if (capa_len == 2) {
 				/* peer only supports EoR marker */
@@ -2732,7 +2746,7 @@ parse_capabilities(struct peer *peer, u_char *d, uint16_t dlen, uint32_t *as)
 }
 
 int
-capa_neg_calc(struct peer *p)
+capa_neg_calc(struct peer *p, uint8_t *suberr)
 {
 	uint8_t	i, hasmp = 0;
 
@@ -2785,8 +2799,11 @@ capa_neg_calc(struct peer *p)
 				    CAPA_GR_RESTARTING;
 			} else {
 				if (imsg_rde(IMSG_SESSION_FLUSH, p->conf.id,
-				    &i, sizeof(i)) == -1)
+				    &i, sizeof(i)) == -1) {
+					log_peer_warnx(&p->conf,
+					    "imsg send failed");
 					return (-1);
+				}
 				log_peer_warnx(&p->conf, "graceful restart of "
 				    "%s, not restarted, flushing", aid2str(i));
 			}
@@ -2820,6 +2837,53 @@ capa_neg_calc(struct peer *p)
 		}
 	}
 
+	/*
+	 * Open policy: check that the policy is sensible.
+	 *
+	 * Make sure that the roles match and set the negotiated capability
+	 * to the role of the peer. So the RDE can inject the OTC attribute.
+	 * See RFC 9234, section 4.2.
+	 */
+	if (p->capa.ann.role_ena != 0 && p->capa.peer.role_ena != 0) {
+		switch (p->capa.ann.role) {
+		case CAPA_ROLE_PROVIDER:
+			if (p->capa.peer.role != CAPA_ROLE_CUSTOMER)
+				goto fail;
+			break;
+		case CAPA_ROLE_RS:
+			if (p->capa.peer.role != CAPA_ROLE_RS_CLIENT)
+				goto fail;
+			break;
+		case CAPA_ROLE_RS_CLIENT:
+			if (p->capa.peer.role != CAPA_ROLE_RS)
+				goto fail;
+			break;
+		case CAPA_ROLE_CUSTOMER:
+			if (p->capa.peer.role != CAPA_ROLE_PROVIDER)
+				goto fail;
+			break;
+		case CAPA_ROLE_PEER:
+			if (p->capa.peer.role != CAPA_ROLE_PEER)
+				goto fail;
+			break;
+		default:
+ fail:
+			log_peer_warnx(&p->conf, "open policy role mismatch: "
+			    "%s vs %s", log_policy(p->capa.ann.role),
+			    log_policy(p->capa.peer.role));
+			*suberr = ERR_OPEN_ROLE;
+			return (-1);
+		}
+		p->capa.neg.role_ena = 1;
+		p->capa.neg.role = p->capa.peer.role;
+	} else if (p->capa.ann.role_ena == 2) {
+		/* enforce presence of open policy role capability */
+		log_peer_warnx(&p->conf, "open policy role enforced but "
+		    "not present");
+		*suberr = ERR_OPEN_ROLE;
+		return (-1);
+	}
+
 	return (0);
 }
 
@@ -2833,7 +2897,7 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 	struct imsgbuf		*i;
 	struct peer		*p;
 	struct listen_addr	*la, *nla;
-	struct kif		*kif;
+	struct session_dependon	*sdon;
 	u_char			*data;
 	int			 n, fd, depend_ok, restricted;
 	uint16_t		 t;
@@ -2938,7 +3002,7 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 				fatalx("reconf request not from parent");
 			if (imsg.hdr.len != IMSG_HEADER_SIZE +
 			    sizeof(restricted))
-				fatalx("IFINFO imsg with wrong len");
+				fatalx("RECONF_CTRL imsg with wrong len");
 			memcpy(&restricted, imsg.data, sizeof(restricted));
 			if (imsg.fd == -1) {
 				log_warnx("expected to receive fd for control "
@@ -3010,17 +3074,17 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 			 * the peer config sent in merge_peers().
 			 */
 			break;
-		case IMSG_IFINFO:
+		case IMSG_SESSION_DEPENDON:
 			if (idx != PFD_PIPE_MAIN)
 				fatalx("IFINFO message not from parent");
 			if (imsg.hdr.len != IMSG_HEADER_SIZE +
-			    sizeof(struct kif))
-				fatalx("IFINFO imsg with wrong len");
-			kif = imsg.data;
-			depend_ok = kif->depend_state;
+			    sizeof(struct session_dependon))
+				fatalx("DEPENDON imsg with wrong len");
+			sdon = imsg.data;
+			depend_ok = sdon->depend_state;
 
 			RB_FOREACH(p, peer_head, &conf->peers)
-				if (!strcmp(p->conf.if_depend, kif->ifname)) {
+				if (!strcmp(p->conf.if_depend, sdon->ifname)) {
 					if (depend_ok && !p->depend_ok) {
 						p->depend_ok = depend_ok;
 						bgp_fsm(p, EVNT_START);
@@ -3392,23 +3456,11 @@ session_template_clone(struct peer *p, struct sockaddr *ip, uint32_t id,
 int
 session_match_mask(struct peer *p, struct bgpd_addr *a)
 {
-	struct in_addr	 v4masked;
-	struct in6_addr	 v6masked;
+	struct bgpd_addr masked;
 
-	switch (p->conf.remote_addr.aid) {
-	case AID_INET:
-		inet4applymask(&v4masked, &a->v4, p->conf.remote_masklen);
-		if (p->conf.remote_addr.v4.s_addr == v4masked.s_addr)
-			return (1);
-		return (0);
-	case AID_INET6:
-		inet6applymask(&v6masked, &a->v6, p->conf.remote_masklen);
-
-		if (memcmp(&v6masked, &p->conf.remote_addr.v6,
-		    sizeof(v6masked)) == 0)
-			return (1);
-		return (0);
-	}
+	applymask(&masked, a, p->conf.remote_masklen);
+	if (memcmp(&masked, &p->conf.remote_addr, sizeof(masked)) == 0)
+		return (1);
 	return (0);
 }
 

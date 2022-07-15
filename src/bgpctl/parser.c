@@ -1,4 +1,4 @@
-/*	$OpenBSD: parser.c,v 1.109 2022/03/21 10:16:23 claudio Exp $ */
+/*	$OpenBSD: parser.c,v 1.113 2022/06/22 12:27:46 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -151,15 +151,15 @@ static const struct token t_show_summary[] = {
 };
 
 static const struct token t_show_fib[] = {
-	{ NOTOKEN,	"",		NONE,		 NULL},
-	{ FLAG,		"connected",	F_CONNECTED,	 t_show_fib},
-	{ FLAG,		"static",	F_STATIC,	 t_show_fib},
-	{ FLAG,		"bgp",		F_BGPD_INSERTED, t_show_fib},
-	{ FLAG,		"nexthop",	F_NEXTHOP,	 t_show_fib},
-	{ KEYWORD,	"table",	NONE,		 t_show_fib_table},
-	{ FAMILY,	"",		NONE,		 t_show_fib},
-	{ ADDRESS,	"",		NONE,		 NULL},
-	{ ENDTOKEN,	"",		NONE,		 NULL}
+	{ NOTOKEN,	"",		NONE,		NULL},
+	{ FLAG,		"connected",	F_CONNECTED,	t_show_fib},
+	{ FLAG,		"static",	F_STATIC,	t_show_fib},
+	{ FLAG,		"bgp",		F_BGPD,		t_show_fib},
+	{ FLAG,		"nexthop",	F_NEXTHOP,	t_show_fib},
+	{ KEYWORD,	"table",	NONE,		t_show_fib_table},
+	{ FAMILY,	"",		NONE,		t_show_fib},
+	{ ADDRESS,	"",		NONE,		NULL},
+	{ ENDTOKEN,	"",		NONE,		NULL}
 };
 
 static const struct token t_show_rib[] = {
@@ -968,17 +968,16 @@ parse_prefix(const char *word, size_t wordlen, struct bgpd_addr *addr,
 			mask = 32;
 		if (mask > 32)
 			errx(1, "invalid netmask: too large");
-		addr->v4.s_addr = addr->v4.s_addr & htonl(prefixlen2mask(mask));
 		break;
 	case AID_INET6:
 		if (mask == -1)
 			mask = 128;
-		inet6applymask(&addr->v6, &addr->v6, mask);
 		break;
 	default:
 		return (0);
 	}
 
+	applymask(addr, addr, mask);
 	*prefixlen = mask;
 	return (1);
 }

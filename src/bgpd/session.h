@@ -1,4 +1,4 @@
-/*	$OpenBSD: session.h,v 1.154 2022/02/06 09:51:19 claudio Exp $ */
+/*	$OpenBSD: session.h,v 1.156 2022/06/27 13:26:51 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -86,11 +86,10 @@ enum suberr_open {
 	ERR_OPEN_AS,
 	ERR_OPEN_BGPID,
 	ERR_OPEN_OPT,
-	ERR_OPEN_AUTH,
+	ERR_OPEN_AUTH,			/* deprecated */
 	ERR_OPEN_HOLDTIME,
 	ERR_OPEN_CAPA,
-	ERR_OPEN_GROUP_CONFLICT,	/* draft-ietf-idr-bgp-multisession-07 */
-	ERR_OPEN_GROUP_REQUIRED		/* draft-ietf-idr-bgp-multisession-07 */
+	ERR_OPEN_ROLE = 11,
 };
 
 enum suberr_fsm {
@@ -111,6 +110,7 @@ enum capa_codes {
 	CAPA_NONE = 0,
 	CAPA_MP = 1,
 	CAPA_REFRESH = 2,
+	CAPA_ROLE = 9,
 	CAPA_RESTART = 64,
 	CAPA_AS4BYTE = 65,
 	CAPA_ADD_PATH = 69,
@@ -295,6 +295,7 @@ void	 mrt_dump_state(struct mrt *, uint16_t, uint16_t,
 void	 mrt_done(struct mrt *);
 
 /* pfkey.c */
+struct sadb_msg;
 int	pfkey_read(int, struct sadb_msg *);
 int	pfkey_establish(struct peer *);
 int	pfkey_remove(struct peer *);

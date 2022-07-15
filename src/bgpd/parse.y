@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.429 2022/06/09 17:33:47 claudio Exp $ */
+/*	$OpenBSD: parse.y,v 1.432 2022/07/11 17:08:21 claudio Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -193,7 +193,7 @@ typedef struct {
 		struct filter_prefixlen	prefixlen;
 		struct prefixset_item	*prefixset_item;
 		struct {
-			uint8_t			enc_alg;
+			enum auth_enc_alg	enc_alg;
 			uint8_t			enc_key_len;
 			char			enc_key[IPSEC_ENC_KEY_LEN];
 		}			encspec;
@@ -210,7 +210,7 @@ typedef struct {
 %token	EBGP IBGP
 %token	LOCALAS REMOTEAS DESCR LOCALADDR MULTIHOP PASSIVE MAXPREFIX RESTART
 %token	ANNOUNCE CAPABILITIES REFRESH AS4BYTE CONNECTRETRY ENHANCED ADDPATH
-%token	SEND RECV
+%token	SEND RECV PLUS POLICY
 %token	DEMOTE ENFORCE NEIGHBORAS ASOVERRIDE REFLECTOR DEPEND DOWN
 %token	DUMP IN OUT SOCKET RESTRICTED
 %token	LOG TRANSPARENT
@@ -230,12 +230,13 @@ typedef struct {
 %token	IPSEC ESP AH SPI IKE
 %token	IPV4 IPV6
 %token	QUALIFY VIA
-%token	NE LE GE XRANGE LONGER MAXLEN
+%token	NE LE GE XRANGE LONGER MAXLEN MAX
 %token	<v.string>		STRING
 %token	<v.number>		NUMBER
 %type	<v.number>		asnumber as4number as4number_any optnumber
 %type	<v.number>		espah family safi restart origincode nettype
-%type	<v.number>		yesno inout restricted validity expires
+%type	<v.number>		yesno inout restricted validity expires enforce
+%type	<v.number>		addpathextra addpathmax
 %type	<v.string>		string
 %type	<v.addr>		address
 %type	<v.prefix>		prefix addrspec
@@ -718,7 +719,7 @@ conf_main	: AS as4number		{
 			struct rde_rib *rr;
 			rr = find_rib("Loc-RIB");
 			if (rr == NULL)
-				fatalx("RTABLE can not find the main RIB!");
+				fatalx("RTABLE cannot find the main RIB!");
 
 			if ($2 == 0)
 				rr->flags |= F_RIB_NOFIBSYNC;
@@ -880,7 +881,7 @@ conf_main	: AS as4number		{
 			}
 			rr = find_rib("Loc-RIB");
 			if (rr == NULL)
-				fatalx("RTABLE can not find the main RIB!");
+				fatalx("RTABLE cannot find the main RIB!");
 			rr->rtableid = $2;
 		}
 		| CONNECTRETRY NUMBER {
@@ -1356,6 +1357,28 @@ groupopts_l	: /* empty */
 		| groupopts_l error '\n'
 		;
 
+addpathextra	: /* empty */		{ $$ = 0;	}
+		| PLUS NUMBER		{
+			if ($2 < 1 || $2 > USHRT_MAX) {
+				yyerror("additional paths must be between "
+				    "%u and %u", 1, USHRT_MAX);
+				YYERROR;
+			}
+			$$ = $2;
+		}
+		;
+
+addpathmax	: /* empty */		{ $$ = 0;	}
+		| MAX NUMBER		{
+			if ($2 < 1 || $2 > USHRT_MAX) {
+				yyerror("maximum additional paths must be "
+				    "between %u and %u", 1, USHRT_MAX);
+				YYERROR;
+			}
+			$$ = $2;
+		}
+		;
+
 peeropts_h	: '{' '\n' peeropts_l '}'
 		| '{' peeropts '}'
 		| /* empty */
@@ -1515,6 +1538,77 @@ peeropts	: REMOTEAS as4number	{
 				else
 					*ap++ &= ~CAPA_AP_RECV;
 		}
+		| ANNOUNCE ADDPATH SEND STRING addpathextra addpathmax {
+			int8_t *ap = curpeer->conf.capabilities.add_path;
+			enum addpath_mode mode;
+			u_int8_t i;
+
+			if (!strcmp($4, "no")) {
+				free($4);
+				if ($5 != 0 || $6 != 0) {
+					yyerror("no additional option allowed "
+					    "for 'add-path send no'");
+					YYERROR;
+				}
+				for (i = 0; i < AID_MAX; i++)
+					*ap++ &= ~CAPA_AP_SEND;
+				break;
+			} else if (!strcmp($4, "all")) {
+				free($4);
+				if ($5 != 0 || $6 != 0) {
+					yyerror("no additional option allowed "
+					    "for 'add-path send all'");
+					YYERROR;
+				}
+				mode = ADDPATH_EVAL_ALL;
+			} else if (!strcmp($4, "best")) {
+				free($4);
+				mode = ADDPATH_EVAL_BEST;
+			} else if (!strcmp($4, "ecmp")) {
+				free($4);
+				mode = ADDPATH_EVAL_ECMP;
+			} else if (!strcmp($4, "as-wide-best")) {
+				free($4);
+				mode = ADDPATH_EVAL_AS_WIDE;
+			} else {
+				yyerror("announce add-path send: "
+				    "unknown mode \"%s\"", $4);
+				free($4);
+				YYERROR;
+			}
+			for (i = 0; i < AID_MAX; i++)
+				*ap++ |= CAPA_AP_SEND;
+			curpeer->conf.eval.mode = mode;
+			curpeer->conf.eval.extrapaths = $5;
+			curpeer->conf.eval.maxpaths = $6;
+		}
+		| ANNOUNCE POLICY STRING enforce {
+			curpeer->conf.capabilities.role_ena = $4;
+			if (strcmp($3, "no") == 0) {
+				curpeer->conf.capabilities.role_ena = 0;
+			} else if (strcmp($3, "provider") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_PROVIDER;
+			} else if (strcmp($3, "rs") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_RS;
+			} else if (strcmp($3, "rs-client") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_RS_CLIENT;
+			} else if (strcmp($3, "customer") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_CUSTOMER;
+			} else if (strcmp($3, "peer") == 0) {
+				curpeer->conf.capabilities.role =
+				    CAPA_ROLE_PEER;
+			} else {
+				yyerror("syntax error, one of no, provider, "
+				    "rs, rs-client, customer, peer expected");
+				free($3);
+				YYERROR;
+			}
+			free($3);
+		}
 		| EXPORT NONE {
 			curpeer->conf.export_type = EXPORT_NONE;
 		}
@@ -1609,7 +1703,7 @@ peeropts	: REMOTEAS as4number	{
 				curpeer->conf.auth.method = AUTH_IPSEC_IKE_AH;
 		}
 		| IPSEC espah inout SPI NUMBER STRING STRING encspec {
-			uint32_t	auth_alg;
+			enum auth_alg	auth_alg;
 			uint8_t		keylen;
 
 			if (curpeer->conf.auth.method &&
@@ -1626,10 +1720,10 @@ peeropts	: REMOTEAS as4number	{
 			}
 
 			if (!strcmp($6, "sha1")) {
-				auth_alg = SADB_AALG_SHA1HMAC;
+				auth_alg = AUTH_AALG_SHA1HMAC;
 				keylen = 20;
 			} else if (!strcmp($6, "md5")) {
-				auth_alg = SADB_AALG_MD5HMAC;
+				auth_alg = AUTH_AALG_MD5HMAC;
 				keylen = 16;
 			} else {
 				yyerror("unknown auth algorithm \"%s\"", $6);
@@ -1866,11 +1960,11 @@ encspec		: /* nada */	{
 		| STRING STRING {
 			bzero(&$$, sizeof($$));
 			if (!strcmp($1, "3des") || !strcmp($1, "3des-cbc")) {
-				$$.enc_alg = SADB_EALG_3DESCBC;
+				$$.enc_alg = AUTH_EALG_3DESCBC;
 				$$.enc_key_len = 21; /* XXX verify */
 			} else if (!strcmp($1, "aes") ||
 			    !strcmp($1, "aes-128-cbc")) {
-				$$.enc_alg = SADB_X_EALG_AES;
+				$$.enc_alg = AUTH_EALG_AES;
 				$$.enc_key_len = 16;
 			} else {
 				yyerror("unknown enc algorithm \"%s\"", $1);
@@ -2596,6 +2690,10 @@ delete		: /* empty */	{ $$ = 0; }
 		| DELETE	{ $$ = 1; }
 		;
 
+enforce		: /* empty */	{ $$ = 1; }
+		| ENFORCE	{ $$ = 2; }
+		;
+
 filter_set_opt	: LOCALPREF NUMBER		{
 			if ($2 < -INT_MAX || $2 > UINT_MAX) {
 				yyerror("bad localpref %lld", $2);
@@ -3045,6 +3143,7 @@ lookup(char *s)
 		{ "localpref",		LOCALPREF},
 		{ "log",		LOG},
 		{ "match",		MATCH},
+		{ "max",		MAX},
 		{ "max-as-len",		MAXASLEN},
 		{ "max-as-seq",		MAXASSEQ},
 		{ "max-communities",	MAXCOMMUNITIES},
@@ -3073,6 +3172,8 @@ lookup(char *s)
 		{ "password",		PASSWORD},
 		{ "peer-as",		PEERAS},
 		{ "pftable",		PFTABLE},
+		{ "plus",		PLUS},
+		{ "policy",		POLICY},
 		{ "port",		PORT},
 		{ "prefix",		PREFIX},
 		{ "prefix-set",		PREFIXSET},
@@ -4567,6 +4668,14 @@ neighbor_consistent(struct peer *p)
 		char *descr = log_fmt_peer(&p->conf);
 		yyerror("duplicate %s", descr);
 		free(descr);
+		return (-1);
+	}
+
+	/* bail if add-path send and rde evaluate all is used together */
+	if ((p->conf.flags & PEERFLAG_EVALUATE_ALL) &&
+	    (p->conf.capabilities.add_path[0] & CAPA_AP_SEND)) {
+		yyerror("neighbors with add-path send cannot use "
+		    "'rde evaluate all'");
 		return (-1);
 	}
 

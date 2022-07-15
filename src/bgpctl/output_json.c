@@ -1,4 +1,4 @@
-/*	$OpenBSD: output_json.c,v 1.14 2022/03/21 10:16:23 claudio Exp $ */
+/*	$OpenBSD: output_json.c,v 1.19 2022/07/08 16:12:11 claudio Exp $ */
 
 /*
  * Copyright (c) 2020 Claudio Jeker <claudio@openbsd.org>
@@ -43,7 +43,7 @@ json_neighbor_capabilities(struct capabilities *capa)
 	int hascapamp = 0, hascapaap = 0;
 	uint8_t i;
 
-	for (i = 0; i < AID_MAX; i++) {
+	for (i = AID_MIN; i < AID_MAX; i++) {
 		if (capa->mp[i])
 			hascapamp = 1;
 		if (capa->add_path[i])
@@ -60,7 +60,7 @@ json_neighbor_capabilities(struct capabilities *capa)
 
 	if (hascapamp) {
 		json_do_array("multiprotocol");
-		for (i = 0; i < AID_MAX; i++)
+		for (i = AID_MIN; i < AID_MAX; i++)
 			if (capa->mp[i])
 				json_do_printf("mp", "%s", aid2str(i));
 		json_do_end();
@@ -68,7 +68,7 @@ json_neighbor_capabilities(struct capabilities *capa)
 	if (capa->grestart.restart) {
 		int restarted = 0, present = 0;
 
-		for (i = 0; i < AID_MAX; i++)
+		for (i = AID_MIN; i < AID_MAX; i++)
 			if (capa->grestart.flags[i] & CAPA_GR_PRESENT) {
 				present = 1;
 				if (capa->grestart.flags[i] & CAPA_GR_RESTART)
@@ -84,7 +84,7 @@ json_neighbor_capabilities(struct capabilities *capa)
 
 		if (present) {
 			json_do_array("protocols");
-			for (i = 0; i < AID_MAX; i++)
+			for (i = AID_MIN; i < AID_MAX; i++)
 				if (capa->grestart.flags[i] & CAPA_GR_PRESENT) {
 					json_do_object("family");
 					json_do_printf("family", "%s",
@@ -101,7 +101,7 @@ json_neighbor_capabilities(struct capabilities *capa)
 	}
 	if (hascapaap) {
 		json_do_array("add-path");
-		for (i = 0; i < AID_MAX; i++)
+		for (i = AID_MIN; i < AID_MAX; i++)
 			if (capa->add_path[i]) {
 				json_do_object("add-path-elm");
 				json_do_printf("family", "%s", aid2str(i));
@@ -123,6 +123,12 @@ json_neighbor_capabilities(struct capabilities *capa)
 				json_do_end();
 			}
 		json_do_end();
+	}
+
+	if (capa->role_ena) {
+		json_do_printf("open_policy_role", "%s%s",
+		    log_policy(capa->role),
+		    capa->role_ena == 2 ? " enforce" : "");
 	}
 
 	json_do_end();
@@ -357,14 +363,12 @@ json_fib(struct kroute_full *kf)
 	json_do_printf("prefix", "%s/%u", log_addr(&kf->prefix), kf->prefixlen);
 	json_do_uint("priority", kf->priority);
 	json_do_bool("up", !(kf->flags & F_DOWN));
-	if (kf->flags & F_BGPD_INSERTED)
+	if (kf->flags & F_BGPD)
 		origin = "bgp";
 	else if (kf->flags & F_CONNECTED)
 		origin = "connected";
 	else if (kf->flags & F_STATIC)
 		origin = "static";
-	else if (kf->flags & F_DYNAMIC)
-		origin = "dynamic";
 	else
 		origin = "unknown";
 	json_do_printf("origin", "%s", origin);
@@ -416,9 +420,6 @@ json_do_interface(struct ctl_show_interface *iface)
 static void
 json_nexthop(struct ctl_show_nexthop *nh)
 {
-	struct kroute *k;
-	struct kroute6 *k6;
-
 	json_do_array("nexthops");
 
 	json_do_object("nexthop");
@@ -429,27 +430,11 @@ json_nexthop(struct ctl_show_nexthop *nh)
 	if (!nh->krvalid)
 		goto done;
 
-	switch (nh->addr.aid) {
-	case AID_INET:
-		k = &nh->kr.kr4;
-		json_do_printf("prefix", "%s/%u", inet_ntoa(k->prefix),
-		    k->prefixlen);
-		json_do_uint("priority", k->priority);
-		json_do_bool("connected", k->flags & F_CONNECTED);
-		json_do_printf("nexthop", "%s", inet_ntoa(k->nexthop));
-		break;
-	case AID_INET6:
-		k6 = &nh->kr.kr6;
-		json_do_printf("prefix", "%s/%u", log_in6addr(&k6->prefix),
-		    k6->prefixlen);
-		json_do_uint("priority", k6->priority);
-		json_do_bool("connected", k6->flags & F_CONNECTED);
-		json_do_printf("nexthop", "%s", log_in6addr(&k6->nexthop));
-		break;
-	default:
-		warnx("nexthop: unknown address family");
-		goto done;
-	}
+	json_do_printf("prefix", "%s/%u", log_addr(&nh->kr.prefix),
+	    nh->kr.prefixlen);
+	json_do_uint("priority", nh->kr.priority);
+	json_do_bool("connected", nh->kr.flags & F_CONNECTED);
+	json_do_printf("nexthop", "%s", log_addr(&nh->kr.nexthop));
 	if (nh->iface.ifname[0])
 		json_do_interface(&nh->iface);
 done:
@@ -833,6 +818,14 @@ bad_len:
 	case ATTR_LARGE_COMMUNITIES:
 		json_do_large_community(data, alen);
 		break;
+	case ATTR_OTC:
+		if (alen == 4) {
+			memcpy(&as, data, sizeof(as));
+			as = ntohl(as);
+			json_do_uint("as", as);
+		} else
+			json_do_printf("error", "bad length");
+		break;
 	case ATTR_ATOMIC_AGGREGATE:
 	default:
 		if (alen)
@@ -877,6 +870,10 @@ json_rib(struct ctl_show_rib *r, u_char *asdata, size_t aslen,
 	json_do_bool("valid", r->flags & F_PREF_ELIGIBLE);
 	if (r->flags & F_PREF_BEST)
 		json_do_bool("best", 1);
+	if (r->flags & F_PREF_ECMP)
+		json_do_bool("ecmp", 1);
+	if (r->flags & F_PREF_AS_WIDE)
+		json_do_bool("as-wide", 1);
 	if (r->flags & F_PREF_INTERNAL)
 		json_do_printf("source", "%s", "internal");
 	else
@@ -892,6 +889,7 @@ json_rib(struct ctl_show_rib *r, u_char *asdata, size_t aslen,
 	json_do_uint("metric", r->med);
 	json_do_uint("localpref", r->local_pref);
 	json_do_uint("weight", r->weight);
+	json_do_int("dmetric", r->dmetric);
 	json_do_printf("last_update", "%s", fmt_timeframe(r->age));
 	json_do_int("last_update_sec", r->age);
 

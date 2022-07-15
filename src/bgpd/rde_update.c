@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_update.c,v 1.140 2022/05/23 13:40:12 deraadt Exp $ */
+/*	$OpenBSD: rde_update.c,v 1.145 2022/07/11 17:08:21 claudio Exp $ */
 
 /*
  * Copyright (c) 2004 Claudio Jeker <claudio@openbsd.org>
@@ -96,6 +96,44 @@ up_test_update(struct rde_peer *peer, struct prefix *p)
 	return (1);
 }
 
+/* RFC9234 open policy handling */
+static int
+up_enforce_open_policy(struct rde_peer *peer, struct filterstate *state)
+{
+	uint8_t role;
+
+	if (!peer_has_open_policy(peer, &role))
+		return 0;
+
+	/*
+	 * do not propagate (consider it filtered) if OTC is present and
+	 * neighbor role is peer, provider or rs.
+	 */
+	if (role == CAPA_ROLE_PEER || role == CAPA_ROLE_PROVIDER ||
+	    role == CAPA_ROLE_RS)
+		if (state->aspath.flags & F_ATTR_OTC)
+			return (1);
+
+	/*
+	 * add OTC attribute if not present for peers, customers and rs-clients.
+	 */
+	if (role == CAPA_ROLE_PEER || role == CAPA_ROLE_CUSTOMER ||
+	    role == CAPA_ROLE_RS_CLIENT)
+		if ((state->aspath.flags & F_ATTR_OTC) == 0) {
+			uint32_t tmp;
+
+			tmp = htonl(peer->conf.local_as);
+			if (attr_optadd(&state->aspath,
+			    ATTR_OPTIONAL|ATTR_TRANSITIVE, ATTR_OTC,
+			    &tmp, sizeof(tmp)) == -1)
+				log_peer_warnx(&peer->conf,
+				    "failed to add OTC attribute");
+			state->aspath.flags |= F_ATTR_OTC;
+		}
+
+	return 0;
+}
+
 void
 up_generate_updates(struct filter_head *rules, struct rde_peer *peer,
     struct prefix *new, struct prefix *old)
@@ -107,9 +145,6 @@ up_generate_updates(struct filter_head *rules, struct rde_peer *peer,
 	uint8_t			prefixlen;
 
 	if (new == NULL) {
-		if (old == NULL)
-			/* no prefix to update or withdraw */
-			return;
 		pt_getaddr(old->pt, &addr);
 		prefixlen = old->pt->prefixlen;
 	} else {
@@ -117,11 +152,13 @@ up_generate_updates(struct filter_head *rules, struct rde_peer *peer,
 		prefixlen = new->pt->prefixlen;
 	}
 
+	p = prefix_adjout_lookup(peer, &addr, prefixlen);
+
 	while (new != NULL) {
 		need_withdraw = 0;
 		/*
 		 * up_test_update() needs to run before the output filters
-		 * else the well known communities wont work properly.
+		 * else the well known communities won't work properly.
 		 * The output filters would not be able to add well known
 		 * communities.
 		 */
@@ -154,6 +191,16 @@ up_generate_updates(struct filter_head *rules, struct rde_peer *peer,
 			break;
 		}
 
+		if (up_enforce_open_policy(peer, &state)) {
+			rde_filterstate_clean(&state);
+			if (peer->flags & PEERFLAG_EVALUATE_ALL) {
+				new = TAILQ_NEXT(new, entry.list.rib);
+				if (new != NULL && prefix_eligible(new))
+					continue;
+			}
+			break;
+		}
+
 		/* check if this was actually a withdraw */
 		if (need_withdraw)
 			break;
@@ -161,8 +208,8 @@ up_generate_updates(struct filter_head *rules, struct rde_peer *peer,
 		/* from here on we know this is an update */
 
 		up_prep_adjout(peer, &state, addr.aid);
-		prefix_adjout_update(peer, &state, &addr,
-		    new->pt->prefixlen, prefix_vstate(new));
+		prefix_adjout_update(p, peer, &state, &addr,
+		    new->pt->prefixlen, new->path_id_tx, prefix_vstate(new));
 		rde_filterstate_clean(&state);
 
 		/* max prefix checker outbound */
@@ -179,8 +226,140 @@ up_generate_updates(struct filter_head *rules, struct rde_peer *peer,
 	}
 
 	/* withdraw prefix */
-	if ((p = prefix_adjout_get(peer, 0, &addr, prefixlen)) != NULL)
+	if (p != NULL)
 		prefix_adjout_withdraw(p);
+}
+
+/*
+ * Generate updates for the add-path send case. Depending on the
+ * peer eval settings prefixes are selected and distributed.
+ * This highly depends on the Adj-RIB-Out to handle prefixes with no
+ * changes gracefully. It may be possible to improve the API so that
+ * less churn is needed.
+ */
+void
+up_generate_addpath(struct filter_head *rules, struct rde_peer *peer,
+    struct prefix *new, struct prefix *old)
+{
+	struct filterstate	state;
+	struct bgpd_addr	addr;
+	struct prefix		*head, *p;
+	uint8_t			prefixlen;
+	int			maxpaths = 0, extrapaths = 0, extra;
+	int			checkmode = 1;
+
+	if (new == NULL) {
+		pt_getaddr(old->pt, &addr);
+		prefixlen = old->pt->prefixlen;
+	} else {
+		pt_getaddr(new->pt, &addr);
+		prefixlen = new->pt->prefixlen;
+	}
+
+	head = prefix_adjout_lookup(peer, &addr, prefixlen);
+
+	/* mark all paths as stale */
+	for (p = head; p != NULL; p = prefix_adjout_next(peer, p))
+		p->flags |= PREFIX_FLAG_STALE;
+
+	/* update paths */
+	for ( ; new != NULL; new = TAILQ_NEXT(new, entry.list.rib)) {
+		/* since list is sorted, stop at first invalid prefix */
+		if (!prefix_eligible(new))
+			break;
+
+		/* check limits and stop when a limit is reached */
+		if (peer->eval.maxpaths != 0 &&
+		    maxpaths >= peer->eval.maxpaths)
+			break;
+		if (peer->eval.extrapaths != 0 &&
+		    extrapaths >= peer->eval.extrapaths)
+			break;
+
+		extra = 1;
+		if (checkmode) {
+			switch (peer->eval.mode) {
+			case ADDPATH_EVAL_BEST:
+				if (new->dmetric == PREFIX_DMETRIC_BEST)
+					extra = 0;
+				else
+					checkmode = 0;
+				break;
+			case ADDPATH_EVAL_ECMP:
+				if (new->dmetric == PREFIX_DMETRIC_BEST ||
+				    new->dmetric == PREFIX_DMETRIC_ECMP)
+					extra = 0;
+				else
+					checkmode = 0;
+				break;
+			case ADDPATH_EVAL_AS_WIDE:
+				if (new->dmetric == PREFIX_DMETRIC_BEST ||
+				    new->dmetric == PREFIX_DMETRIC_ECMP ||
+				    new->dmetric == PREFIX_DMETRIC_AS_WIDE)
+					extra = 0;
+				else
+					checkmode = 0;
+				break;
+			case ADDPATH_EVAL_ALL:
+				/* nothing to check */
+				checkmode = 0;
+				break;
+			default:
+				fatalx("unknown add-path eval mode");
+			}
+		}
+
+		/*
+		 * up_test_update() needs to run before the output filters
+		 * else the well known communities won't work properly.
+		 * The output filters would not be able to add well known
+		 * communities.
+		 */
+		if (!up_test_update(peer, new))
+			continue;
+
+		rde_filterstate_prep(&state, prefix_aspath(new),
+		    prefix_communities(new), prefix_nexthop(new),
+		    prefix_nhflags(new));
+		if (rde_filter(rules, peer, prefix_peer(new), &addr,
+		    prefixlen, prefix_vstate(new), &state) == ACTION_DENY) {
+			rde_filterstate_clean(&state);
+			continue;
+		}
+
+		if (up_enforce_open_policy(peer, &state)) {
+			rde_filterstate_clean(&state);
+			continue;
+		}
+
+		/* from here on we know this is an update */
+		maxpaths++;
+		extrapaths += extra;
+
+		p = prefix_adjout_get(peer, new->path_id_tx, &addr,
+		    new->pt->prefixlen);
+
+		up_prep_adjout(peer, &state, addr.aid);
+		prefix_adjout_update(p, peer, &state, &addr,
+		    new->pt->prefixlen, new->path_id_tx, prefix_vstate(new));
+		rde_filterstate_clean(&state);
+
+		/* max prefix checker outbound */
+		if (peer->conf.max_out_prefix &&
+		    peer->prefix_out_cnt > peer->conf.max_out_prefix) {
+			log_peer_warnx(&peer->conf,
+			    "outbound prefix limit reached (>%u/%u)",
+			    peer->prefix_out_cnt, peer->conf.max_out_prefix);
+			rde_update_err(peer, ERR_CEASE,
+			    ERR_CEASE_MAX_SENT_PREFIX, NULL, 0);
+		}
+	}
+
+	/* withdraw stale paths */
+	for (p = head; p != NULL; p = prefix_adjout_next(peer, p)) {
+		if (p->flags & PREFIX_FLAG_STALE)
+			prefix_adjout_withdraw(p);
+	}
 }
 
 struct rib_entry *rib_add(struct rib *, struct bgpd_addr *, int);
@@ -195,6 +374,7 @@ up_generate_default(struct filter_head *rules, struct rde_peer *peer,
 	extern struct rde_peer	*peerself;
 	struct filterstate	 state;
 	struct rde_aspath	*asp;
+	struct prefix		*p;
 	struct bgpd_addr	 addr;
 
 	if (peer->capa.mp[aid] == 0)
@@ -214,6 +394,8 @@ up_generate_default(struct filter_head *rules, struct rde_peer *peer,
 
 	bzero(&addr, sizeof(addr));
 	addr.aid = aid;
+	p = prefix_adjout_lookup(peer, &addr, 0);
+
 	/* outbound filter as usual */
 	if (rde_filter(rules, peer, peerself, &addr, 0, ROA_NOTFOUND,
 	    &state) == ACTION_DENY) {
@@ -222,7 +404,7 @@ up_generate_default(struct filter_head *rules, struct rde_peer *peer,
 	}
 
 	up_prep_adjout(peer, &state, addr.aid);
-	prefix_adjout_update(peer, &state, &addr, 0, ROA_NOTFOUND);
+	prefix_adjout_update(p, peer, &state, &addr, 0, 0, ROA_NOTFOUND);
 	rde_filterstate_clean(&state);
 
 	/* max prefix checker outbound */
@@ -535,6 +717,7 @@ up_generate_attr(u_char *buf, int len, struct rde_peer *peer,
 			/* FALLTHROUGH */
 		case ATTR_ORIGINATOR_ID:
 		case ATTR_CLUSTER_LIST:
+		case ATTR_OTC:
 			if (oa == NULL || oa->type != type)
 				break;
 			if ((!(oa->flags & ATTR_TRANSITIVE)) &&
@@ -624,8 +807,11 @@ up_dump_prefix(u_char *buf, int len, struct prefix_tree *prefix_head,
 		}
 		pt_getaddr(p->pt, &addr);
 		if ((r = prefix_write(buf + wpos, len - wpos,
-		    &addr, p->pt->prefixlen, withdraw)) == -1)
+		    &addr, p->pt->prefixlen, withdraw)) == -1) {
+			if (peer_has_add_path(peer, p->pt->aid, CAPA_AP_SEND))
+				wpos -= sizeof(pathid);
 			break;
+		}
 		wpos += r;
 
 		/* make sure we only dump prefixes which belong together */
@@ -636,7 +822,6 @@ up_dump_prefix(u_char *buf, int len, struct prefix_tree *prefix_head,
 		    np->nhflags != p->nhflags ||
 		    (np->flags & PREFIX_FLAG_EOR))
 			done = 1;
-
 
 		if (withdraw) {
 			/* prefix no longer needed, remove it */
@@ -649,6 +834,7 @@ up_dump_prefix(u_char *buf, int len, struct prefix_tree *prefix_head,
 			peer->up_nlricnt--;
 			peer->prefix_sent_update++;
 		}
+
 		if (done)
 			break;
 	}

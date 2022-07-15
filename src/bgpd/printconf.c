@@ -1,4 +1,4 @@
-/*	$OpenBSD: printconf.c,v 1.152 2022/05/31 09:45:33 claudio Exp $	*/
+/*	$OpenBSD: printconf.c,v 1.156 2022/07/11 17:08:21 claudio Exp $	*/
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -45,8 +45,8 @@ void		 print_roa(struct roa_tree *);
 void		 print_rtrs(struct rtr_config_head *);
 void		 print_peer(struct peer_config *, struct bgpd_config *,
 		    const char *);
-const char	*print_auth_alg(uint8_t);
-const char	*print_enc_alg(uint8_t);
+const char	*print_auth_alg(enum auth_alg);
+const char	*print_enc_alg(enum auth_enc_alg);
 void		 print_announce(struct peer_config *, const char *);
 void		 print_as(struct filter_rule *);
 void		 print_rule(struct bgpd_config *, struct filter_rule *);
@@ -659,14 +659,6 @@ print_peer(struct peer_config *p, struct bgpd_config *conf, const char *c)
 		printf("%s\tholdtime %u\n", c, p->holdtime);
 	if (p->min_holdtime)
 		printf("%s\tholdtime min %u\n", c, p->min_holdtime);
-	if (p->announce_capa == 0)
-		printf("%s\tannounce capabilities no\n", c);
-	if (p->capabilities.refresh == 0)
-		printf("%s\tannounce refresh no\n", c);
-	if (p->capabilities.grestart.restart == 0)
-		printf("%s\tannounce restart no\n", c);
-	if (p->capabilities.as4byte == 0)
-		printf("%s\tannounce as4byte no\n", c);
 	if (p->export_type == EXPORT_NONE)
 		printf("%s\texport none\n", c);
 	else if (p->export_type == EXPORT_DEFAULT_ROUTE)
@@ -751,12 +743,12 @@ print_peer(struct peer_config *p, struct bgpd_config *conf, const char *c)
 }
 
 const char *
-print_auth_alg(uint8_t alg)
+print_auth_alg(enum auth_alg alg)
 {
 	switch (alg) {
-	case SADB_AALG_SHA1HMAC:
+	case AUTH_AALG_SHA1HMAC:
 		return ("sha1");
-	case SADB_AALG_MD5HMAC:
+	case AUTH_AALG_MD5HMAC:
 		return ("md5");
 	default:
 		return ("???");
@@ -764,15 +756,32 @@ print_auth_alg(uint8_t alg)
 }
 
 const char *
-print_enc_alg(uint8_t alg)
+print_enc_alg(enum auth_enc_alg alg)
 {
 	switch (alg) {
-	case SADB_EALG_3DESCBC:
+	case AUTH_EALG_3DESCBC:
 		return ("3des");
-	case SADB_X_EALG_AES:
+	case AUTH_EALG_AES:
 		return ("aes");
 	default:
 		return ("???");
+	}
+}
+
+static const char *
+print_addpath_mode(enum addpath_mode mode)
+{
+	switch (mode) {
+	case ADDPATH_EVAL_NONE:
+		return "none";
+	case ADDPATH_EVAL_BEST:
+		return "best";
+	case ADDPATH_EVAL_ECMP:
+		return "ecmp";
+	case ADDPATH_EVAL_AS_WIDE:
+		return "as-wide-best";
+	case ADDPATH_EVAL_ALL:
+		return "all";
 	}
 }
 
@@ -781,9 +790,38 @@ print_announce(struct peer_config *p, const char *c)
 {
 	uint8_t	aid;
 
+	if (p->announce_capa == 0)
+		printf("%s\tannounce capabilities no\n", c);
+
 	for (aid = 0; aid < AID_MAX; aid++)
 		if (p->capabilities.mp[aid])
 			printf("%s\tannounce %s\n", c, aid2str(aid));
+
+	if (p->capabilities.refresh == 0)
+		printf("%s\tannounce refresh no\n", c);
+	if (p->capabilities.enhanced_rr == 1)
+		printf("%s\tannounce enhanced refresh yes\n", c);
+	if (p->capabilities.grestart.restart == 0)
+		printf("%s\tannounce restart no\n", c);
+	if (p->capabilities.as4byte == 0)
+		printf("%s\tannounce as4byte no\n", c);
+	if (p->capabilities.add_path[0] & CAPA_AP_RECV)
+		printf("%s\tannounce add-path recv yes\n", c);
+	if (p->capabilities.add_path[0] & CAPA_AP_SEND) {
+		printf("%s\tannounce add-path send %s", c,
+		     print_addpath_mode(p->eval.mode));
+		if (p->eval.extrapaths != 0)
+			printf(" plus %d", p->eval.extrapaths);
+		if (p->eval.maxpaths != 0)
+			printf(" max %d", p->eval.maxpaths);
+		printf("\n");
+	}
+	if (p->capabilities.role_ena) {
+		printf("%s\tannounce policy %s%s\n", c,
+		    log_policy(p->capabilities.role),
+		    p->capabilities.role_ena == 2 ? " enforce" : "");
+	}
+
 }
 
 void
