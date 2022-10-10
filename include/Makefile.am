@@ -1,6 +1,5 @@
 noinst_HEADERS =
 noinst_HEADERS += linux/rtnetlink.h
-noinst_HEADERS += net/route.h
 noinst_HEADERS += netinet/in.h
 noinst_HEADERS += netinet/ip_ipsp.h
 noinst_HEADERS += sys/_null.h
@@ -14,7 +13,6 @@ noinst_HEADERS += endian.h
 noinst_HEADERS += imsg.h
 noinst_HEADERS += sha2.h
 noinst_HEADERS += sha2_openbsd.h
-noinst_HEADERS += siphash.h
 noinst_HEADERS += stdlib.h
 noinst_HEADERS += string.h
 noinst_HEADERS += unistd.h

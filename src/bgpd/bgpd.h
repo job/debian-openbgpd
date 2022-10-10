@@ -1,4 +1,4 @@
-/*	$OpenBSD: bgpd.h,v 1.441 2022/07/11 17:08:21 claudio Exp $ */
+/*	$OpenBSD: bgpd.h,v 1.454 2022/09/23 15:50:41 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -22,7 +22,6 @@
 #include <sys/socket.h>
 #include <sys/queue.h>
 #include <sys/tree.h>
-#include <net/route.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
@@ -39,6 +38,7 @@
 #define	PEER_DESCR_LEN			32
 #define	REASON_LEN			256	/* includes NUL terminator */
 #define	PFTABLE_LEN			32
+#define	ROUTELABEL_LEN			32
 #define	TCP_MD5_KEY_LEN			80
 #define	IPSEC_ENC_KEY_LEN		32
 #define	IPSEC_AUTH_KEY_LEN		20
@@ -84,17 +84,15 @@
 #define	SOCKET_NAME			RUNSTATEDIR "/bgpd.sock"
 
 #define	F_BGPD			0x0001
-#define	F_KERNEL		0x0002
+#define	F_BGPD_INSERTED		0x0002
 #define	F_CONNECTED		0x0004
-#define	F_NEXTHOP		0x0008
-#define	F_DOWN			0x0010
-#define	F_STATIC		0x0020
-#define	F_BGPD_INSERTED		0x0040
-#define	F_REJECT		0x0080
-#define	F_BLACKHOLE		0x0100
+#define	F_STATIC		0x0008
+#define	F_NEXTHOP		0x0010
+#define	F_REJECT		0x0020
+#define	F_BLACKHOLE		0x0040
+#define	F_MPLS			0x0080
 #define	F_LONGER		0x0200
 #define	F_SHORTER		0x0400
-#define	F_MPLS			0x0800
 #define	F_CTL_DETAIL		0x1000	/* only set on requests */
 #define	F_CTL_ADJ_IN		0x2000	/* only set on requests */
 #define	F_CTL_ADJ_OUT		0x4000	/* only set on requests */
@@ -486,8 +484,8 @@ struct network_config {
 	struct filter_set_head	 attrset;
 	char			 psname[SET_NAME_LEN];
 	uint64_t		 rd;
-	uint16_t		 rtlabel;
 	enum network_type	 type;
+	uint16_t		 rtlabel;
 	uint8_t			 prefixlen;
 	uint8_t			 priority;
 	uint8_t			 old;	/* used for reloading */
@@ -530,7 +528,7 @@ struct ctl_show_rtr {
 	uint32_t		expire;
 	int			session_id;
 	in_addr_t		remote_port;
-	enum rtr_error 		last_sent_error;
+	enum rtr_error		last_sent_error;
 	enum rtr_error		last_recv_error;
 	char			last_sent_msg[REASON_LEN];
 	char			last_recv_msg[REASON_LEN];
@@ -559,7 +557,6 @@ enum imsg_type {
 	IMSG_CTL_SHOW_RIB_ATTR,
 	IMSG_CTL_SHOW_NETWORK,
 	IMSG_CTL_SHOW_RIB_MEM,
-	IMSG_CTL_SHOW_RIB_HASH,
 	IMSG_CTL_SHOW_TERSE,
 	IMSG_CTL_SHOW_TIMER,
 	IMSG_CTL_LOG_VERBOSE,
@@ -604,6 +601,7 @@ enum imsg_type {
 	IMSG_SESSION_UP,
 	IMSG_SESSION_DOWN,
 	IMSG_SESSION_STALE,
+	IMSG_SESSION_NOGRACE,
 	IMSG_SESSION_FLUSH,
 	IMSG_SESSION_RESTARTED,
 	IMSG_SESSION_DEPENDON,
@@ -717,7 +715,7 @@ struct ktable {
 struct kroute_full {
 	struct bgpd_addr	prefix;
 	struct bgpd_addr	nexthop;
-	char			label[RTLABEL_LEN];
+	char			label[ROUTELABEL_LEN];
 	uint32_t		mplslabel;
 	uint16_t		flags;
 	u_short			ifindex;
@@ -729,9 +727,9 @@ struct kroute_nexthop {
 	struct bgpd_addr	nexthop;
 	struct bgpd_addr	gateway;
 	struct bgpd_addr	net;
+	uint8_t			netlen;
 	uint8_t			valid;
 	uint8_t			connected;
-	uint8_t			netlen;
 };
 
 struct session_dependon {
@@ -1129,7 +1127,7 @@ struct filter_set {
 		struct nexthop			*nh_ref;
 		struct community		 community;
 		char				 pftable[PFTABLE_LEN];
-		char				 rtlabel[RTLABEL_LEN];
+		char				 rtlabel[ROUTELABEL_LEN];
 		uint8_t				 origin;
 	}				action;
 	enum action_types		type;
@@ -1204,7 +1202,6 @@ struct rde_memstats {
 	long long	nexthop_cnt;
 	long long	aspath_cnt;
 	long long	aspath_size;
-	long long	aspath_refs;
 	long long	comm_cnt;
 	long long	comm_nmemb;
 	long long	comm_size;
@@ -1218,15 +1215,6 @@ struct rde_memstats {
 	long long	aset_nmemb;
 	long long	pset_cnt;
 	long long	pset_size;
-};
-
-struct rde_hashstats {
-	char		name[16];
-	long long	num;
-	long long	min;
-	long long	max;
-	long long	sum;
-	long long	sumq;
 };
 
 #define	MRT_FILE_LEN	512
@@ -1274,8 +1262,8 @@ struct mrt_config {
 void		 send_nexthop_update(struct kroute_nexthop *);
 void		 send_imsg_session(int, pid_t, void *, uint16_t);
 int		 send_network(int, struct network_config *,
-		     struct filter_set_head *);
-int		 bgpd_filternexthop(struct kroute_full *);
+		    struct filter_set_head *);
+int		 bgpd_oknexthop(struct kroute_full *);
 void		 set_pollfd(struct pollfd *, struct imsgbuf *);
 int		 handle_pollfd(struct pollfd *, struct imsgbuf *);
 
@@ -1285,6 +1273,7 @@ int	control_imsg_relay(struct imsg *);
 /* config.c */
 struct bgpd_config	*new_config(void);
 void		copy_config(struct bgpd_config *, struct bgpd_config *);
+void		network_free(struct network *);
 void		free_l3vpns(struct l3vpn_head *);
 void		free_config(struct bgpd_config *);
 void		free_prefixsets(struct prefixset_head *);
@@ -1295,13 +1284,15 @@ void		free_rtrs(struct rtr_config_head *);
 void		filterlist_free(struct filter_head *);
 int		host(const char *, struct bgpd_addr *, uint8_t *);
 uint32_t	get_bgpid(void);
-void		expand_networks(struct bgpd_config *);
+void		expand_networks(struct bgpd_config *, struct network_head *);
 RB_PROTOTYPE(prefixset_tree, prefixset_item, entry, prefixset_cmp);
 int		roa_cmp(struct roa *, struct roa *);
 RB_PROTOTYPE(roa_tree, roa, entry, roa_cmp);
 
 /* kroute.c */
 int		 kr_init(int *, uint8_t);
+int		 kr_default_prio(void);
+int		 kr_check_prio(long long);
 int		 ktable_update(u_int, char *, int);
 void		 ktable_preload(void);
 void		 ktable_postload(void);
@@ -1358,7 +1349,7 @@ void		 pftable_unref(uint16_t);
 uint16_t	 pftable_ref(uint16_t);
 
 /* parse.y */
-int		 	cmdline_symset(char *);
+int			cmdline_symset(char *);
 struct prefixset	*find_prefixset(char *, struct prefixset_head *);
 struct bgpd_config	*parse_config(char *, struct peer_head *,
 			    struct rtr_config_head *);
@@ -1431,13 +1422,13 @@ int		 aspath_verify(void *, uint16_t, int, int);
 #define		 AS_ERR_SOFT	-4
 u_char		*aspath_inflate(void *, uint16_t, uint16_t *);
 int		 nlri_get_prefix(u_char *, uint16_t, struct bgpd_addr *,
-		     uint8_t *);
+		    uint8_t *);
 int		 nlri_get_prefix6(u_char *, uint16_t, struct bgpd_addr *,
-		     uint8_t *);
+		    uint8_t *);
 int		 nlri_get_vpn4(u_char *, uint16_t, struct bgpd_addr *,
-		     uint8_t *, int);
+		    uint8_t *, int);
 int		 nlri_get_vpn6(u_char *, uint16_t, struct bgpd_addr *,
-		     uint8_t *, int);
+		    uint8_t *, int);
 int		 prefix_compare(const struct bgpd_addr *,
 		    const struct bgpd_addr *, int);
 void		 inet4applymask(struct in_addr *, const struct in_addr *, int);

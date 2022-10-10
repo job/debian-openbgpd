@@ -1,3 +1,9 @@
+openbgpd (7.7-1) unstable; urgency=low
+
+  * Import OpenBGPD 7.7
+
+ -- Job Snijders <job@openbsd.org>  Mon, 10 Oct 2022 13:11:08 +0200
+
 openbgpd (7.5-1) unstable; urgency=low
 
   * Import OpenBGPD 7.5

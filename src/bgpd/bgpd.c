@@ -1,4 +1,4 @@
-/*	$OpenBSD: bgpd.c,v 1.248 2022/06/23 13:09:03 claudio Exp $ */
+/*	$OpenBSD: bgpd.c,v 1.254 2022/08/17 15:15:25 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -321,7 +321,7 @@ BROKEN	if (pledge("stdio rpath wpath cpath fattr unix route recvfd sendfd",
 			pfd = newp;
 			pfd_elms = PFD_CONNECT_START + connect_cnt;
 		}
-		bzero(pfd, sizeof(struct pollfd) * pfd_elms);
+		memset(pfd, 0, sizeof(struct pollfd) * pfd_elms);
 
 		timeout = mrt_timeout(conf->mrt);
 
@@ -599,7 +599,9 @@ send_config(struct bgpd_config *conf)
 
 	reconfpending = 3;	/* one per child */
 
-	expand_networks(conf);
+	expand_networks(conf, &conf->networks);
+	SIMPLEQ_FOREACH(vpn, &conf->l3vpns, entry)
+		expand_networks(conf, &vpn->net_l);
 
 	cflags = conf->flags;
 
@@ -1113,23 +1115,19 @@ send_network(int type, struct network_config *net, struct filter_set_head *h)
 	return (0);
 }
 
+/*
+ * Return true if a route can be used for nexthop resolution.
+ */
 int
-bgpd_filternexthop(struct kroute_full *kf)
+bgpd_oknexthop(struct kroute_full *kf)
 {
-	/* kernel routes are never filtered */
-	if (kf->flags & F_KERNEL && kf->prefixlen != 0)
-		return (0);
+	if (kf->flags & F_BGPD)
+		return ((cflags & BGPD_FLAG_NEXTHOP_BGP) != 0);
 
-	if (cflags & BGPD_FLAG_NEXTHOP_BGP) {
-		if (kf->flags & F_BGPD)
-			return (0);
-	}
+	if (kf->prefixlen == 0)
+		return ((cflags & BGPD_FLAG_NEXTHOP_DEFAULT) != 0);
 
-	if (cflags & BGPD_FLAG_NEXTHOP_DEFAULT) {
-		if (kf->prefixlen == 0)
-			return (0);
-	}
-
+	/* any other route is fine */
 	return (1);
 }
 
@@ -1318,7 +1316,7 @@ bgpd_rtr_connect(struct rtr_config *r)
 
 	ce->id = r->id;
 	ce->fd = socket(aid2af(r->remote_addr.aid),
-	     SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, IPPROTO_TCP);
+	    SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK, IPPROTO_TCP);
 	if (ce->fd == -1) {
 		log_warn("rtr %s", r->descr);
 		free(ce);
@@ -1367,7 +1365,7 @@ bgpd_rtr_connect_done(int fd, struct bgpd_config *conf)
 	}
 	if (ce == NULL)
 		fatalx("connect entry not found");
-	
+
 	TAILQ_REMOVE(&connect_queue, ce, entry);
 	connect_cnt--;
 

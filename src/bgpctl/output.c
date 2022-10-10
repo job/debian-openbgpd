@@ -1,4 +1,4 @@
-/*	$OpenBSD: output.c,v 1.24 2022/07/08 16:12:11 claudio Exp $ */
+/*	$OpenBSD: output.c,v 1.29 2022/08/31 15:00:53 claudio Exp $ */
 
 /*
  * Copyright (c) 2003 Henning Brauer <henning@openbsd.org>
@@ -45,12 +45,11 @@ show_head(struct parse_result *res)
 		    "MsgRcvd", "MsgSent", "OutQ", "Up/Down", "State/PrfRcvd");
 		break;
 	case SHOW_FIB:
-		printf("flags: * = valid, B = BGP, C = Connected, "
-		    "S = Static\n");
-		printf("       "
-		    "N = BGP Nexthop reachable via this route\n");
+		printf("flags: B = BGP, C = Connected, S = Static\n");
+		printf("       N = BGP Nexthop reachable via this route\n");
 		printf("       r = reject route, b = blackhole route\n\n");
-		printf("flags prio destination          gateway\n");
+		printf("%-5s %-4s %-32s %-32s\n", "flags", "prio",
+		    "destination", "gateway");
 		break;
 	case SHOW_FIB_TABLES:
 		printf("%-5s %-20s %-8s\n", "Table", "Description", "State");
@@ -83,7 +82,8 @@ show_head(struct parse_result *res)
 		break;
 	case NETWORK_SHOW:
 		printf("flags: S = Static\n");
-		printf("flags prio destination          gateway\n");
+		printf("%-5s %-4s %-32s %-32s\n", "flags", "prio",
+		    "destination", "gateway");
 		break;
 	default:
 		break;
@@ -221,13 +221,16 @@ show_neighbor_msgstats(struct peer *p)
 	    p->stats.msg_rcvd_update + p->stats.msg_rcvd_keepalive +
 	    p->stats.msg_rcvd_rrefresh);
 	printf("  Update statistics:\n");
-	printf("  %-15s %-10s %-10s\n", "", "Sent", "Received");
+	printf("  %-15s %-10s %-10s %-10s\n", "", "Sent", "Received",
+	    "Pending");
 	printf("  %-15s %10u %10u\n", "Prefixes",
 	    p->stats.prefix_out_cnt, p->stats.prefix_cnt);
-	printf("  %-15s %10llu %10llu\n", "Updates",
-	    p->stats.prefix_sent_update, p->stats.prefix_rcvd_update);
-	printf("  %-15s %10llu %10llu\n", "Withdraws",
-	    p->stats.prefix_sent_withdraw, p->stats.prefix_rcvd_withdraw);
+	printf("  %-15s %10llu %10llu %10u\n", "Updates",
+	    p->stats.prefix_sent_update, p->stats.prefix_rcvd_update,
+	    p->stats.pending_update);
+	printf("  %-15s %10llu %10llu %10u\n", "Withdraws",
+	    p->stats.prefix_sent_withdraw, p->stats.prefix_rcvd_withdraw,
+	    p->stats.pending_withdraw);
 	printf("  %-15s %10llu %10llu\n", "End-of-Rib",
 	    p->stats.prefix_sent_eor, p->stats.prefix_rcvd_eor);
 	printf("  Route Refresh statistics:\n");
@@ -467,7 +470,7 @@ show_fib(struct kroute_full *kf)
 
 	if (asprintf(&p, "%s/%u", log_addr(&kf->prefix), kf->prefixlen) == -1)
 		err(1, NULL);
-	printf("%s%4i %-20s ", fmt_fib_flags(kf->flags), kf->priority, p);
+	printf("%-5s %4i %-32s ", fmt_fib_flags(kf->flags), kf->priority, p);
 	free(p);
 
 	if (kf->flags & F_CONNECTED)
@@ -1000,9 +1003,7 @@ show_rib_mem(struct rde_memstats *stats)
 	printf("\t   and holding %lld references\n",
 	    stats->path_refs);
 	printf("%10lld BGP AS-PATH attribute entries using "
-	    "%s of memory\n\t   and holding %lld references\n",
-	    stats->aspath_cnt, fmt_mem(stats->aspath_size),
-	    stats->aspath_refs);
+	    "%s of memory\n", stats->aspath_cnt, fmt_mem(stats->aspath_size));
 	printf("%10lld entries for %lld BGP communities "
 	    "using %s of memory\n", stats->comm_cnt, stats->comm_nmemb,
 	    fmt_mem(stats->comm_cnt * sizeof(struct rde_community) +
@@ -1029,20 +1030,6 @@ show_rib_mem(struct rde_memstats *stats)
 	    stats->attr_data));
 	printf("Sets using %s of memory\n", fmt_mem(stats->aset_size +
 	    stats->pset_size));
-	printf("\nRDE hash statistics\n");
-}
-
-static void
-show_rib_hash(struct rde_hashstats *hash)
-{
-	double avg, dev;
-
-	printf("\t%s: size %lld, %lld entries\n", hash->name, hash->num,
-	    hash->sum);
-	avg = (double)hash->sum / (double)hash->num;
-	dev = sqrt(fmax(0, hash->sumq / hash->num - avg * avg));
-	printf("\t    min %lld max %lld avg/std-dev = %.3f/%.3f\n",
-	    hash->min, hash->max, avg, dev);
 }
 
 static void
@@ -1130,7 +1117,6 @@ const struct output show_output = {
 	.attr = show_attr,
 	.rib = show_rib,
 	.rib_mem = show_rib_mem,
-	.rib_hash = show_rib_hash,
 	.set = show_rib_set,
 	.rtr = show_rtr,
 	.result = show_result,

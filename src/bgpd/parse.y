@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.432 2022/07/11 17:08:21 claudio Exp $ */
+/*	$OpenBSD: parse.y,v 1.436 2022/09/21 21:12:04 claudio Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -368,7 +368,7 @@ string		: string STRING			{
 		| STRING
 		;
 
-yesno		:  STRING			{
+yesno		: STRING			{
 			if (!strcmp($1, "yes"))
 				$$ = 1;
 			else if (!strcmp($1, "no"))
@@ -708,9 +708,8 @@ conf_main	: AS as4number		{
 			TAILQ_INSERT_TAIL(conf->listen_addrs, la, entry);
 		}
 		| FIBPRIORITY NUMBER		{
-			if ($2 <= RTP_LOCAL || $2 > RTP_MAX) {
-				yyerror("fib-priority %lld must be between "
-				    "%u and %u", $2, RTP_LOCAL + 1, RTP_MAX);
+			if (!kr_check_prio($2)) {
+				yyerror("fib-priority %lld out of range", $2);
 				YYERROR;
 			}
 			conf->fib_priority = $2;
@@ -1046,9 +1045,8 @@ network		: NETWORK prefix filter_set	{
 		}
 		| NETWORK family PRIORITY NUMBER filter_set	{
 			struct network	*n;
-			if ($4 <= RTP_LOCAL && $4 > RTP_MAX) {
-				yyerror("priority %lld must be between "
-				    "%u and %u", $4, RTP_LOCAL + 1, RTP_MAX);
+			if (!kr_check_prio($4)) {
+				yyerror("priority %lld out of range", $4);
 				YYERROR;
 			}
 
@@ -1955,10 +1953,10 @@ espah		: ESP		{ $$ = 1; }
 		;
 
 encspec		: /* nada */	{
-			bzero(&$$, sizeof($$));
+			memset(&$$, 0, sizeof($$));
 		}
 		| STRING STRING {
-			bzero(&$$, sizeof($$));
+			memset(&$$, 0, sizeof($$));
 			if (!strcmp($1, "3des") || !strcmp($1, "3des-cbc")) {
 				$$.enc_alg = AUTH_EALG_3DESCBC;
 				$$.enc_key_len = 21; /* XXX verify */
@@ -1996,7 +1994,7 @@ filterrule	: action quick filter_rib_h direction filter_peer_h
 			struct filter_rule	 r;
 			struct filter_rib_l	 *rb, *rbnext;
 
-			bzero(&r, sizeof(r));
+			memset(&r, 0, sizeof(r));
 			r.action = $1;
 			r.quick = $2;
 			r.dir = $4;
@@ -2181,11 +2179,11 @@ filter_prefix_m	: filter_prefix_l
 		| '{' filter_prefix_l '}'		{ $$ = $2; }
 		| '{' filter_prefix_l '}' filter_prefix_m
 		{
-			struct filter_prefix_l  *p;
+			struct filter_prefix_l	*p;
 
 			/* merge, both can be lists */
 			for (p = $2; p != NULL && p->next != NULL; p = p->next)
-				;       /* nothing */
+				;	/* nothing */
 			if (p != NULL)
 				p->next = $4;
 			$$ = $2;
@@ -2323,10 +2321,10 @@ filter_as	: as4number_any		{
 		;
 
 filter_match_h	: /* empty */			{
-			bzero(&$$, sizeof($$));
+			memset(&$$, 0, sizeof($$));
 		}
 		| {
-			bzero(&fmopts, sizeof(fmopts));
+			memset(&fmopts, 0, sizeof(fmopts));
 		}
 		    filter_match		{
 			memcpy(&$$, &fmopts, sizeof($$));
@@ -2574,15 +2572,15 @@ filter_elm	: filter_prefix_h	{
 		}
 		;
 
-prefixlenop	: /* empty */			{ bzero(&$$, sizeof($$)); }
+prefixlenop	: /* empty */			{ memset(&$$, 0, sizeof($$)); }
 		| LONGER				{
-			bzero(&$$, sizeof($$));
+			memset(&$$, 0, sizeof($$));
 			$$.op = OP_RANGE;
 			$$.len_min = -1;
 			$$.len_max = -1;
 		}
 		| MAXLEN NUMBER				{
-			bzero(&$$, sizeof($$));
+			memset(&$$, 0, sizeof($$));
 			if ($2 < 0 || $2 > 128) {
 				yyerror("prefixlen must be >= 0 and <= 128");
 				YYERROR;
@@ -2595,7 +2593,7 @@ prefixlenop	: /* empty */			{ bzero(&$$, sizeof($$)); }
 		| PREFIXLEN unaryop NUMBER		{
 			int min, max;
 
-			bzero(&$$, sizeof($$));
+			memset(&$$, 0, sizeof($$));
 			if ($3 < 0 || $3 > 128) {
 				yyerror("prefixlen must be >= 0 and <= 128");
 				YYERROR;
@@ -2636,7 +2634,7 @@ prefixlenop	: /* empty */			{ bzero(&$$, sizeof($$)); }
 			$$.len_max = max;
 		}
 		| PREFIXLEN NUMBER binaryop NUMBER	{
-			bzero(&$$, sizeof($$));
+			memset(&$$, 0, sizeof($$));
 			if ($2 < 0 || $2 > 128 || $4 < 0 || $4 > 128) {
 				yyerror("prefixlen must be < 128");
 				YYERROR;
@@ -3604,7 +3602,7 @@ init_config(struct bgpd_config *c)
 	c->holdtime = INTERVAL_HOLD;
 	c->connectretry = INTERVAL_CONNECTRETRY;
 	c->bgpid = get_bgpid();
-	c->fib_priority = RTP_BGP;
+	c->fib_priority = kr_default_prio();
 	c->default_tableid = getrtable();
 	if (!ktable_exists(c->default_tableid, &rdomid))
 		fatalx("current routing table %u does not exist",
@@ -3868,7 +3866,7 @@ getcommunity(char *s, int large, uint32_t *val, uint32_t *flag)
 		*flag = COMMUNITY_NEIGHBOR_AS;
 		return 0;
 	} else if (strcmp(s, "local-as") == 0) {
-		*flag =  COMMUNITY_LOCAL_AS;
+		*flag = COMMUNITY_LOCAL_AS;
 		return 0;
 	}
 	if (large)
@@ -4500,7 +4498,7 @@ expand_rule(struct filter_rule *rule, struct filter_rib_l *rib,
 
 					if (rb != NULL)
 						strlcpy(r->rib, rb->name,
-						     sizeof(r->rib));
+						    sizeof(r->rib));
 
 					if (p != NULL)
 						memcpy(&r->peer, &p->p,
@@ -4668,14 +4666,6 @@ neighbor_consistent(struct peer *p)
 		char *descr = log_fmt_peer(&p->conf);
 		yyerror("duplicate %s", descr);
 		free(descr);
-		return (-1);
-	}
-
-	/* bail if add-path send and rde evaluate all is used together */
-	if ((p->conf.flags & PEERFLAG_EVALUATE_ALL) &&
-	    (p->conf.capabilities.add_path[0] & CAPA_AP_SEND)) {
-		yyerror("neighbors with add-path send cannot use "
-		    "'rde evaluate all'");
 		return (-1);
 	}
 

@@ -1,4 +1,4 @@
-/*	$OpenBSD: session.h,v 1.156 2022/06/27 13:26:51 claudio Exp $ */
+/*	$OpenBSD: session.h,v 1.158 2022/08/29 14:57:27 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -179,6 +179,8 @@ struct peer_stats {
 	time_t			 last_write;
 	uint32_t		 prefix_cnt;
 	uint32_t		 prefix_out_cnt;
+	uint32_t		 pending_update;
+	uint32_t		 pending_withdraw;
 	uint8_t			 last_sent_errcode;
 	uint8_t			 last_sent_suberr;
 	uint8_t			 last_rcvd_errcode;
@@ -289,9 +291,9 @@ void	 log_conn_attempt(const struct peer *, struct sockaddr *,
 
 /* mrt.c */
 void	 mrt_dump_bgp_msg(struct mrt *, void *, uint16_t,
-	     struct peer *, enum msg_type);
+	    struct peer *, enum msg_type);
 void	 mrt_dump_state(struct mrt *, uint16_t, uint16_t,
-	     struct peer *);
+	    struct peer *);
 void	 mrt_done(struct mrt *);
 
 /* pfkey.c */

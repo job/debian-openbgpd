@@ -1,4 +1,4 @@
-/*	$OpenBSD: logmsg.c,v 1.7 2022/06/28 11:42:41 claudio Exp $ */
+/*	$OpenBSD: logmsg.c,v 1.9 2022/08/24 17:14:02 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -150,7 +150,7 @@ log_notification(const struct peer *peer, uint8_t errcode, uint8_t subcode,
 			suberrname = suberr_header_names[subcode];
 		break;
 	case ERR_OPEN:
-		if (subcode >= sizeof(suberr_open_names) / sizeof(char *) || 
+		if (subcode >= sizeof(suberr_open_names) / sizeof(char *) ||
 		    suberr_open_names[subcode] == NULL)
 			uk = 1;
 		else
@@ -213,11 +213,11 @@ void
 log_conn_attempt(const struct peer *peer, struct sockaddr *sa, socklen_t len)
 {
 	char		*p;
-	const char	*b;
 
 	if (peer == NULL) {	/* connection from non-peer, drop */
-		b = log_sockaddr(sa, len);
-		logit(LOG_INFO, "connection from non-peer %s refused", b);
+		if (log_getverbose())
+			logit(LOG_INFO, "connection from non-peer %s refused",
+			    log_sockaddr(sa, len));
 	} else {
 		/* only log if there is a chance that the session may come up */
 		if (peer->conf.down && peer->state == STATE_IDLE)

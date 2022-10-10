@@ -1,4 +1,4 @@
-/*	$OpenBSD: session.c,v 1.430 2022/06/27 13:26:51 claudio Exp $ */
+/*	$OpenBSD: session.c,v 1.435 2022/08/31 15:51:44 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004, 2005 Henning Brauer <henning@openbsd.org>
@@ -288,7 +288,7 @@ session_main(int debug, int verbose)
 		if (peer_cnt > peer_l_elms) {
 			if ((newp = reallocarray(peer_l, peer_cnt,
 			    sizeof(struct peer *))) == NULL) {
-				/* panic for now  */
+				/* panic for now */
 				log_warn("could not resize peer_l from %u -> %u"
 				    " entries", peer_l_elms, peer_cnt);
 				fatalx("exiting");
@@ -313,7 +313,7 @@ session_main(int debug, int verbose)
 		if (mrt_cnt > mrt_l_elms) {
 			if ((newp = reallocarray(mrt_l, mrt_cnt,
 			    sizeof(struct mrt *))) == NULL) {
-				/* panic for now  */
+				/* panic for now */
 				log_warn("could not resize mrt_l from %u -> %u"
 				    " entries", mrt_l_elms, mrt_cnt);
 				fatalx("exiting");
@@ -327,7 +327,7 @@ session_main(int debug, int verbose)
 		if (new_cnt > pfd_elms) {
 			if ((newp = reallocarray(pfd, new_cnt,
 			    sizeof(struct pollfd))) == NULL) {
-				/* panic for now  */
+				/* panic for now */
 				log_warn("could not resize pfd from %u -> %u"
 				    " entries", pfd_elms, new_cnt);
 				fatalx("exiting");
@@ -336,7 +336,7 @@ session_main(int debug, int verbose)
 			pfd_elms = new_cnt;
 		}
 
-		bzero(pfd, sizeof(struct pollfd) * pfd_elms);
+		memset(pfd, 0, sizeof(struct pollfd) * pfd_elms);
 
 		set_pollfd(&pfd[PFD_PIPE_MAIN], ibuf_main);
 		set_pollfd(&pfd[PFD_PIPE_ROUTE], ibuf_rde);
@@ -892,7 +892,7 @@ change_state(struct peer *peer, enum session_state state,
 		free(peer->rbuf);
 		peer->rbuf = NULL;
 		peer->rpending = 0;
-		bzero(&peer->capa.peer, sizeof(peer->capa.peer));
+		memset(&peer->capa.peer, 0, sizeof(peer->capa.peer));
 		if (!peer->template)
 			imsg_compose(ibuf_main, IMSG_PFKEY_RELOAD,
 			    peer->conf.id, 0, -1, NULL, 0);
@@ -938,7 +938,7 @@ change_state(struct peer *peer, enum session_state state,
 			timer_stop(&peer->timers, Timer_IdleHoldReset);
 			session_close_connection(peer);
 			msgbuf_clear(&peer->wbuf);
-			bzero(&peer->capa.peer, sizeof(peer->capa.peer));
+			memset(&peer->capa.peer, 0, sizeof(peer->capa.peer));
 		}
 		break;
 	case STATE_ACTIVE:
@@ -1310,7 +1310,7 @@ session_tcp_established(struct peer *peer)
 void
 session_capa_ann_none(struct peer *peer)
 {
-	bzero(&peer->capa.ann, sizeof(peer->capa.ann));
+	memset(&peer->capa.ann, 0, sizeof(peer->capa.ann));
 }
 
 int
@@ -1452,7 +1452,7 @@ session_open(struct peer *p)
 	/* BGP open policy, RFC 9234 */
 	if (p->capa.ann.role_ena) {
 		errs += session_capa_add(opb, CAPA_ROLE, 1);
-		errs += ibuf_add(opb, &p->capa.ann.role, 1); 
+		errs += ibuf_add(opb, &p->capa.ann.role, 1);
 	}
 
 	/* graceful restart and End-of-RIB marker, RFC 4724 */
@@ -1770,7 +1770,7 @@ session_graceful_restart(struct peer *p)
 			    aid2str(i));
 			p->capa.neg.grestart.flags[i] |= CAPA_GR_RESTARTING;
 		} else if (p->capa.neg.mp[i]) {
-			if (imsg_rde(IMSG_SESSION_FLUSH, p->conf.id,
+			if (imsg_rde(IMSG_SESSION_NOGRACE, p->conf.id,
 			    &i, sizeof(i)) == -1)
 				return (-1);
 			log_peer_warnx(&p->conf,
@@ -2184,7 +2184,7 @@ bad_len:
 			extlen = 1;
 		}
 
-		/* RFC9020 encoding has 3 extra bytes */ 
+		/* RFC9020 encoding has 3 extra bytes */
 		if (optparamlen + 3 * extlen != msglen - MSGSIZE_OPEN_MIN)
 			goto bad_len;
 	}
@@ -2534,14 +2534,14 @@ parse_notification(struct peer *peer)
 			reason_len = *p++;
 			datalen--;
 			if (datalen < reason_len) {
-			    log_peer_warnx(&peer->conf,
-				"received truncated shutdown reason");
-			    return (0);
+				log_peer_warnx(&peer->conf,
+				    "received truncated shutdown reason");
+				return (0);
 			}
 			if (reason_len > REASON_LEN - 1) {
-			    log_peer_warnx(&peer->conf,
-				"received overly long shutdown reason");
-			    return (0);
+				log_peer_warnx(&peer->conf,
+				    "received overly long shutdown reason");
+				return (0);
 			}
 			memcpy(peer->stats.last_reason, p, reason_len);
 			peer->stats.last_reason[reason_len] = '\0';
@@ -3151,7 +3151,6 @@ session_dispatch_imsg(struct imsgbuf *ibuf, int idx, u_int *listener_cnt)
 		case IMSG_CTL_SHOW_RIB_COMMUNITIES:
 		case IMSG_CTL_SHOW_RIB_ATTR:
 		case IMSG_CTL_SHOW_RIB_MEM:
-		case IMSG_CTL_SHOW_RIB_HASH:
 		case IMSG_CTL_SHOW_NETWORK:
 		case IMSG_CTL_SHOW_NEIGHBOR:
 		case IMSG_CTL_SHOW_SET:
@@ -3306,7 +3305,7 @@ la_cmp(struct listen_addr *a, struct listen_addr *b)
 	case AF_INET6:
 		in6_a = (struct sockaddr_in6 *)&a->sa;
 		in6_b = (struct sockaddr_in6 *)&b->sa;
-		if (bcmp(&in6_a->sin6_addr, &in6_b->sin6_addr,
+		if (memcmp(&in6_a->sin6_addr, &in6_b->sin6_addr,
 		    sizeof(struct in6_addr)))
 			return (1);
 		if (in6_a->sin6_port != in6_b->sin6_port)
@@ -3467,7 +3466,7 @@ session_match_mask(struct peer *p, struct bgpd_addr *a)
 void
 session_down(struct peer *peer)
 {
-	bzero(&peer->capa.neg, sizeof(peer->capa.neg));
+	memset(&peer->capa.neg, 0, sizeof(peer->capa.neg));
 	peer->stats.last_updown = getmonotime();
 	/*
 	 * session_down is called in the exit code path so check
@@ -3516,11 +3515,9 @@ imsg_ctl_parent(int type, uint32_t peerid, pid_t pid, void *data,
 int
 imsg_ctl_rde(int type, pid_t pid, void *data, uint16_t datalen)
 {
-	if (ibuf_rde_ctl == NULL) {
-		log_warnx("Can't send message %u to RDE, ctl pipe closed",
-		    type);
+	if (ibuf_rde_ctl == NULL)
 		return (0);
-	}
+
 	/*
 	 * Use control socket to talk to RDE to bypass the queue of the
 	 * regular imsg socket.
@@ -3531,10 +3528,8 @@ imsg_ctl_rde(int type, pid_t pid, void *data, uint16_t datalen)
 int
 imsg_rde(int type, uint32_t peerid, void *data, uint16_t datalen)
 {
-	if (ibuf_rde == NULL) {
-		log_warnx("Can't send message %u to RDE, pipe closed", type);
+	if (ibuf_rde == NULL)
 		return (0);
-	}
 
 	return (imsg_compose(ibuf_rde, type, peerid, 0, -1, data, datalen));
 }

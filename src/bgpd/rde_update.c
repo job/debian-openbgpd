@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_update.c,v 1.145 2022/07/11 17:08:21 claudio Exp $ */
+/*	$OpenBSD: rde_update.c,v 1.148 2022/09/23 15:49:20 claudio Exp $ */
 
 /*
  * Copyright (c) 2004 Claudio Jeker <claudio@openbsd.org>
@@ -22,7 +22,6 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <siphash.h>
 #include <stdio.h>
 
 #include "bgpd.h"
@@ -362,6 +361,113 @@ up_generate_addpath(struct filter_head *rules, struct rde_peer *peer,
 	}
 }
 
+/*
+ * Generate updates for the add-path send all case. Since all prefixes
+ * are distributed just remove old and add new.
+ */ 
+void
+up_generate_addpath_all(struct filter_head *rules, struct rde_peer *peer,
+    struct prefix *best, struct prefix *new, struct prefix *old)
+{
+	struct filterstate	state;
+	struct bgpd_addr	addr;
+	struct prefix		*p, *next, *head = NULL;
+	uint8_t			prefixlen;
+	int			all = 0;
+
+	/*
+	 * if old and new are NULL then insert all prefixes from best,
+	 * clearing old routes in the process
+	 */
+	if (old == NULL && new == NULL) {
+		/* mark all paths as stale */
+		pt_getaddr(best->pt, &addr);
+		prefixlen = best->pt->prefixlen;
+
+		head = prefix_adjout_lookup(peer, &addr, prefixlen);
+		for (p = head; p != NULL; p = prefix_adjout_next(peer, p))
+			p->flags |= PREFIX_FLAG_STALE;
+
+		new = best;
+		all = 1;
+	}
+
+	if (old != NULL) {
+		/* withdraw stale paths */
+		pt_getaddr(old->pt, &addr);
+		p = prefix_adjout_get(peer, old->path_id_tx, &addr,
+		    old->pt->prefixlen);
+		if (p != NULL)
+			prefix_adjout_withdraw(p);
+	}
+
+	if (new != NULL) {
+		pt_getaddr(new->pt, &addr);
+		prefixlen = new->pt->prefixlen;
+	}
+
+	/* add new path (or multiple if all is set) */
+	for (; new != NULL; new = next) {
+		if (all)
+			next = TAILQ_NEXT(new, entry.list.rib);
+		else
+			next = NULL;
+
+		/* only allow valid prefixes */
+		if (!prefix_eligible(new))
+			break;
+
+		/*
+		 * up_test_update() needs to run before the output filters
+		 * else the well known communities won't work properly.
+		 * The output filters would not be able to add well known
+		 * communities.
+		 */
+		if (!up_test_update(peer, new))
+			continue;
+
+		rde_filterstate_prep(&state, prefix_aspath(new),
+		    prefix_communities(new), prefix_nexthop(new),
+		    prefix_nhflags(new));
+		if (rde_filter(rules, peer, prefix_peer(new), &addr,
+		    prefixlen, prefix_vstate(new), &state) == ACTION_DENY) {
+			rde_filterstate_clean(&state);
+			continue;
+		}
+
+		if (up_enforce_open_policy(peer, &state)) {
+			rde_filterstate_clean(&state);
+			continue;
+		}
+
+		/* from here on we know this is an update */
+		p = prefix_adjout_get(peer, new->path_id_tx, &addr, prefixlen);
+
+		up_prep_adjout(peer, &state, addr.aid);
+		prefix_adjout_update(p, peer, &state, &addr,
+		    prefixlen, new->path_id_tx, prefix_vstate(new));
+		rde_filterstate_clean(&state);
+
+		/* max prefix checker outbound */
+		if (peer->conf.max_out_prefix &&
+		    peer->prefix_out_cnt > peer->conf.max_out_prefix) {
+			log_peer_warnx(&peer->conf,
+			    "outbound prefix limit reached (>%u/%u)",
+			    peer->prefix_out_cnt, peer->conf.max_out_prefix);
+			rde_update_err(peer, ERR_CEASE,
+			    ERR_CEASE_MAX_SENT_PREFIX, NULL, 0);
+		}
+	}
+
+	if (all) {
+		/* withdraw stale paths */
+		for (p = head; p != NULL; p = prefix_adjout_next(peer, p)) {
+			if (p->flags & PREFIX_FLAG_STALE)
+				prefix_adjout_withdraw(p);
+		}
+	}
+}
+
 struct rib_entry *rib_add(struct rib *, struct bgpd_addr *, int);
 void rib_remove(struct rib_entry *);
 int rib_empty(struct rib_entry *);
@@ -392,7 +498,7 @@ up_generate_default(struct filter_head *rules, struct rde_peer *peer,
 	 */
 	/* rde_apply_set(asp, peerself, peerself, set, af); */
 
-	bzero(&addr, sizeof(addr));
+	memset(&addr, 0, sizeof(addr));
 	addr.aid = aid;
 	p = prefix_adjout_lookup(peer, &addr, 0);
 
@@ -898,7 +1004,7 @@ up_dump_mp_unreach(u_char *buf, int len, struct rde_peer *peer, uint8_t aid)
 	memcpy(attrbuf + 2, &attr_len, sizeof(attr_len));
 
 	/* write length fields */
-	bzero(buf, sizeof(uint16_t));	/* withdrawn routes len */
+	memset(buf, 0, sizeof(uint16_t));	/* withdrawn routes len */
 	attr_len = htons(wpos - 4);
 	memcpy(buf + 2, &attr_len, sizeof(attr_len));
 
@@ -934,7 +1040,7 @@ up_dump_attrnlri(u_char *buf, int len, struct rde_peer *peer)
 		 * an invalid bgp update.
 		 */
 done:
-		bzero(buf, 2);
+		memset(buf, 0, 2);
 		return (2);
 	}
 
@@ -998,7 +1104,7 @@ up_generate_mp_reach(u_char *buf, int len, struct rde_peer *peer,
 		tmp = htons(tmp);
 		memcpy(attrbuf, &tmp, sizeof(tmp));
 		attrbuf[3] = sizeof(uint64_t) + sizeof(struct in_addr);
-		bzero(attrbuf + 4, sizeof(uint64_t));
+		memset(attrbuf + 4, 0, sizeof(uint64_t));
 		attrbuf[16] = 0; /* Reserved must be 0 */
 
 		/* write nexthop */
@@ -1016,7 +1122,7 @@ up_generate_mp_reach(u_char *buf, int len, struct rde_peer *peer,
 		tmp = htons(tmp);
 		memcpy(attrbuf, &tmp, sizeof(tmp));
 		attrbuf[3] = sizeof(uint64_t) + sizeof(struct in6_addr);
-		bzero(attrbuf + 4, sizeof(uint64_t));
+		memset(attrbuf + 4, 0, sizeof(uint64_t));
 		attrbuf[28] = 0; /* Reserved must be 0 */
 
 		/* write nexthop */
@@ -1080,7 +1186,7 @@ up_dump_mp_reach(u_char *buf, int len, struct rde_peer *peer, uint8_t aid)
 	wpos += r;
 
 	/* write length fields */
-	bzero(buf, sizeof(uint16_t));	/* withdrawn routes len */
+	memset(buf, 0, sizeof(uint16_t));	/* withdrawn routes len */
 	attr_len = htons(wpos - 4);
 	memcpy(buf + 2, &attr_len, sizeof(attr_len));
 

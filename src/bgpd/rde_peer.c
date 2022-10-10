@@ -1,4 +1,4 @@
-/*	$OpenBSD: rde_peer.c,v 1.19 2022/07/11 17:08:21 claudio Exp $ */
+/*	$OpenBSD: rde_peer.c,v 1.25 2022/09/23 15:49:20 claudio Exp $ */
 
 /*
  * Copyright (c) 2019 Claudio Jeker <claudio@openbsd.org>
@@ -26,15 +26,7 @@
 #include "bgpd.h"
 #include "rde.h"
 
-struct peer_table {
-	struct rde_peer_head	*peer_hashtbl;
-	uint32_t		 peer_hashmask;
-} peertable;
-
-#define PEER_HASH(x)		\
-	&peertable.peer_hashtbl[(x) & peertable.peer_hashmask]
-
-struct rde_peer_head	 peerlist;
+struct peer_tree	 peertable;
 struct rde_peer		*peerself;
 
 CTASSERT(sizeof(peerself->recv_eor) * 8 > AID_MAX);
@@ -82,44 +74,25 @@ peer_accept_no_as_set(struct rde_peer *peer)
 }
 
 void
-peer_init(uint32_t hashsize)
+peer_init(void)
 {
 	struct peer_config pc;
-	uint32_t	 hs, i;
 
-	for (hs = 1; hs < hashsize; hs <<= 1)
-		;
-	peertable.peer_hashtbl = calloc(hs, sizeof(struct rde_peer_head));
-	if (peertable.peer_hashtbl == NULL)
-		fatal("peer_init");
+	RB_INIT(&peertable);
 
-	for (i = 0; i < hs; i++)
-		LIST_INIT(&peertable.peer_hashtbl[i]);
-	LIST_INIT(&peerlist);
-
-	peertable.peer_hashmask = hs - 1;
-
-	bzero(&pc, sizeof(pc));
+	memset(&pc, 0, sizeof(pc));
 	snprintf(pc.descr, sizeof(pc.descr), "LOCAL");
 	pc.id = PEER_ID_SELF;
 
 	peerself = peer_add(PEER_ID_SELF, &pc);
-	if (peerself == NULL)
-		fatalx("peer_init add self");
-
 	peerself->state = PEER_UP;
 }
 
 void
 peer_shutdown(void)
 {
-	uint32_t	i;
-
-	for (i = 0; i <= peertable.peer_hashmask; i++)
-		if (!LIST_EMPTY(&peertable.peer_hashtbl[i]))
-			log_warnx("peer_free: free non-free table");
-
-	free(peertable.peer_hashtbl);
+	if (!RB_EMPTY(&peertable))
+		log_warnx("%s: free non-free table", __func__);
 }
 
 /*
@@ -130,7 +103,7 @@ peer_foreach(void (*callback)(struct rde_peer *, void *), void *arg)
 {
 	struct rde_peer *peer, *np;
 
-	LIST_FOREACH_SAFE(peer, &peerlist, peer_l, np)
+	RB_FOREACH_SAFE(peer, peer_tree, &peertable, np)
 		callback(peer, arg);
 }
 
@@ -140,16 +113,10 @@ peer_foreach(void (*callback)(struct rde_peer *, void *), void *arg)
 struct rde_peer *
 peer_get(uint32_t id)
 {
-	struct rde_peer_head	*head;
-	struct rde_peer		*peer;
+	struct rde_peer	needle;
 
-	head = PEER_HASH(id);
-
-	LIST_FOREACH(peer, head, hash_l) {
-		if (peer->conf.id == id)
-			return (peer);
-	}
-	return (NULL);
+	needle.conf.id = id;
+	return RB_FIND(peer_tree, &peertable, &needle);
 }
 
 /*
@@ -160,28 +127,18 @@ peer_get(uint32_t id)
 struct rde_peer *
 peer_match(struct ctl_neighbor *n, uint32_t peerid)
 {
-	struct rde_peer_head	*head;
 	struct rde_peer		*peer;
-	uint32_t		i = 0;
 
-	if (peerid != 0)
-		i = peerid & peertable.peer_hashmask;
+	if (peerid != 0) {
+		peer = peer_get(peerid);
+		if (peer)
+			peer = RB_NEXT(peer_tree, &peertable, peer);
+	} else
+		peer = RB_MIN(peer_tree, &peertable);
 
-	while (i <= peertable.peer_hashmask) {
-		head = &peertable.peer_hashtbl[i];
-		LIST_FOREACH(peer, head, hash_l) {
-			/* skip peers until peerid is found */
-			if (peerid == peer->conf.id) {
-				peerid = 0;
-				continue;
-			}
-			if (peerid != 0)
-				continue;
-
-			if (rde_match_peer(peer, n))
-				return (peer);
-		}
-		i++;
+	for (; peer != NULL; peer = RB_NEXT(peer_tree, &peertable, peer)) {
+		if (rde_match_peer(peer, n))
+			return (peer);
 	}
 	return (NULL);
 }
@@ -189,12 +146,12 @@ peer_match(struct ctl_neighbor *n, uint32_t peerid)
 struct rde_peer *
 peer_add(uint32_t id, struct peer_config *p_conf)
 {
-	struct rde_peer_head	*head;
 	struct rde_peer		*peer;
+	int			 conflict;
 
 	if ((peer = peer_get(id))) {
 		memcpy(&peer->conf, p_conf, sizeof(struct peer_config));
-		return (NULL);
+		return (peer);
 	}
 
 	peer = calloc(1, sizeof(struct rde_peer));
@@ -212,24 +169,57 @@ peer_add(uint32_t id, struct peer_config *p_conf)
 	peer->flags = peer->conf.flags;
 	SIMPLEQ_INIT(&peer->imsg_queue);
 
-	head = PEER_HASH(id);
+	/*
+	 * Assign an even random unique transmit path id.
+	 * Odd path_id_tx numbers are for peers using add-path recv.
+	 */
+	do {
+		struct rde_peer *p;
 
-	LIST_INSERT_HEAD(head, peer, hash_l);
-	LIST_INSERT_HEAD(&peerlist, peer, peer_l);
+		conflict = 0;
+		peer->path_id_tx = arc4random() << 1;
+		RB_FOREACH(p, peer_tree, &peertable) {
+			if (p->path_id_tx == peer->path_id_tx) {
+				conflict = 1;
+				break;
+			}
+		}
+	} while (conflict);
+
+	if (RB_INSERT(peer_tree, &peertable, peer) != NULL)
+		fatalx("rde peer table corrupted");
 
 	return (peer);
 }
 
+static inline int
+peer_cmp(struct rde_peer *a, struct rde_peer *b)
+{
+	if (a->conf.id > b->conf.id)
+		return 1;
+	if (a->conf.id < b->conf.id)
+		return -1;
+	return 0;
+}
+
+RB_GENERATE(peer_tree, rde_peer, entry, peer_cmp);
+
 static void
 peer_generate_update(struct rde_peer *peer, uint16_t rib_id,
-    struct prefix *new, struct prefix *old, enum eval_mode mode)
+    struct prefix *newbest, struct prefix *oldbest,
+    struct prefix *newpath, struct prefix *oldpath,
+    enum eval_mode mode)
 {
 	uint8_t		 aid;
 
-	if (new != NULL)
-		aid = new->pt->aid;
-	else if (old != NULL)
-		aid = old->pt->aid;
+	if (newbest != NULL)
+		aid = newbest->pt->aid;
+	else if (oldbest != NULL)
+		aid = oldbest->pt->aid;
+	else if (newpath != NULL)
+		aid = newpath->pt->aid;
+	else if (oldpath != NULL)
+		aid = oldpath->pt->aid;
 	else
 		return;
 
@@ -255,32 +245,38 @@ peer_generate_update(struct rde_peer *peer, uint16_t rib_id,
 
 	/* handle peers with add-path */
 	if (peer_has_add_path(peer, aid, CAPA_AP_SEND)) {
-		up_generate_addpath(out_rules, peer, new, old);
+		if (peer->eval.mode == ADDPATH_EVAL_ALL)
+			up_generate_addpath_all(out_rules, peer, newbest,
+			    newpath, oldpath);
+		else
+			up_generate_addpath(out_rules, peer, newbest, oldbest);
 		return;
 	}
 
 	/* skip regular peers if the best path didn't change */
 	if (mode == EVAL_ALL && (peer->flags & PEERFLAG_EVALUATE_ALL) == 0)
 		return;
-	up_generate_updates(out_rules, peer, new, old);
+	up_generate_updates(out_rules, peer, newbest, oldbest);
 }
 
 void
-rde_generate_updates(struct rib *rib, struct prefix *new, struct prefix *old,
+rde_generate_updates(struct rib *rib, struct prefix *newbest,
+    struct prefix *oldbest, struct prefix *newpath, struct prefix *oldpath,
     enum eval_mode mode)
 {
 	struct rde_peer	*peer;
 
 	/*
-	 * If old is != NULL we know it was active and should be removed.
-	 * If new is != NULL we know it is reachable and then we should
+	 * If oldbest is != NULL we know it was active and should be removed.
+	 * If newbest is != NULL we know it is reachable and then we should
 	 * generate an update.
 	 */
-	if (old == NULL && new == NULL)
+	if (oldbest == NULL && newbest == NULL)
 		return;
 
-	LIST_FOREACH(peer, &peerlist, peer_l)
-		peer_generate_update(peer, rib->id, new, old, mode);
+	RB_FOREACH(peer, peer_tree, &peertable)
+		peer_generate_update(peer, rib->id, newbest, oldbest, newpath,
+		    oldpath, mode);
 }
 
 /*
@@ -337,7 +333,7 @@ peer_flush_upcall(struct rib_entry *re, void *arg)
 			if (rib == NULL)
 				continue;
 			rp = prefix_get(rib, peer, p->path_id,
-			     &addr, prefixlen);
+			    &addr, prefixlen);
 			if (rp) {
 				asp = prefix_aspath(rp);
 				if (asp && asp->pftableid)
@@ -388,10 +384,10 @@ rde_up_dump_upcall(struct rib_entry *re, void *ptr)
 	struct rde_peer		*peer = ptr;
 	struct prefix		*p;
 
-	/* no eligible prefix, not even for 'evaluate all' */
 	if ((p = prefix_best(re)) == NULL)
+		/* no eligible prefix, not even for 'evaluate all' */
 		return;
-	peer_generate_update(peer, re->rib_id, p, NULL, 0);
+	peer_generate_update(peer, re->rib_id, p, NULL, NULL, NULL, 0);
 }
 
 static void
@@ -408,7 +404,7 @@ rde_up_dump_done(void *ptr, uint8_t aid)
 /*
  * Session got established, bring peer up, load RIBs do initial table dump.
  */
-int
+void
 peer_up(struct rde_peer *peer, struct session_up *sup)
 {
 	uint8_t	 i;
@@ -418,6 +414,8 @@ peer_up(struct rde_peer *peer, struct session_up *sup)
 		 * There is a race condition when doing PEER_ERR -> PEER_DOWN.
 		 * So just do a full reset of the peer here.
 		 */
+		rib_dump_terminate(peer);
+		peer_imsg_flush(peer);
 		if (prefix_dump_new(peer, AID_UNSPEC, 0, NULL,
 		    peer_adjout_clear_upcall, NULL, NULL) == -1)
 			fatal("%s: prefix_dump_new", __func__);
@@ -448,8 +446,6 @@ peer_up(struct rde_peer *peer, struct session_up *sup)
 		if (peer->capa.mp[i])
 			peer_dump(peer, i);
 	}
-
-	return (0);
 }
 
 /*
@@ -461,8 +457,12 @@ peer_down(struct rde_peer *peer, void *bula)
 {
 	peer->remote_bgpid = 0;
 	peer->state = PEER_DOWN;
-	/* stop all pending dumps which may depend on this peer */
+	/*
+	 * stop all pending dumps which may depend on this peer
+	 * and flush all pending imsg from the SE.
+	 */
 	rib_dump_terminate(peer);
+	peer_imsg_flush(peer);
 
 	/* flush Adj-RIB-Out */
 	if (prefix_dump_new(peer, AID_UNSPEC, 0, NULL,
@@ -474,10 +474,7 @@ peer_down(struct rde_peer *peer, void *bula)
 	peer->prefix_cnt = 0;
 	peer->prefix_out_cnt = 0;
 
-	peer_imsg_flush(peer);
-
-	LIST_REMOVE(peer, hash_l);
-	LIST_REMOVE(peer, peer_l);
+	RB_REMOVE(peer_tree, &peertable, peer);
 	free(peer);
 }
 
@@ -511,7 +508,7 @@ peer_flush(struct rde_peer *peer, uint8_t aid, time_t staletime)
  * is set to the current timestamp for identifying stale routes in Adj-RIB-In.
  */
 void
-peer_stale(struct rde_peer *peer, uint8_t aid)
+peer_stale(struct rde_peer *peer, uint8_t aid, int flushall)
 {
 	time_t now;
 
@@ -522,9 +519,19 @@ peer_stale(struct rde_peer *peer, uint8_t aid)
 	peer->staletime[aid] = now = getmonotime();
 	peer->state = PEER_DOWN;
 
+	/*
+	 * stop all pending dumps which may depend on this peer
+	 * and flush all pending imsg from the SE.
+	 */
+	rib_dump_terminate(peer);
+	peer_imsg_flush(peer);
+
+	if (flushall)
+		peer_flush(peer, aid, 0);
+
 	/* XXX this is not quite correct */
 	/* mark Adj-RIB-Out stale for this peer */
-	if (prefix_dump_new(peer, AID_UNSPEC, 0, NULL,
+	if (prefix_dump_new(peer, aid, 0, NULL,
 	    peer_adjout_stale_upcall, NULL, NULL) == -1)
 		fatal("%s: prefix_dump_new", __func__);
 

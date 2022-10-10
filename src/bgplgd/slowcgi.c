@@ -1,4 +1,4 @@
-/*	$OpenBSD: slowcgi.c,v 1.2 2022/07/08 08:48:56 claudio Exp $ */
+/*	$OpenBSD: slowcgi.c,v 1.4 2022/08/25 16:49:18 claudio Exp $ */
 /*
  * Copyright (c) 2020 Claudio Jeker <claudio@openbsd.org>
  * Copyright (c) 2019 Kristaps Dzonsons <kristaps@bsd.lv>
@@ -45,7 +45,7 @@
 #include "bgplgd.h"
 #include "http.h"
 
-#define TIMEOUT_DEFAULT		 120
+#define TIMEOUT_DEFAULT		 30
 #ifndef	WWW_USER
 #define WWW_USER		 "www"
 #endif
@@ -110,20 +110,21 @@ struct request {
 	struct event			tmo;
 	struct event			script_ev;
 	struct event			script_err_ev;
-	int				fd;
+	struct fcgi_response_head	response_head;
+	struct env_head			env;
 	uint8_t				buf[FCGI_RECORD_SIZE];
 	size_t				buf_pos;
 	size_t				buf_len;
-	struct fcgi_response_head	response_head;
-	struct env_head			env;
+	int				fd;
 	int				env_count;
+	int				inflight_fds_accounted;
 	pid_t				command_pid;
 	int				command_status;
 	int				script_flags;
 	uint16_t			id;
 	uint8_t				request_started;
 	uint8_t				request_done;
-	int				inflight_fds_accounted;
+	uint8_t				timeout_fired;
 };
 
 LIST_HEAD(requests_head, request);
@@ -224,6 +225,7 @@ usage(void)
 }
 
 struct timeval		timeout = { TIMEOUT_DEFAULT, 0 };
+struct timeval		kill_timeout = { 5, 0 };
 struct slowcgi_proc	slowcgi_proc;
 int			debug = 0;
 int			on = 1;
@@ -392,7 +394,7 @@ slowcgi_listen(char *path, struct passwd *pw)
 	    0)) == -1)
 		lerr(1, "slowcgi_listen: socket");
 
-	bzero(&sun, sizeof(sun));
+	memset(&sun, 0, sizeof(sun));
 	sun.sun_family = AF_UNIX;
 	if (strlcpy(sun.sun_path, path, sizeof(sun.sun_path)) >=
 	    sizeof(sun.sun_path))
@@ -505,7 +507,35 @@ slowcgi_accept(int fd, short events, void *arg)
 void
 slowcgi_timeout(int fd, short events, void *arg)
 {
-	cleanup_request((struct request*) arg);
+	struct request	*c = arg;
+	int sig = SIGTERM;
+
+	if (c->script_flags & SCRIPT_DONE)
+		return;
+
+	ldebug("timeout fired");
+
+	if (c->timeout_fired)
+		sig = SIGKILL;
+
+	if (kill(c->command_pid, sig) == -1) {
+		lwarn("kill child %d after timeout", c->command_pid);
+		if (event_initialized(&c->script_ev)) {
+			close(EVENT_FD(&c->script_ev));
+			event_del(&c->script_ev);
+		}
+		if (event_initialized(&c->script_err_ev)) {
+			close(EVENT_FD(&c->script_err_ev));
+			event_del(&c->script_err_ev);
+		}
+
+		c->command_status = SIGALRM;
+		c->script_flags = STDOUT_DONE | STDERR_DONE | SCRIPT_DONE;
+		create_end_record(c);
+	}
+
+	if (c->timeout_fired++ == 0)
+		evtimer_add(&c->tmo, &kill_timeout);
 }
 
 void
@@ -525,7 +555,7 @@ slowcgi_sig_handler(int sig, short event, void *arg)
 				if (c->command_pid == pid)
 					break;
 			if (c == NULL) {
-				lwarnx("caught exit of unknown child %i", pid);
+				lwarnx("caught exit of unknown child %d", pid);
 				continue;
 			}
 
@@ -535,7 +565,7 @@ slowcgi_sig_handler(int sig, short event, void *arg)
 				c->command_status = WEXITSTATUS(status);
 
 			ldebug("exit %s%d",
-			    WIFSIGNALED(status) ? "signal" : "",
+			    WIFSIGNALED(status) ? "signal " : "",
 			    c->command_status);
 
 			c->script_flags |= SCRIPT_DONE;
@@ -659,7 +689,7 @@ slowcgi_request(int fd, short events, void *arg)
 
 	/* Make space for further reads */
 	if (c->buf_len > 0) {
-		bcopy(c->buf + c->buf_pos, c->buf, c->buf_len);
+		memmove(c->buf, c->buf + c->buf_pos, c->buf_len);
 		c->buf_pos = 0;
 	}
 	return;
@@ -767,11 +797,11 @@ parse_params(uint8_t *buf, uint16_t n, struct request *c, uint16_t id)
 			return;
 		}
 
-		bcopy(buf, env_entry->key, name_len);
+		memcpy(env_entry->key, buf, name_len);
 		buf += name_len;
 		n -= name_len;
 		env_entry->key[name_len] = '\0';
-		bcopy(buf, env_entry->val, val_len);
+		memcpy(env_entry->val, buf, val_len);
 		buf += val_len;
 		n -= val_len;
 		env_entry->val[val_len] = '\0';

@@ -1,4 +1,4 @@
-/*	$OpenBSD: mrt.c,v 1.107 2022/03/22 10:53:08 claudio Exp $ */
+/*	$OpenBSD: mrt.c,v 1.110 2022/09/01 13:23:24 claudio Exp $ */
 
 /*
  * Copyright (c) 2003, 2004 Claudio Jeker <claudio@openbsd.org>
@@ -416,7 +416,7 @@ mrt_dump_entry_mp(struct mrt *mrt, struct prefix *p, uint16_t snum,
 
 	/* XXX is this for peer self? */
 	aid = peer->remote_addr.aid == AID_UNSPEC ? p->pt->aid :
-	     peer->remote_addr.aid;
+	    peer->remote_addr.aid;
 	switch (aid) {
 	case AID_INET:
 	case AID_VPN_IPv4:
@@ -449,7 +449,7 @@ mrt_dump_entry_mp(struct mrt *mrt, struct prefix *p, uint16_t snum,
 
 	n = prefix_nexthop(p);
 	if (n == NULL) {
-		bzero(&nexthop, sizeof(struct bgpd_addr));
+		memset(&nexthop, 0, sizeof(struct bgpd_addr));
 		nexthop.aid = addr.aid;
 		nh = &nexthop;
 	} else
@@ -543,7 +543,7 @@ mrt_dump_entry(struct mrt *mrt, struct prefix *p, uint16_t snum,
 
 	nexthop = prefix_nexthop(p);
 	if (nexthop == NULL) {
-		bzero(&addr, sizeof(struct bgpd_addr));
+		memset(&addr, 0, sizeof(struct bgpd_addr));
 		addr.aid = p->pt->aid;
 		nh = &addr;
 	} else
@@ -645,7 +645,7 @@ mrt_dump_entry_v2_rib(struct rib_entry *re, struct ibuf **nb, struct ibuf **apb,
 
 		nexthop = prefix_nexthop(p);
 		if (nexthop == NULL) {
-			bzero(&addr, sizeof(struct bgpd_addr));
+			memset(&addr, 0, sizeof(struct bgpd_addr));
 			addr.aid = re->prefix->aid;
 			nh = &addr;
 		} else
@@ -783,14 +783,33 @@ fail:
 	return (-1);
 }
 
-int
-mrt_dump_v2_hdr(struct mrt *mrt, struct bgpd_config *conf,
-    struct rde_peer_head *ph)
+struct cb_arg {
+	struct ibuf	*buf;
+	int		 nump;
+};
+
+static void
+mrt_dump_v2_hdr_peer(struct rde_peer *peer, void *arg)
 {
-	struct rde_peer	*peer;
+	struct cb_arg *a = arg;
+
+	if (a->nump == -1)
+		return;
+	peer->mrt_idx = a->nump;
+	if (mrt_dump_peer(a->buf, peer) == -1) {
+		a->nump = -1;
+		return;
+	}
+	a->nump++;
+}
+
+int
+mrt_dump_v2_hdr(struct mrt *mrt, struct bgpd_config *conf)
+{
 	struct ibuf	*buf, *hbuf = NULL;
 	size_t		 len, off;
 	uint16_t	 nlen, nump;
+	struct cb_arg	 arg;
 
 	if ((buf = ibuf_dynamic(0, UINT_MAX)) == NULL) {
 		log_warn("%s: ibuf_dynamic", __func__);
@@ -812,14 +831,13 @@ mrt_dump_v2_hdr(struct mrt *mrt, struct bgpd_config *conf,
 		log_warn("%s: ibuf_reserve error", __func__);
 		goto fail;
 	}
-	nump = 0;
-	LIST_FOREACH(peer, ph, peer_l) {
-		peer->mrt_idx = nump;
-		if (mrt_dump_peer(buf, peer) == -1)
-			goto fail;
-		nump++;
-	}
-	nump = htons(nump);
+	arg.nump = 0;
+	arg.buf = buf;
+	peer_foreach(mrt_dump_v2_hdr_peer, &arg);
+	if (arg.nump == -1)
+		goto fail;
+
+	nump = htons(arg.nump);
 	memcpy(ibuf_seek(buf, off, sizeof(nump)), &nump, sizeof(nump));
 
 	len = ibuf_size(buf);

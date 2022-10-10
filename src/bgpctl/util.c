@@ -1,4 +1,4 @@
-/*	$OpenBSD: util.c,v 1.69 2022/06/28 05:49:05 tb Exp $ */
+/*	$OpenBSD: util.c,v 1.71 2022/08/17 15:15:26 claudio Exp $ */
 
 /*
  * Copyright (c) 2006 Claudio Jeker <claudio@openbsd.org>
@@ -60,7 +60,7 @@ log_in6addr(const struct in6_addr *addr)
 {
 	struct sockaddr_in6	sa_in6;
 
-	bzero(&sa_in6, sizeof(sa_in6));
+	memset(&sa_in6, 0, sizeof(sa_in6));
 	sa_in6.sin6_family = AF_INET6;
 	memcpy(&sa_in6.sin6_addr, addr, sizeof(sa_in6.sin6_addr));
 
@@ -364,7 +364,7 @@ aspath_strlen(void *data, uint16_t len)
 /*
  * Extract the asnum out of the as segment at the specified position.
  * Direct access is not possible because of non-aligned reads.
- * ATTENTION: no bounds checks are done.
+ * Only works on verified 4-byte AS paths.
  */
 uint32_t
 aspath_extract(const void *seg, int pos)
@@ -372,6 +372,9 @@ aspath_extract(const void *seg, int pos)
 	const u_char	*ptr = seg;
 	uint32_t	 as;
 
+	/* minimal pos check, return 0 since that is an invalid ASN */
+	if (pos < 0 || pos >= ptr[1])
+		return (0);
 	ptr += 2 + sizeof(uint32_t) * pos;
 	memcpy(&as, ptr, sizeof(uint32_t));
 	return (ntohl(as));
@@ -528,7 +531,7 @@ nlri_get_prefix(u_char *p, uint16_t len, struct bgpd_addr *prefix,
 	pfxlen = *p++;
 	len--;
 
-	bzero(prefix, sizeof(struct bgpd_addr));
+	memset(prefix, 0, sizeof(struct bgpd_addr));
 	prefix->aid = AID_INET;
 	*prefixlen = pfxlen;
 
@@ -554,7 +557,7 @@ nlri_get_prefix6(u_char *p, uint16_t len, struct bgpd_addr *prefix,
 	pfxlen = *p++;
 	len--;
 
-	bzero(prefix, sizeof(struct bgpd_addr));
+	memset(prefix, 0, sizeof(struct bgpd_addr));
 	prefix->aid = AID_INET6;
 	*prefixlen = pfxlen;
 
@@ -582,7 +585,7 @@ nlri_get_vpn4(u_char *p, uint16_t len, struct bgpd_addr *prefix,
 	p += 1;
 	plen = 1;
 
-	bzero(prefix, sizeof(struct bgpd_addr));
+	memset(prefix, 0, sizeof(struct bgpd_addr));
 
 	/* label stack */
 	do {
@@ -793,7 +796,7 @@ inet6applymask(struct in6_addr *dest, const struct in6_addr *src, int prefixlen)
 	struct in6_addr	mask;
 	int		i;
 
-	bzero(&mask, sizeof(mask));
+	memset(&mask, 0, sizeof(mask));
 	for (i = 0; i < prefixlen / 8; i++)
 		mask.s6_addr[i] = 0xff;
 	i = prefixlen % 8;
@@ -895,7 +898,7 @@ addr2sa(const struct bgpd_addr *addr, uint16_t port, socklen_t *len)
 	if (addr == NULL || addr->aid == AID_UNSPEC)
 		return (NULL);
 
-	bzero(&ss, sizeof(ss));
+	memset(&ss, 0, sizeof(ss));
 	switch (addr->aid) {
 	case AID_INET:
 	case AID_VPN_IPv4:
@@ -924,7 +927,7 @@ sa2addr(struct sockaddr *sa, struct bgpd_addr *addr, uint16_t *port)
 	struct sockaddr_in		*sa_in = (struct sockaddr_in *)sa;
 	struct sockaddr_in6		*sa_in6 = (struct sockaddr_in6 *)sa;
 
-	bzero(addr, sizeof(*addr));
+	memset(addr, 0, sizeof(*addr));
 	switch (sa->sa_family) {
 	case AF_INET:
 		addr->aid = AID_INET;

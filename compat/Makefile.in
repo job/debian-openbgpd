@@ -110,27 +110,26 @@ host_triplet = @host@
 @HAVE_REALLOCARRAY_FALSE@am__append_4 = reallocarray.c
 @HAVE_RECALLOCARRAY_FALSE@am__append_5 = recallocarray.c
 @HAVE_SETPROCTITLE_FALSE@am__append_6 = setproctitle.c
-@HAVE_SIPHASH_FALSE@am__append_7 = siphash.c
-@HAVE_STRLCAT_FALSE@am__append_8 = strlcat.c
-@HAVE_STRLCPY_FALSE@am__append_9 = strlcpy.c
-@HAVE_STRTONUM_FALSE@am__append_10 = strtonum.c
-@HAVE_SETRESGID_FALSE@am__append_11 = bsd-setresgid.c
-@HAVE_SETRESUID_FALSE@am__append_12 = bsd-setresuid.c
-@HAVE_ARC4RANDOM_FALSE@am__append_13 = arc4random.c \
+@HAVE_STRLCAT_FALSE@am__append_7 = strlcat.c
+@HAVE_STRLCPY_FALSE@am__append_8 = strlcpy.c
+@HAVE_STRTONUM_FALSE@am__append_9 = strtonum.c
+@HAVE_SETRESGID_FALSE@am__append_10 = bsd-setresgid.c
+@HAVE_SETRESUID_FALSE@am__append_11 = bsd-setresuid.c
+@HAVE_ARC4RANDOM_FALSE@am__append_12 = arc4random.c \
 @HAVE_ARC4RANDOM_FALSE@	arc4random_uniform.c
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_FREEBSD_TRUE@am__append_14 = getentropy_freebsd.c
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@am__append_15 = getentropy_linux.c \
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_FREEBSD_TRUE@am__append_13 = getentropy_freebsd.c
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@am__append_14 = getentropy_linux.c \
 @HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@	sha2.c
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_NETBSD_TRUE@am__append_16 = getentropy_netbsd.c
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@am__append_17 = getentropy_osx.c \
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_NETBSD_TRUE@am__append_15 = getentropy_netbsd.c
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@am__append_16 = getentropy_osx.c \
 @HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@	sha2.c
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@am__append_18 = getentropy_solaris.c \
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@am__append_17 = getentropy_solaris.c \
 @HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@	sha2.c
-@HAVE_GETRTABLE_FALSE@am__append_19 = getrtable.c
-@HAVE_INET_NET_PTON_FALSE@am__append_20 = inet_net_pton.c
-@HAVE_FMT_SCALED_FALSE@am__append_21 = fmt_scaled.c
-@HAVE_STRNVIS_FALSE@am__append_22 = vis.c
-@BROKEN_STRNVIS_TRUE@am__append_23 = vis.c
+@HAVE_GETRTABLE_FALSE@am__append_18 = getrtable.c
+@HAVE_INET_NET_PTON_FALSE@am__append_19 = inet_net_pton.c
+@HAVE_FMT_SCALED_FALSE@am__append_20 = fmt_scaled.c
+@HAVE_STRNVIS_FALSE@am__append_21 = vis.c
+@BROKEN_STRNVIS_TRUE@am__append_22 = vis.c
 subdir = compat
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -147,8 +146,8 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libcompat_la_DEPENDENCIES =
 am__libcompat_la_SOURCES_DIST = freezero.c imsg.c imsg-buffer.c \
-	reallocarray.c recallocarray.c setproctitle.c siphash.c \
-	strlcat.c strlcpy.c strtonum.c bsd-setresgid.c bsd-setresuid.c \
+	reallocarray.c recallocarray.c setproctitle.c strlcat.c \
+	strlcpy.c strtonum.c bsd-setresgid.c bsd-setresuid.c \
 	arc4random.c arc4random_uniform.c getentropy_freebsd.c \
 	getentropy_linux.c sha2.c getentropy_netbsd.c getentropy_osx.c \
 	getentropy_solaris.c getrtable.c inet_net_pton.c fmt_scaled.c \
@@ -158,27 +157,26 @@ am__libcompat_la_SOURCES_DIST = freezero.c imsg.c imsg-buffer.c \
 @HAVE_REALLOCARRAY_FALSE@am__objects_3 = reallocarray.lo
 @HAVE_RECALLOCARRAY_FALSE@am__objects_4 = recallocarray.lo
 @HAVE_SETPROCTITLE_FALSE@am__objects_5 = setproctitle.lo
-@HAVE_SIPHASH_FALSE@am__objects_6 = siphash.lo
-@HAVE_STRLCAT_FALSE@am__objects_7 = strlcat.lo
-@HAVE_STRLCPY_FALSE@am__objects_8 = strlcpy.lo
-@HAVE_STRTONUM_FALSE@am__objects_9 = strtonum.lo
-@HAVE_SETRESGID_FALSE@am__objects_10 = bsd-setresgid.lo
-@HAVE_SETRESUID_FALSE@am__objects_11 = bsd-setresuid.lo
-@HAVE_ARC4RANDOM_FALSE@am__objects_12 = arc4random.lo \
+@HAVE_STRLCAT_FALSE@am__objects_6 = strlcat.lo
+@HAVE_STRLCPY_FALSE@am__objects_7 = strlcpy.lo
+@HAVE_STRTONUM_FALSE@am__objects_8 = strtonum.lo
+@HAVE_SETRESGID_FALSE@am__objects_9 = bsd-setresgid.lo
+@HAVE_SETRESUID_FALSE@am__objects_10 = bsd-setresuid.lo
+@HAVE_ARC4RANDOM_FALSE@am__objects_11 = arc4random.lo \
 @HAVE_ARC4RANDOM_FALSE@	arc4random_uniform.lo
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_FREEBSD_TRUE@am__objects_13 = getentropy_freebsd.lo
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@am__objects_14 = getentropy_linux.lo \
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_FREEBSD_TRUE@am__objects_12 = getentropy_freebsd.lo
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@am__objects_13 = getentropy_linux.lo \
 @HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@	sha2.lo
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_NETBSD_TRUE@am__objects_15 = getentropy_netbsd.lo
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@am__objects_16 = getentropy_osx.lo \
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_NETBSD_TRUE@am__objects_14 = getentropy_netbsd.lo
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@am__objects_15 = getentropy_osx.lo \
 @HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@	sha2.lo
-@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@am__objects_17 = getentropy_solaris.lo \
+@HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@am__objects_16 = getentropy_solaris.lo \
 @HAVE_ARC4RANDOM_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@	sha2.lo
-@HAVE_GETRTABLE_FALSE@am__objects_18 = getrtable.lo
-@HAVE_INET_NET_PTON_FALSE@am__objects_19 = inet_net_pton.lo
-@HAVE_FMT_SCALED_FALSE@am__objects_20 = fmt_scaled.lo
-@HAVE_STRNVIS_FALSE@am__objects_21 = vis.lo
-@BROKEN_STRNVIS_TRUE@am__objects_22 = vis.lo
+@HAVE_GETRTABLE_FALSE@am__objects_17 = getrtable.lo
+@HAVE_INET_NET_PTON_FALSE@am__objects_18 = inet_net_pton.lo
+@HAVE_FMT_SCALED_FALSE@am__objects_19 = fmt_scaled.lo
+@HAVE_STRNVIS_FALSE@am__objects_20 = vis.lo
+@BROKEN_STRNVIS_TRUE@am__objects_21 = vis.lo
 am_libcompat_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
@@ -186,7 +184,7 @@ am_libcompat_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_12) $(am__objects_13) $(am__objects_14) \
 	$(am__objects_15) $(am__objects_16) $(am__objects_17) \
 	$(am__objects_18) $(am__objects_19) $(am__objects_20) \
-	$(am__objects_21) $(am__objects_22)
+	$(am__objects_21)
 libcompat_la_OBJECTS = $(am_libcompat_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -194,8 +192,8 @@ am__v_lt_0 = --silent
 am__v_lt_1 = 
 libcompatnoopt_la_LIBADD =
 am__libcompatnoopt_la_SOURCES_DIST = explicit_bzero.c
-@HAVE_EXPLICIT_BZERO_FALSE@am__objects_23 = libcompatnoopt_la-explicit_bzero.lo
-am_libcompatnoopt_la_OBJECTS = $(am__objects_23)
+@HAVE_EXPLICIT_BZERO_FALSE@am__objects_22 = libcompatnoopt_la-explicit_bzero.lo
+am_libcompatnoopt_la_OBJECTS = $(am__objects_22)
 libcompatnoopt_la_OBJECTS = $(am_libcompatnoopt_la_OBJECTS)
 libcompatnoopt_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -230,9 +228,8 @@ am__depfiles_remade = ./$(DEPDIR)/arc4random.Plo \
 	./$(DEPDIR)/libcompatnoopt_la-explicit_bzero.Plo \
 	./$(DEPDIR)/reallocarray.Plo ./$(DEPDIR)/recallocarray.Plo \
 	./$(DEPDIR)/setproctitle.Plo ./$(DEPDIR)/sha2.Plo \
-	./$(DEPDIR)/siphash.Plo ./$(DEPDIR)/strlcat.Plo \
-	./$(DEPDIR)/strlcpy.Plo ./$(DEPDIR)/strtonum.Plo \
-	./$(DEPDIR)/vis.Plo
+	./$(DEPDIR)/strlcat.Plo ./$(DEPDIR)/strlcpy.Plo \
+	./$(DEPDIR)/strtonum.Plo ./$(DEPDIR)/vis.Plo
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -419,8 +416,7 @@ libcompat_la_SOURCES = $(am__append_2) $(am__append_3) $(am__append_4) \
 	$(am__append_11) $(am__append_12) $(am__append_13) \
 	$(am__append_14) $(am__append_15) $(am__append_16) \
 	$(am__append_17) $(am__append_18) $(am__append_19) \
-	$(am__append_20) $(am__append_21) $(am__append_22) \
-	$(am__append_23)
+	$(am__append_20) $(am__append_21) $(am__append_22)
 libcompat_la_LIBADD = $(PLATFORM_LDADD)
 noinst_HEADERS = arc4random.h arc4random_freebsd.h arc4random_linux.h \
 	arc4random_netbsd.h arc4random_osx.h arc4random_solaris.h \
@@ -502,7 +498,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/recallocarray.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setproctitle.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha2.Plo@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/siphash.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcat.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcpy.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtonum.Plo@am__quote@ # am--include-marker
@@ -696,7 +691,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/recallocarray.Plo
 	-rm -f ./$(DEPDIR)/setproctitle.Plo
 	-rm -f ./$(DEPDIR)/sha2.Plo
-	-rm -f ./$(DEPDIR)/siphash.Plo
 	-rm -f ./$(DEPDIR)/strlcat.Plo
 	-rm -f ./$(DEPDIR)/strlcpy.Plo
 	-rm -f ./$(DEPDIR)/strtonum.Plo
@@ -766,7 +760,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/recallocarray.Plo
 	-rm -f ./$(DEPDIR)/setproctitle.Plo
 	-rm -f ./$(DEPDIR)/sha2.Plo
-	-rm -f ./$(DEPDIR)/siphash.Plo
 	-rm -f ./$(DEPDIR)/strlcat.Plo
 	-rm -f ./$(DEPDIR)/strlcpy.Plo
 	-rm -f ./$(DEPDIR)/strtonum.Plo

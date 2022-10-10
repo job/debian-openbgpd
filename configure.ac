@@ -73,14 +73,14 @@ AC_ARG_ENABLE(bgplgd,
 		*) enable_bgplgd=yes;; esac],
 	enable_bgplgd=yes)
 
-AC_ARG_ENABLE(netlink,
-	AS_HELP_STRING([--enable-netlink],
-		[ build with netlink support [default=disabled]]),
+AC_ARG_ENABLE(fib-support,
+	AS_HELP_STRING([--disable-fib-support],
+		[ build without fib support [default=enabled]]),
 	[case $enableval in
-		yes) enable_netlink=yes;;
-		no) enable_netlink=no;;
-		*) enable_netlink=no;; esac],
-	enable_netlink=no)
+		yes) disable_fib=no;;
+		no) disable_fib=yes;;
+		*) disable_fib=no;; esac],
+	disable_fib=no)
 
 AC_ARG_ENABLE(warnings,
 	AS_HELP_STRING([--disable-warnings],
@@ -125,27 +125,28 @@ AC_SUBST(AM_LDFLAGS)
 AC_CHECK_HEADERS([endian.h])
 AC_CHECK_HEADERS([netinet/ip_ipsp.h], [], [], [[#include <sys/socket.h>]])
 AC_CHECK_HEADERS([linux/in6.h])
-
-# check auxiliary libraries that might contain other functions
-AC_SEARCH_LIBS([arc4random], [crypto])
-AC_SEARCH_LIBS([clock_gettime],[rt posix4])
-AC_SEARCH_LIBS([ibuf_open], [util])
-AC_SEARCH_LIBS([SHA512Init], [md])
-AC_SEARCH_LIBS([inet_net_pton],[resolv])
-AC_SEARCH_LIBS([fmt_scaled], [util])
+AC_CHECK_HEADERS([linux/if.h])
 
 # check functions that are expected to be in libc
-AC_CHECK_FUNCS([arc4random clock_gettime ibuf_open SHA512Init])
-AC_CHECK_FUNCS([inet_net_pton fmt_scaled])
 AC_CHECK_FUNCS([asprintf explicit_bzero])
 AC_CHECK_FUNCS([getentropy reallocarray recallocarray freezero])
 AC_CHECK_FUNCS([setproctitle setgroups])
 AC_CHECK_FUNCS([setregid setresgid setreuid setresuid])
 AC_CHECK_FUNCS([strlcat strlcpy strtonum sysconf])
 AC_CHECK_FUNCS([pledge unveil])
-AC_CHECK_FUNCS([SipHash])
 AC_CHECK_FUNCS([getdtablecount getrtable])
 AC_CHECK_FUNCS([strnvis])
+AC_CHECK_FUNCS([arc4random])
+
+# check auxiliary libraries that might contain other functions
+AC_SEARCH_LIBS([clock_gettime],[rt posix4])
+AC_SEARCH_LIBS([inet_net_pton],[resolv])
+AC_CHECK_FUNCS([clock_gettime inet_net_pton])
+
+# check needed libutil functions
+AC_SEARCH_LIBS([ibuf_open], [util])
+AC_SEARCH_LIBS([fmt_scaled], [util])
+AC_CHECK_FUNCS([ibuf_open fmt_scaled])
 
 dnl NetBSD added an strnvis and unfortunately made it incompatible with the
 dnl existing one in OpenBSD and Linux's libbsd (the former having existed
@@ -183,12 +184,13 @@ static void sighandler(int sig) { _exit(1); }
  )
 fi
 
-if test "$enable_netlink" = yes; then
+if test "$disable_fib" = no; then
 	# check for libmnl
-	AC_CHECK_LIB([mnl], [mnl_socket_recvfrom], [],
-		[AC_MSG_ERROR([libmnl required])])
-	AC_CHECK_FUNCS([mnl_socket_recvfrom], [],
-		[AC_MSG_ERROR([libmnl required])])
+	AC_CHECK_LIB([mnl], [mnl_socket_recvfrom], [], [])
+	if test "x$ac_cv_lib_mnl_mnl_socket_recvfrom" = "xyes"; then
+		AC_CHECK_FUNCS([mnl_socket_open2], [],
+			[AC_MSG_ERROR([libmnl >= 1.0.4 required])])
+	fi
 fi
 
 # Share test results with automake
@@ -210,21 +212,19 @@ AM_CONDITIONAL([HAVE_SETGROUPS], [test "x$ac_cv_func_setgroups" = xyes])
 AM_CONDITIONAL([HAVE_SETRESGID], [test "x$ac_cv_func_setresgid" = xyes])
 AM_CONDITIONAL([HAVE_SETRESUID], [test "x$ac_cv_func_setresuid" = xyes])
 AM_CONDITIONAL([HAVE_SETPROCTITLE], [test "x$ac_cv_func_setproctitle" = xyes])
-AM_CONDITIONAL([HAVE_SHA512], [test "x$ac_cv_func_SHA512Init" = xyes])
 AM_CONDITIONAL([HAVE_STRLCAT], [test "x$ac_cv_func_strlcat" = xyes])
 AM_CONDITIONAL([HAVE_STRLCPY], [test "x$ac_cv_func_strlcpy" = xyes])
 AM_CONDITIONAL([HAVE_STRTONUM], [test "x$ac_cv_func_strtonum" = xyes])
 AM_CONDITIONAL([HAVE_SYSCONF], [test "x$ac_cv_func_sysconf" = xyes])
 AM_CONDITIONAL([HAVE_PLEDGE], [test "x$ac_cv_func_pledge" = xyes])
 AM_CONDITIONAL([HAVE_UNVEIL], [test "x$ac_cv_func_unveil" = xyes])
-AM_CONDITIONAL([HAVE_SIPHASH], [test "x$ac_cv_func_SipHash" = xyes])
 AM_CONDITIONAL([HAVE_GETDTABLECOUNT], [test "x$ac_cv_func_getdtablecount" = xyes])
 AM_CONDITIONAL([HAVE_GETRTABLE], [test "x$ac_cv_func_getrtable" = xyes])
 AM_CONDITIONAL([HAVE_STRNVIS], [test "x$ac_cv_func_strnvis" = xyes])
 AM_CONDITIONAL([BROKEN_STRNVIS], [test "x$ac_cv_broken_strnvis" = xyes])
 AM_CONDITIONAL([HAVE_INET_NET_PTON], [test "x$ac_cv_func_inet_net_pton" = xyes])
 AM_CONDITIONAL([HAVE_FMT_SCALED], [test "x$ac_cv_func_fmt_scaled" = xyes])
-AM_CONDITIONAL([HAVE_MNL], [test "x$ac_cv_func_mnl_socket_recvfrom" = "xyes"])
+AM_CONDITIONAL([HAVE_MNL], [test "x$ac_cv_func_mnl_socket_open2" = "xyes"])
 
 # overrides for arc4random implementations with known issues
 AM_CONDITIONAL([HAVE_ARC4RANDOM],
@@ -232,14 +232,6 @@ AM_CONDITIONAL([HAVE_ARC4RANDOM],
 	   -a "x$HOST_OS" != xfreebsd \
 	   -a "x$HOST_OS" != xnetbsd \
 	   -a "x$ac_cv_func_arc4random" = xyes])
-
-AC_CHECK_HEADERS([err.h sha2.h])
-
-AC_CHECK_MEMBERS([struct sockaddr_in.sin_len], , ,
-	[ #include <netdb.h>
-	  #include <netinet/in.h>
-	  #include <sys/socket.h> ]
-)
 
 AC_CHECK_MEMBERS([struct tcp_md5sig.tcpm_key], , ,
 	[ #include <sys/socket.h>
@@ -312,6 +304,8 @@ if test "$enable_bgplgd" = yes; then
 fi
 
 AM_CONDITIONAL([BUILD_BGPLGD], [test "$enable_bgplgd" = yes])
+
+AM_CONDITIONAL([DISABLE_FIB], [test "$disable_fib" = yes])
 
 # workaround the issue that there is no autoconf release supporting
 # runstatedir but many linux distros patched their versions instead
