@@ -6,6 +6,7 @@ After=network.target
 [Service]
 Type=forking
 EnvironmentFile=-/etc/default/openbgpd
+ExecReload=/usr/sbin/bgpctl reload
 ExecStart=/usr/sbin/bgpd $DAEMON_OPTS
 ExecStartPre=/usr/sbin/bgpd -n $DAEMON_OPTS
 Restart=on-failure
