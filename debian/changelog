@@ -57,4 +57,3 @@ openbgpd (6.8p1-1) unstable; urgency=low
   * Initial release (Closes: #984811)
 
  -- Job Snijders <job@openbsd.org>  Tue, 09 Mar 2021 15:37:33 +0100
-
